@@ -19,11 +19,24 @@ INCLUDEPATH += include
 SOURCES += src/main.cpp\
         src/MainWindow.cpp \
         src/QtOgreWindow.cpp \
-        src/CustomOgreWindow.cpp
+        src/CustomOgreWindow.cpp \
+        src/RGBDScene.cpp \
+        src/CameraManager.cpp \
+        src/DatasetManager.cpp \
+        src/Scene.cpp \
+        src/EventArgs.cpp
 
 HEADERS  += include/scene-evolution/MainWindow.h \
         include/scene-evolution/QtOgreWindow.h \
-        include/scene-evolution/CustomOgreWindow.h
+        include/scene-evolution/CustomOgreWindow.h \
+        include/scene-evolution/RGBDScene.h \
+        include/scene-evolution/CameraManager.h \
+        include/scene-evolution/DatasetManager.h \
+        include/scene-evolution/Scene.h \
+        include/scene-evolution/EventArgs.h \
+        include/scene-evolution/Cache.h \
+        include/scene-evolution/util.h \
+        include/scene-evolution/interop.h
 
 FORMS    += forms/MainWindow.ui
 
