@@ -17,21 +17,12 @@ public:
 
     QString getFileName() const;
 
-    cv::Mat getLabelTextImg() const;
-    void setLabelTextImg(const cv::Mat& labelTextImg);
-
-    cv::Mat getSegmentImg() const;
-    void setSegmentImg(const cv::Mat& segmentImg);
-
 protected:
     cv::Mat mDepthImg;
     cv::Mat mRgbImg;
     cv::Mat mLabelImg;
 
     QString mFileName;
-
-    cv::Mat mLabelTextImg;
-    cv::Mat mSegmentImg;
 
 };
 

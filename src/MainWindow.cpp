@@ -31,8 +31,7 @@ MainWindow::MainWindow(QWidget *parent)
     QWidget* ogreContainer = QWidget::createWindowContainer(mOgreWindow);
     ui->widgetOgreContainer->layout()->addWidget(ogreContainer);
 
-    // Load first scene
-    changeScene(mDatasetManager->loadScene(mDatasetManager->getAllSceneNames().front()), 0);
+    // Do not load the first scene yet, this is done when OGRE is fully initialized
 }
 
 MainWindow::~MainWindow() {
@@ -52,12 +51,24 @@ void MainWindow::changeScene(const Scene& scene, unsigned int sceneIdx) {
     mCurrentScene = scene;
     mCurrentSceneIdx = sceneIdx;
 
+    // Clean up old scene
     delete mRGBDScene;
-    mRGBDScene = new RGBDScene(mOgreWindow->getOgreSceneManager(), scene.getDepthImg(), scene.getRgbImg(), mCameraManager);
+
+    // Create and attach new scene
+    if(!mRGBDSceneNode)
+        mRGBDSceneNode = mOgreWindow->getOgreSceneManager()->getRootSceneNode()->createChildSceneNode(Strings::RGBDSceneNodeName);
+
+    mRGBDScene = new RGBDScene(mOgreWindow->getOgreSceneManager(), scene.getDepthImg(), scene.getRgbImg(), mDatasetManager->getCameraParams());
+    mRGBDSceneNode->attachObject(mRGBDScene->getManualObject());
 
     // Emit post scene change signal
     SceneChangedEventArgs postArgs(scene.getFileName(), sceneIdx);
     emit sceneChanged(postArgs);
+}
+
+void MainWindow::onOgreInitialized() {
+    // Load first scene
+    changeScene(mDatasetManager->loadScene(mDatasetManager->getAllSceneNames().front()), 0);
 }
 
 void MainWindow::onActionChangeNYUDirectoryTriggered(bool checked) {
@@ -150,6 +161,8 @@ DatasetManager* MainWindow::requestNYUDir() {
 }
 
 void MainWindow::setUpConnections() {
+    connect(mOgreWindow, SIGNAL(initialized()), this, SLOT(onOgreInitialized()));
+
     connect(ui->actionChangeNYUdirectory, SIGNAL(triggered(bool)), this, SLOT(onActionChangeNYUDirectoryTriggered(bool)));
     connect(ui->actionExit, SIGNAL(triggered(bool)), this, SLOT(onActionExitTriggered(bool)));
 
@@ -159,4 +172,11 @@ void MainWindow::setUpConnections() {
 
     connect(this, SIGNAL(sceneChanging(SceneChangingEventArgs&)), this, SLOT(onSceneChanging(SceneChangingEventArgs&)));
     connect(this, SIGNAL(sceneChanged(SceneChangedEventArgs&)), this, SLOT(onSceneChanged(SceneChangedEventArgs&)));
+}
+
+QString MainWindow::buildWindowTitle() {
+    QString title = Strings::WindowTitleBase + " - " + mDatasetManager->getDatasetDir().dirName();
+    if(!mCurrentScene.getFileName().isEmpty())
+        title += " - " + mCurrentScene.getFileName();
+    return title;
 }

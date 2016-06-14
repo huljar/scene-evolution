@@ -1,4 +1,4 @@
-#include <nyu-depth/EventArgs.h>
+#include <scene-evolution/EventArgs.h>
 
 SceneChangingEventArgs::SceneChangingEventArgs(const QString& oldSceneName, unsigned int oldSceneIdx, const QString& newSceneName, unsigned int newSceneIdx)
     : oldSceneName(oldSceneName)

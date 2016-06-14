@@ -98,15 +98,72 @@ QVector<QString> DatasetManager::readLabelFile(const QString& filePath) {
         }
     }
 
+    file.close();
+
     return ret;
+}
+
+CameraManager DatasetManager::readCameraFile(const QString& filePath) {
+    QFile file(filePath);
+    if(!file.open(QFile::ReadOnly | QFile::Text)) {
+        std::cerr << "Error: Unable to open file stream!" << std::endl;
+        return CameraManager();
+    }
+
+    QTextStream in(&file);
+    QString line;
+
+    cv::Vec2f depthPrincipalPoint;
+    cv::Vec2f depthFocalLength;
+    cv::Vec2f rgbPrincipalPoint;
+    cv::Vec2f rgbFocalLength;
+    cv::Matx33f rotation;
+    cv::Vec3f translation;
+    CameraManager::MapMode mapMode = CameraManager::MapMode::MAPPED_DEPTH_TO_RGB;
+
+    // TODO: implement actual parsing
+    in.readLineInto(&line);
+
+    if(line.startsWith("%% Color")) { // NYU V1
+        depthPrincipalPoint = cv::Vec2f(3.2442516903961865e+02, 2.3584766381177013e+02);
+        depthFocalLength = cv::Vec2f(5.7616540758591043e+02, 5.7375619782082447e+02);
+        rgbPrincipalPoint = cv::Vec2f(3.2850951551345941e+02, 2.5282555217253503e+02);
+        rgbFocalLength = cv::Vec2f(5.1930334103339817e+02, 5.1816401430246583e+02);
+        rotation = cv::Matx33f(9.9998579449446667e-01, 3.4203777687649762e-03, -4.0880099301915437e-03,
+                               -3.4291385577729263e-03, 9.9999183503355726e-01, -2.1379604698021303e-03,
+                               4.0806639192662465e-03, 2.1519484514690057e-03,  9.9998935859330040e-01);
+        translation = cv::Vec3f(2.2142187053089738e-02, -1.4391632009665779e-04, -7.9356552371601212e-03);
+    }
+    else if(line.startsWith("% Calibrated using the")) { // NYU V2
+        depthPrincipalPoint = cv::Vec2f(3.1304475870804731e+02, 2.3844389626620386e+02);
+        depthFocalLength = cv::Vec2f(5.8262448167737955e+02, 5.8269103270988637e+02);
+        rgbPrincipalPoint = cv::Vec2f(3.2558244941119034e+02, 2.5373616633400465e+02);
+        rgbFocalLength = cv::Vec2f(5.1885790117450188e+02, 5.1946961112127485e+02);
+        rotation = cv::Matx33f(9.9997798940829263e-01, 5.0518419386157446e-03, 4.3011152014118693e-03,
+                               -5.0359919480810989e-03, 9.9998051861143999e-01, -3.6879781309514218e-03,
+                               -4.3196624923060242e-03, 3.6662365748484798e-03, 9.9998394948385538e-01);
+        translation = cv::Vec3f(2.5031875059141302e-02, -2.9342312935846411e-04, 6.6238747008330102e-04);
+    }
+    else {
+        std::cerr << "Error: Unrecognized camera parameter file!" << std::endl;
+    }
+
+    file.close();
+
+    return CameraManager(depthPrincipalPoint, depthFocalLength, rgbPrincipalPoint, rgbFocalLength, rotation, translation, mapMode);
 }
 
 const QVector<QString>& DatasetManager::getLabelNames() const {
     return mLabelNames;
 }
 
+const CameraManager& DatasetManager::getCameraParams() const {
+    return mCameraParams;
+}
+
 void DatasetManager::init() {
     mLabelNames = readLabelFile(mDatasetDir.filePath("labelNames.txt"));
+    mCameraParams = readCameraFile(mDatasetDir.filePath("Camera-Parameter.txt"));
 }
 
 DatasetManager::DatasetException::DatasetException(const std::string& what_arg)

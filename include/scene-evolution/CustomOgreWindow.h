@@ -13,6 +13,7 @@ public:
 
 protected:
     void createCamera() override;
+    void keyPressEvent(QKeyEvent* e) override;
 };
 
 #endif // CUSTOMOGREWINDOW_H

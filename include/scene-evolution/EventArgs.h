@@ -3,9 +3,7 @@
 
 #include <QString>
 
-class SceneChangingEventArgs
-{
-public:
+struct SceneChangingEventArgs {
     SceneChangingEventArgs(const QString& oldSceneName, unsigned int oldSceneIdx, const QString& newSceneName, unsigned int newSceneIdx);
 
     QString oldSceneName;
@@ -17,9 +15,7 @@ public:
     bool abort;
 };
 
-class SceneChangedEventArgs
-{
-public:
+struct SceneChangedEventArgs {
     SceneChangedEventArgs(const QString& sceneName, unsigned int sceneIdx);
 
     QString sceneName;

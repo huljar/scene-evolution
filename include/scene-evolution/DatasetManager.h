@@ -3,6 +3,7 @@
 
 #include <scene-evolution/Cache.h>
 #include <scene-evolution/Scene.h>
+#include <scene-evolution/CameraManager.h>
 
 #include <opencv2/core/core.hpp>
 
@@ -45,12 +46,15 @@ public:
     void setDatasetDir(const QString& datasetDirPath);
 
     const QVector<QString>& getLabelNames() const;
+    const CameraManager& getCameraParams() const;
 
 protected:
     QVector<QString> readLabelFile(const QString& filePath);
+    CameraManager readCameraFile(const QString& filePath);
 
     QDir mDatasetDir;
     QVector<QString> mLabelNames;
+    CameraManager mCameraParams;
 
     Cache<QString, std::array<cv::Mat, 3>> mSceneCache;
 

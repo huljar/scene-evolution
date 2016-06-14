@@ -25,6 +25,8 @@ public:
     void changeScene(const Scene& scene, unsigned int sceneIdx);
 
 public slots:
+    void onOgreInitialized();
+
     void onActionChangeNYUDirectoryTriggered(bool checked);
     void onActionExitTriggered(bool checked);
 
@@ -42,6 +44,7 @@ signals:
 private:
     DatasetManager* requestNYUDir();
     void setUpConnections();
+    QString buildWindowTitle();
 
     Ui::MainWindow* ui;
 
@@ -53,7 +56,6 @@ private:
 
     RGBDScene* mRGBDScene;
     Ogre::SceneNode* mRGBDSceneNode;
-    CameraManager* mCameraManager;
 };
 
 #endif // MAINWINDOW_H
