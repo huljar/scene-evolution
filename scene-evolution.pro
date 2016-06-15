@@ -24,7 +24,9 @@ SOURCES += src/main.cpp\
         src/CameraManager.cpp \
         src/DatasetManager.cpp \
         src/Scene.cpp \
-        src/EventArgs.cpp
+        src/EventArgs.cpp \
+    src/OrientedBoundingBox.cpp \
+    src/BoundingBoxManager.cpp
 
 HEADERS  += include/scene-evolution/MainWindow.h \
         include/scene-evolution/QtOgreWindow.h \
@@ -36,7 +38,9 @@ HEADERS  += include/scene-evolution/MainWindow.h \
         include/scene-evolution/EventArgs.h \
         include/scene-evolution/Cache.h \
         include/scene-evolution/util.h \
-        include/scene-evolution/interop.h
+        include/scene-evolution/interop.h \
+    include/scene-evolution/OrientedBoundingBox.h \
+    include/scene-evolution/BoundingBoxManager.h
 
 FORMS    += forms/MainWindow.ui
 

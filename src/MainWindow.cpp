@@ -11,6 +11,7 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
     , mOgreWindow(new CustomOgreWindow)
     , mDatasetManager(nullptr)
+    , mBoundingBoxManager(nullptr)
     , mCurrentSceneIdx(0)
     , mRGBDScene(nullptr)
     , mRGBDSceneNode(nullptr)
@@ -32,20 +33,58 @@ MainWindow::MainWindow(QWidget *parent)
     ui->widgetOgreContainer->layout()->addWidget(ogreContainer);
 
     // Do not load the first scene yet, this is done when OGRE is fully initialized
+
+    // Fill bounding box object type selection menu
+    ui->comboBoxBoundingBoxType->addItems(Constants::SupportedObjects);
 }
 
 MainWindow::~MainWindow() {
+    delete mBoundingBoxManager;
+    delete mDatasetManager;
+    delete mOgreWindow;
     delete ui;
 }
 
-void MainWindow::changeScene(const Scene& scene, unsigned int sceneIdx) {
+bool MainWindow::changeDataset(DatasetManager* dataset) {
+    if(!dataset)
+        throw std::invalid_argument("Cannot change dataset to a null pointer");
+
+    // Emit pre dataset change signal
+    DatasetChangingEventArgs preArgs(mDatasetManager->getDatasetDir().absolutePath(), dataset->getDatasetDir().absolutePath());
+    emit datasetChanging(preArgs);
+
+    // Check if the change shall be aborted
+    if(preArgs.abort) {
+        delete dataset;
+        return false;
+    }
+
+    // Load first scene in dataset
+    bool result = changeScene(dataset->loadScene(dataset->getAllSceneNames().front()), 0);
+    if(!result)
+        return false;
+
+    // Perform the dataset change
+    if(mDatasetManager != dataset) {
+        delete mDatasetManager;
+        mDatasetManager = dataset;
+    }
+
+    // Emit post dataset change signal
+    DatasetChangedEventArgs postArgs(mDatasetManager->getDatasetDir().absolutePath());
+    emit datasetChanged(postArgs);
+
+    return true;
+}
+
+bool MainWindow::changeScene(const Scene& scene, unsigned int sceneIdx) {
     // Emit pre scene change signal
     SceneChangingEventArgs preArgs(mCurrentScene.getFileName(), mCurrentSceneIdx, scene.getFileName(), sceneIdx);
     emit sceneChanging(preArgs);
 
     // Check if the scene change was cancelled by a slot
     if(preArgs.abort)
-        return;
+        return false;
 
     // Perform the scene change
     mCurrentScene = scene;
@@ -64,11 +103,13 @@ void MainWindow::changeScene(const Scene& scene, unsigned int sceneIdx) {
     // Emit post scene change signal
     SceneChangedEventArgs postArgs(scene.getFileName(), sceneIdx);
     emit sceneChanged(postArgs);
+
+    return true;
 }
 
 void MainWindow::onOgreInitialized() {
-    // Load first scene
-    changeScene(mDatasetManager->loadScene(mDatasetManager->getAllSceneNames().front()), 0);
+    // Emit dataset "change" for the initially loaded dataset to trigger necessary setup code
+    changeDataset(mDatasetManager);
 }
 
 void MainWindow::onActionChangeNYUDirectoryTriggered(bool checked) {
@@ -76,18 +117,18 @@ void MainWindow::onActionChangeNYUDirectoryTriggered(bool checked) {
 
     DatasetManager* tmp = requestNYUDir();
     if(tmp) {
-        delete mDatasetManager;
-        mDatasetManager = tmp;
-
-        // Load first scene in dataset
-        changeScene(mDatasetManager->loadScene(mDatasetManager->getAllSceneNames().front()), 0);
+        changeDataset(tmp);
     }
 }
 
 void MainWindow::onActionExitTriggered(bool checked) {
     Q_UNUSED(checked);
 
-    QApplication::quit();
+    WindowClosingEventArgs args;
+    emit windowClosing(args);
+
+    if(!args.abort)
+        QApplication::quit();
 }
 
 void MainWindow::onPushButtonPrevSceneClicked(bool checked) {
@@ -118,6 +159,45 @@ void MainWindow::onPushButtonGoToSceneClicked(bool checked) {
         changeScene(mDatasetManager->loadScene(sceneNames[newIdx]), newIdx);
 }
 
+void MainWindow::onPushButtonStartNewBoxClicked(bool checked) {
+    Q_UNUSED(checked);
+
+    // Enable/disable controls
+    QList<QDoubleSpinBox*> spinboxes = ui->groupBoxBoundingBoxes->findChildren<QDoubleSpinBox*>();
+    QList<QComboBox*> comboboxes = ui->groupBoxBoundingBoxes->findChildren<QComboBox*>();
+
+    for(QList<QDoubleSpinBox*>::iterator it = spinboxes.begin(); it != spinboxes.end(); ++it)
+        (*it)->setEnabled(true);
+    for(QList<QComboBox*>::iterator it = comboboxes.begin(); it != comboboxes.end(); ++it)
+        (*it)->setEnabled(true);
+    ui->pushButtonFinalizeBox->setEnabled(true);
+    ui->pushButtonStartNewBox->setEnabled(false);
+
+    // Check if bounding box manager exists
+    if(!mBoundingBoxManager) {
+        mBoundingBoxManager = new BoundingBoxManager(mOgreWindow->getOgreSceneManager(), mCurrentSceneIdx);
+        setUpBBMConnections();
+    }
+
+    // Create new bounding box
+}
+
+void MainWindow::onDatasetChanging(DatasetChangingEventArgs& e) {
+    Q_UNUSED(e);
+}
+
+void MainWindow::onDatasetChanged(DatasetChangedEventArgs& e) {
+    Q_UNUSED(e);
+
+    unsigned int sceneCount = mDatasetManager->getSceneCount();
+
+    // Set max value of scene selection spin box
+    ui->spinBoxGoToScene->setMaximum(sceneCount - 1);
+
+    // Set total scenes label text
+    ui->labelTotalScenes->setText(QString::number(sceneCount) + Strings::TotalScenesLabelBase);
+}
+
 void MainWindow::onSceneChanging(SceneChangingEventArgs& e) {
     Q_UNUSED(e);
 }
@@ -133,9 +213,18 @@ void MainWindow::onSceneChanged(SceneChangedEventArgs& e) {
     ui->pushButtonPrevScene->setEnabled(e.sceneIdx > 0);
     ui->pushButtonNextScene->setEnabled(e.sceneIdx < sceneCount - 1);
 
-    // Set scene number in spin box (and max value in case the dataset changed)
-    ui->spinBoxGoToScene->setMaximum(sceneCount - 1);
+    // Set scene number in spin box
     ui->spinBoxGoToScene->setValue(e.sceneIdx);
+}
+
+void MainWindow::closeEvent(QCloseEvent* e) {
+    WindowClosingEventArgs args;
+    emit windowClosing(args);
+
+    if(args.abort)
+        e->ignore();
+    else
+        e->accept();
 }
 
 DatasetManager* MainWindow::requestNYUDir() {
@@ -170,8 +259,20 @@ void MainWindow::setUpConnections() {
     connect(ui->pushButtonNextScene, SIGNAL(clicked(bool)), this, SLOT(onPushButtonNextSceneClicked(bool)));
     connect(ui->pushButtonGoToScene, SIGNAL(clicked(bool)), this, SLOT(onPushButtonGoToSceneClicked(bool)));
 
+    connect(ui->pushButtonStartNewBox, SIGNAL(clicked(bool)), this, SLOT(onPushButtonStartNewBoxClicked(bool)));
+
+    connect(this, SIGNAL(datasetChanging(DatasetChangingEventArgs&)), this, SLOT(onDatasetChanging(DatasetChangingEventArgs&)));
+    connect(this, SIGNAL(datasetChanged(DatasetChangedEventArgs&)), this, SLOT(onDatasetChanged(DatasetChangedEventArgs&)));
+
     connect(this, SIGNAL(sceneChanging(SceneChangingEventArgs&)), this, SLOT(onSceneChanging(SceneChangingEventArgs&)));
     connect(this, SIGNAL(sceneChanged(SceneChangedEventArgs&)), this, SLOT(onSceneChanged(SceneChangedEventArgs&)));
+}
+
+void MainWindow::setUpBBMConnections() {
+    connect(this, SIGNAL(sceneChanging(SceneChangingEventArgs&)), mBoundingBoxManager, SLOT(onSceneChanging(SceneChangingEventArgs&)));
+    connect(this, SIGNAL(sceneChanged(SceneChangedEventArgs&)), mBoundingBoxManager, SLOT(onSceneChanged(SceneChangedEventArgs&)));
+
+    connect(this, SIGNAL(windowClosing(WindowClosingEventArgs&)), mBoundingBoxManager, SLOT(onMainWindowClosing(WindowClosingEventArgs&)));
 }
 
 QString MainWindow::buildWindowTitle() {

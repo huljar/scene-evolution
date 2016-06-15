@@ -3,6 +3,21 @@
 
 #include <QString>
 
+struct DatasetChangingEventArgs {
+    DatasetChangingEventArgs(const QString& oldDatasetPath, const QString& newDatasetPath);
+
+    QString oldDatasetPath;
+    QString newDatasetPath;
+
+    bool abort;
+};
+
+struct DatasetChangedEventArgs {
+    DatasetChangedEventArgs(const QString& datasetPath);
+
+    QString datasetPath;
+};
+
 struct SceneChangingEventArgs {
     SceneChangingEventArgs(const QString& oldSceneName, unsigned int oldSceneIdx, const QString& newSceneName, unsigned int newSceneIdx);
 
@@ -20,6 +35,12 @@ struct SceneChangedEventArgs {
 
     QString sceneName;
     unsigned int sceneIdx;
+};
+
+struct WindowClosingEventArgs {
+    WindowClosingEventArgs();
+
+    bool abort;
 };
 
 #endif // EVENTARGS_H

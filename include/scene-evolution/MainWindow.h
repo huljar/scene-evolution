@@ -7,6 +7,7 @@
 #include <scene-evolution/RGBDScene.h>
 #include <scene-evolution/CameraManager.h>
 #include <scene-evolution/EventArgs.h>
+#include <scene-evolution/BoundingBoxManager.h>
 
 #include <QMainWindow>
 
@@ -22,7 +23,8 @@ public:
     explicit MainWindow(QWidget* parent = 0);
     ~MainWindow();
 
-    void changeScene(const Scene& scene, unsigned int sceneIdx);
+    bool changeDataset(DatasetManager* dataset);
+    bool changeScene(const Scene& scene, unsigned int sceneIdx);
 
 public slots:
     void onOgreInitialized();
@@ -34,22 +36,37 @@ public slots:
     void onPushButtonNextSceneClicked(bool checked);
     void onPushButtonGoToSceneClicked(bool checked);
 
+    void onPushButtonStartNewBoxClicked(bool checked);
+
+    void onDatasetChanging(DatasetChangingEventArgs& e);
+    void onDatasetChanged(DatasetChangedEventArgs& e);
+
     void onSceneChanging(SceneChangingEventArgs& e);
     void onSceneChanged(SceneChangedEventArgs& e);
 
 signals:
+    void datasetChanging(DatasetChangingEventArgs& e);
+    void datasetChanged(DatasetChangedEventArgs& e);
+
     void sceneChanging(SceneChangingEventArgs& e);
     void sceneChanged(SceneChangedEventArgs& e);
+
+    void windowClosing(WindowClosingEventArgs& e);
+
+protected:
+    void closeEvent(QCloseEvent* e);
 
 private:
     DatasetManager* requestNYUDir();
     void setUpConnections();
+    void setUpBBMConnections();
     QString buildWindowTitle();
 
     Ui::MainWindow* ui;
 
     CustomOgreWindow* mOgreWindow;
     DatasetManager* mDatasetManager;
+    BoundingBoxManager* mBoundingBoxManager;
 
     Scene mCurrentScene;
     unsigned int mCurrentSceneIdx;
