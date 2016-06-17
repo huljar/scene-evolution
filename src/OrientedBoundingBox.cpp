@@ -6,7 +6,7 @@
 
 #include <iostream>
 
-OrientedBoundingBox::OrientedBoundingBox(Ogre::SceneManager* sceneMgr, const Ogre::Vector3& center, const Ogre::Vector3& extents, const Ogre::Matrix3& orientation)
+OrientedBoundingBox::OrientedBoundingBox(Ogre::SceneManager* sceneMgr, const Ogre::Vector3& center, const Ogre::Vector3& extents, const Ogre::Quaternion& orientation)
     : mSceneMgr(sceneMgr)
     , mEntity(nullptr)
     , mSceneNode(nullptr)
@@ -20,7 +20,7 @@ OrientedBoundingBox::OrientedBoundingBox(Ogre::SceneManager* sceneMgr, const Ogr
         std::cout << "Creating the mesh" << std::endl;
 
         Ogre::ManualObject* m = sceneMgr->createManualObject();
-        m->begin("BaseWhiteNoLighting", Ogre::RenderOperation::OT_LINE_LIST);
+        m->begin(Strings::StandardMaterialName, Ogre::RenderOperation::OT_LINE_LIST);
 
         m->position(0.5, 0.5, 0.5);
         m->position(0.5, 0.5, -0.5);
@@ -182,6 +182,14 @@ void OrientedBoundingBox::setOrientation(const Ogre::Quaternion& orientation) {
 void OrientedBoundingBox::setOrientation(Ogre::Real w, Ogre::Real x, Ogre::Real y, Ogre::Real z) {
     mOrientation = Ogre::Quaternion(w, x, y, z);
     updateSceneNode();
+}
+
+OrientedBoundingBox::ObjectType OrientedBoundingBox::getObjectType() const {
+    return mObjectType;
+}
+
+void OrientedBoundingBox::setObjectType(ObjectType objectType) {
+    mObjectType = objectType;
 }
 
 Ogre::Entity* OrientedBoundingBox::getEntity() const {

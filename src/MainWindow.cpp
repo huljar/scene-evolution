@@ -34,8 +34,19 @@ MainWindow::MainWindow(QWidget *parent)
 
     // Do not load the first scene yet, this is done when OGRE is fully initialized
 
-    // Fill bounding box object type selection menu
-    ui->comboBoxBoundingBoxType->addItems(Constants::SupportedObjects);
+    // Set bounding box initial values in UI
+    ui->doubleSpinBoxBoundingBoxCenterX->setValue(Constants::InitialOBBCenter.x);
+    ui->doubleSpinBoxBoundingBoxCenterY->setValue(Constants::InitialOBBCenter.y);
+    ui->doubleSpinBoxBoundingBoxCenterZ->setValue(Constants::InitialOBBCenter.z);
+    ui->doubleSpinBoxBoundingBoxExtentX->setValue(Constants::InitialOBBExtents.x);
+    ui->doubleSpinBoxBoundingBoxExtentY->setValue(Constants::InitialOBBExtents.y);
+    ui->doubleSpinBoxBoundingBoxExtentZ->setValue(Constants::InitialOBBExtents.z);
+    ui->doubleSpinBoxBoundingBoxAngleX->setValue(Constants::InitialOBBEulerAngles.x);
+    ui->doubleSpinBoxBoundingBoxAngleY->setValue(Constants::InitialOBBEulerAngles.y);
+    ui->doubleSpinBoxBoundingBoxAngleZ->setValue(Constants::InitialOBBEulerAngles.z);
+
+    ui->comboBoxBoundingBoxType->addItems(Constants::OBBSupportedObjects);
+    ui->comboBoxBoundingBoxType->setCurrentIndex(Constants::InitialOBBObjectIndex);
 }
 
 MainWindow::~MainWindow() {
@@ -163,23 +174,35 @@ void MainWindow::onPushButtonStartNewBoxClicked(bool checked) {
     Q_UNUSED(checked);
 
     // Enable/disable controls
-    QList<QDoubleSpinBox*> spinboxes = ui->groupBoxBoundingBoxes->findChildren<QDoubleSpinBox*>();
-    QList<QComboBox*> comboboxes = ui->groupBoxBoundingBoxes->findChildren<QComboBox*>();
-
-    for(QList<QDoubleSpinBox*>::iterator it = spinboxes.begin(); it != spinboxes.end(); ++it)
-        (*it)->setEnabled(true);
-    for(QList<QComboBox*>::iterator it = comboboxes.begin(); it != comboboxes.end(); ++it)
-        (*it)->setEnabled(true);
-    ui->pushButtonFinalizeBox->setEnabled(true);
-    ui->pushButtonStartNewBox->setEnabled(false);
+    setBoundingBoxControlStates(true);
 
     // Check if bounding box manager exists
     if(!mBoundingBoxManager) {
         mBoundingBoxManager = new BoundingBoxManager(mOgreWindow->getOgreSceneManager(), mCurrentSceneIdx);
         setUpBBMConnections();
-    }
 
-    // Create new bounding box
+        // "Emit" button click again so the bounding box manager sees it
+        mBoundingBoxManager->onPushButtonStartNewBoxClicked(false);
+    }
+}
+
+void MainWindow::onPushButtonFinalizeBoxClicked(bool checked) {
+    Q_UNUSED(checked);
+
+    // Enable/disable controls
+    setBoundingBoxControlStates(false);
+
+    // Restore defaults
+    ui->doubleSpinBoxBoundingBoxCenterX->setValue(Constants::InitialOBBCenter.x);
+    ui->doubleSpinBoxBoundingBoxCenterY->setValue(Constants::InitialOBBCenter.y);
+    ui->doubleSpinBoxBoundingBoxCenterZ->setValue(Constants::InitialOBBCenter.z);
+    ui->doubleSpinBoxBoundingBoxExtentX->setValue(Constants::InitialOBBExtents.x);
+    ui->doubleSpinBoxBoundingBoxExtentY->setValue(Constants::InitialOBBExtents.y);
+    ui->doubleSpinBoxBoundingBoxExtentZ->setValue(Constants::InitialOBBExtents.z);
+    ui->doubleSpinBoxBoundingBoxAngleX->setValue(Constants::InitialOBBEulerAngles.x);
+    ui->doubleSpinBoxBoundingBoxAngleY->setValue(Constants::InitialOBBEulerAngles.y);
+    ui->doubleSpinBoxBoundingBoxAngleZ->setValue(Constants::InitialOBBEulerAngles.z);
+    ui->comboBoxBoundingBoxType->setCurrentIndex(Constants::InitialOBBObjectIndex);
 }
 
 void MainWindow::onDatasetChanging(DatasetChangingEventArgs& e) {
@@ -260,6 +283,7 @@ void MainWindow::setUpConnections() {
     connect(ui->pushButtonGoToScene, SIGNAL(clicked(bool)), this, SLOT(onPushButtonGoToSceneClicked(bool)));
 
     connect(ui->pushButtonStartNewBox, SIGNAL(clicked(bool)), this, SLOT(onPushButtonStartNewBoxClicked(bool)));
+    connect(ui->pushButtonFinalizeBox, SIGNAL(clicked(bool)), this, SLOT(onPushButtonFinalizeBoxClicked(bool)));
 
     connect(this, SIGNAL(datasetChanging(DatasetChangingEventArgs&)), this, SLOT(onDatasetChanging(DatasetChangingEventArgs&)));
     connect(this, SIGNAL(datasetChanged(DatasetChangedEventArgs&)), this, SLOT(onDatasetChanged(DatasetChangedEventArgs&)));
@@ -269,10 +293,49 @@ void MainWindow::setUpConnections() {
 }
 
 void MainWindow::setUpBBMConnections() {
+    connect(this, SIGNAL(datasetChanging(DatasetChangingEventArgs&)), mBoundingBoxManager, SLOT(onDatasetChanging(DatasetChangingEventArgs&)));
+    connect(this, SIGNAL(datasetChanged(DatasetChangedEventArgs&)), mBoundingBoxManager, SLOT(onDatasetChanged(DatasetChangedEventArgs&)));
+
     connect(this, SIGNAL(sceneChanging(SceneChangingEventArgs&)), mBoundingBoxManager, SLOT(onSceneChanging(SceneChangingEventArgs&)));
     connect(this, SIGNAL(sceneChanged(SceneChangedEventArgs&)), mBoundingBoxManager, SLOT(onSceneChanged(SceneChangedEventArgs&)));
 
     connect(this, SIGNAL(windowClosing(WindowClosingEventArgs&)), mBoundingBoxManager, SLOT(onMainWindowClosing(WindowClosingEventArgs&)));
+
+    connect(ui->pushButtonStartNewBox, SIGNAL(clicked(bool)), mBoundingBoxManager, SLOT(onPushButtonStartNewBoxClicked(bool)));
+
+    connect(ui->doubleSpinBoxBoundingBoxCenterX, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [this](double d) {
+        mBoundingBoxManager->onBoundingBoxCenterValueChanged(d, ui->doubleSpinBoxBoundingBoxCenterY->value(), ui->doubleSpinBoxBoundingBoxCenterZ->value());
+    });
+    connect(ui->doubleSpinBoxBoundingBoxCenterY, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [this](double d) {
+        mBoundingBoxManager->onBoundingBoxCenterValueChanged(ui->doubleSpinBoxBoundingBoxCenterX->value(), d, ui->doubleSpinBoxBoundingBoxCenterZ->value());
+    });
+    connect(ui->doubleSpinBoxBoundingBoxCenterZ, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [this](double d) {
+        mBoundingBoxManager->onBoundingBoxCenterValueChanged(ui->doubleSpinBoxBoundingBoxCenterX->value(), ui->doubleSpinBoxBoundingBoxCenterY->value(), d);
+    });
+
+    connect(ui->doubleSpinBoxBoundingBoxExtentX, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [this](double d) {
+        mBoundingBoxManager->onBoundingBoxExtentsValueChanged(d, ui->doubleSpinBoxBoundingBoxExtentY->value(), ui->doubleSpinBoxBoundingBoxExtentZ->value());
+    });
+    connect(ui->doubleSpinBoxBoundingBoxExtentY, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [this](double d) {
+        mBoundingBoxManager->onBoundingBoxExtentsValueChanged(ui->doubleSpinBoxBoundingBoxExtentX->value(), d, ui->doubleSpinBoxBoundingBoxExtentZ->value());
+    });
+    connect(ui->doubleSpinBoxBoundingBoxExtentZ, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [this](double d) {
+        mBoundingBoxManager->onBoundingBoxExtentsValueChanged(ui->doubleSpinBoxBoundingBoxExtentX->value(), ui->doubleSpinBoxBoundingBoxExtentY->value(), d);
+    });
+
+    connect(ui->doubleSpinBoxBoundingBoxAngleX, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [this](double d) {
+        mBoundingBoxManager->onBoundingBoxEulerAnglesValueChanged(d, ui->doubleSpinBoxBoundingBoxAngleY->value(), ui->doubleSpinBoxBoundingBoxAngleZ->value());
+    });
+    connect(ui->doubleSpinBoxBoundingBoxAngleY, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [this](double d) {
+        mBoundingBoxManager->onBoundingBoxEulerAnglesValueChanged(ui->doubleSpinBoxBoundingBoxAngleX->value(), d, ui->doubleSpinBoxBoundingBoxAngleZ->value());
+    });
+    connect(ui->doubleSpinBoxBoundingBoxAngleZ, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [this](double d) {
+        mBoundingBoxManager->onBoundingBoxEulerAnglesValueChanged(ui->doubleSpinBoxBoundingBoxAngleX->value(), ui->doubleSpinBoxBoundingBoxAngleY->value(), d);
+    });
+
+    connect(ui->comboBoxBoundingBoxType, SIGNAL(currentIndexChanged(QString)), mBoundingBoxManager, SLOT(onComboBoxBoundingBoxTypeCurrentIndexChanged(QString)));
+
+    connect(ui->pushButtonFinalizeBox, SIGNAL(clicked(bool)), mBoundingBoxManager, SLOT(onPushButtonFinalizeBoxClicked(bool)));
 }
 
 QString MainWindow::buildWindowTitle() {
@@ -280,4 +343,16 @@ QString MainWindow::buildWindowTitle() {
     if(!mCurrentScene.getFileName().isEmpty())
         title += " - " + mCurrentScene.getFileName();
     return title;
+}
+
+void MainWindow::setBoundingBoxControlStates(bool enable) {
+    QList<QDoubleSpinBox*> spinboxes = ui->groupBoxBoundingBoxes->findChildren<QDoubleSpinBox*>();
+    QList<QComboBox*> comboboxes = ui->groupBoxBoundingBoxes->findChildren<QComboBox*>();
+
+    for(QList<QDoubleSpinBox*>::iterator it = spinboxes.begin(); it != spinboxes.end(); ++it)
+        (*it)->setEnabled(enable);
+    for(QList<QComboBox*>::iterator it = comboboxes.begin(); it != comboboxes.end(); ++it)
+        (*it)->setEnabled(enable);
+    ui->pushButtonFinalizeBox->setEnabled(enable);
+    ui->pushButtonStartNewBox->setEnabled(!enable);
 }

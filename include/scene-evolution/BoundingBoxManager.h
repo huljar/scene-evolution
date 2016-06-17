@@ -10,7 +10,7 @@
 #include <QSet>
 
 #include <OGRE/OgreVector3.h>
-#include <OGRE/OgreMatrix3.h>
+#include <OGRE/OgreQuaternion.h>
 #include <OGRE/OgreSceneManager.h>
 
 class BoundingBoxManager : public QObject
@@ -23,20 +23,34 @@ public:
 
     BoundingBoxManager(Ogre::SceneManager* sceneMgr, unsigned int currentSceneIdx, const QString& initFilePath = QString());
 
-    OrientedBoundingBox* createBox(const Ogre::Vector3& center = Ogre::Vector3(0, 0, -200),
-                                   const Ogre::Vector3& extents = Ogre::Vector3(200, 200, 200),
-                                   const Ogre::Matrix3& orientation = Ogre::Matrix3::IDENTITY);
+    OrientedBoundingBox* createBox(const Ogre::Vector3& center,
+                                   const Ogre::Vector3& extents,
+                                   const Ogre::Quaternion& orientation);
     void destroyBox(OrientedBoundingBox* box);
     void destroyBox(OrientedBoundingBox* box, unsigned int sceneIdx);
 
 public slots:
+    void onDatasetChanging(DatasetChangingEventArgs& e);
+    void onDatasetChanged(DatasetChangedEventArgs& e);
+
     void onSceneChanging(SceneChangingEventArgs& e);
     void onSceneChanged(SceneChangedEventArgs& e);
 
     void onMainWindowClosing(WindowClosingEventArgs& e);
 
+    void onPushButtonStartNewBoxClicked(bool checked);
+
+    void onBoundingBoxCenterValueChanged(double x, double y, double z);
+    void onBoundingBoxExtentsValueChanged(double x, double y, double z);
+    void onBoundingBoxEulerAnglesValueChanged(double x, double y, double z);
+
+    void onComboBoxBoundingBoxTypeCurrentIndexChanged(const QString& text);
+
+    void onPushButtonFinalizeBoxClicked(bool checked);
+
 private:
     unsigned int mCurrentSceneIdx;
+    OrientedBoundingBox* mCurrentOBB;
 
     SceneBoxMap mSceneBoxMap;
 

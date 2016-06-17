@@ -37,6 +37,7 @@ public slots:
     void onPushButtonGoToSceneClicked(bool checked);
 
     void onPushButtonStartNewBoxClicked(bool checked);
+    void onPushButtonFinalizeBoxClicked(bool checked);
 
     void onDatasetChanging(DatasetChangingEventArgs& e);
     void onDatasetChanged(DatasetChangedEventArgs& e);
@@ -61,6 +62,7 @@ private:
     void setUpConnections();
     void setUpBBMConnections();
     QString buildWindowTitle();
+    void setBoundingBoxControlStates(bool enable);
 
     Ui::MainWindow* ui;
 
