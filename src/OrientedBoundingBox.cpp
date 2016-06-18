@@ -8,57 +8,52 @@
 
 OrientedBoundingBox::OrientedBoundingBox(Ogre::SceneManager* sceneMgr, const Ogre::Vector3& center, const Ogre::Vector3& extents, const Ogre::Quaternion& orientation)
     : mSceneMgr(sceneMgr)
-    , mEntity(nullptr)
+    , mEntityActive(nullptr)
+    , mEntityInactive(nullptr)
     , mSceneNode(nullptr)
     , mCenter(center)
     , mExtents(extents)
-    , mOrientation(orientation)
+    , mOrientation(orientation) // TODO: init object type, also in other constructors/assignment
+    , mActive(true)
 {
-    // Check if the mesh already exists, if not, create it
-    Ogre::MeshPtr mesh = Ogre::MeshManager::getSingletonPtr()->getByName(Strings::BoundingBoxMeshName);
-    if(mesh.isNull()) {
+    // Check if the meshes already exists, if not, create them
+    Ogre::MeshPtr meshActive = Ogre::MeshManager::getSingletonPtr()->getByName(Strings::BoundingBoxMeshNameActive);
+    if(meshActive.isNull()) {
         std::cout << "Creating the mesh" << std::endl;
 
         Ogre::ManualObject* m = sceneMgr->createManualObject();
         m->begin(Strings::StandardMaterialName, Ogre::RenderOperation::OT_LINE_LIST);
-
-        m->position(0.5, 0.5, 0.5);
-        m->position(0.5, 0.5, -0.5);
-        m->position(0.5, -0.5, 0.5);
-        m->position(0.5, -0.5, -0.5);
-        m->position(-0.5, 0.5, 0.5);
-        m->position(-0.5, 0.5, -0.5);
-        m->position(-0.5, -0.5, 0.5);
-        m->position(-0.5, -0.5, -0.5);
-
-        m->index(0); m->index(1);
-        m->index(1); m->index(3);
-        m->index(3); m->index(2);
-        m->index(2); m->index(0);
-
-        m->index(4); m->index(5);
-        m->index(5); m->index(7);
-        m->index(7); m->index(6);
-        m->index(6); m->index(4);
-
-        m->index(0); m->index(4);
-        m->index(1); m->index(5);
-        m->index(2); m->index(6);
-        m->index(3); m->index(7);
-
+        createVertices(m, Constants::BoundingBoxActiveColour);
+        createIndices(m);
         m->end();
-        mesh = m->convertToMesh(Strings::BoundingBoxMeshName);
+        meshActive = m->convertToMesh(Strings::BoundingBoxMeshNameActive);
     }
     else {
         std::cout << "Mesh already exists" << std::endl;
     }
 
-    // Create an entity from the mesh for this box
-    mEntity = mSceneMgr->createEntity(mesh);
+    Ogre::MeshPtr meshInactive = Ogre::MeshManager::getSingletonPtr()->getByName(Strings::BoundingBoxMeshNameInactive);
+    if(meshInactive.isNull()) {
+        std::cout << "Creating the mesh" << std::endl;
 
-    // Create the scene node and attach the entity
+        Ogre::ManualObject* m = sceneMgr->createManualObject();
+        m->begin(Strings::StandardMaterialName, Ogre::RenderOperation::OT_LINE_LIST);
+        createVertices(m, Constants::BoundingBoxInactiveColour);
+        createIndices(m);
+        m->end();
+        meshInactive = m->convertToMesh(Strings::BoundingBoxMeshNameInactive);
+    }
+    else {
+        std::cout << "Mesh already exists" << std::endl;
+    }
+
+    // Create entities from the meshes for this box
+    mEntityActive = mSceneMgr->createEntity(meshActive);
+    mEntityInactive = mSceneMgr->createEntity(meshInactive);
+
+    // Create the scene node and attach the active entity
     mSceneNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
-    mSceneNode->attachObject(mEntity);
+    mSceneNode->attachObject(mEntityActive);
 
     // Apply parameters to scene node
     updateSceneNode();
@@ -66,77 +61,76 @@ OrientedBoundingBox::OrientedBoundingBox(Ogre::SceneManager* sceneMgr, const Ogr
 
 OrientedBoundingBox::OrientedBoundingBox(const OrientedBoundingBox& other)
     : mSceneMgr(other.mSceneMgr)
-    , mEntity(nullptr)
+    , mEntityActive(nullptr)
+    , mEntityInactive(nullptr)
     , mSceneNode(nullptr)
     , mCenter(other.mCenter)
     , mExtents(other.mExtents)
     , mOrientation(other.mOrientation)
+    , mActive(other.mActive)
 {
-    // Create new entity and scene node
-    mEntity = mSceneMgr->createEntity(Strings::BoundingBoxMeshName);
+    // Create new entities and scene node
+    mEntityActive = mSceneMgr->createEntity(Strings::BoundingBoxMeshNameActive);
+    mEntityInactive = mSceneMgr->createEntity(Strings::BoundingBoxMeshNameInactive);
     mSceneNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
-    mSceneNode->attachObject(mEntity);
+    mSceneNode->attachObject(mActive ? mEntityActive : mEntityInactive);
     updateSceneNode();
 }
 
 OrientedBoundingBox::OrientedBoundingBox(OrientedBoundingBox&& other)
     : mSceneMgr(other.mSceneMgr)
-    , mEntity(other.mEntity)
+    , mEntityActive(other.mEntityActive)
+    , mEntityInactive(other.mEntityInactive)
     , mSceneNode(other.mSceneNode)
     , mCenter(other.mCenter)
     , mExtents(other.mExtents)
     , mOrientation(other.mOrientation)
+    , mActive(other.mActive)
 {
     // Make other resource-less
     other.mSceneMgr = nullptr;
-    other.mEntity = nullptr;
+    other.mEntityActive = nullptr;
+    other.mEntityInactive = nullptr;
     other.mSceneNode = nullptr;
 }
 
 OrientedBoundingBox::~OrientedBoundingBox() {
-    if(mSceneMgr) {
-        mEntity->detachFromParent();
-        mSceneMgr->destroyEntity(mEntity);
-        mSceneMgr->destroySceneNode(mSceneNode);
-    }
+    destroy();
 }
 
 OrientedBoundingBox& OrientedBoundingBox::operator=(const OrientedBoundingBox& other) {
-    if(mSceneMgr) {
-        mEntity->detachFromParent();
-        mSceneMgr->destroyEntity(mEntity);
-        mSceneMgr->destroySceneNode(mSceneNode);
-    }
+    destroy();
 
     mSceneMgr = other.mSceneMgr;
     mCenter = other.mCenter;
     mExtents = other.mExtents;
     mOrientation = other.mOrientation;
+    mActive = other.mActive;
 
-    mEntity = mSceneMgr->createEntity(Strings::BoundingBoxMeshName);
+    mEntityActive = mSceneMgr->createEntity(Strings::BoundingBoxMeshNameActive);
+    mEntityInactive = mSceneMgr->createEntity(Strings::BoundingBoxMeshNameInactive);
     mSceneNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
-    mSceneNode->attachObject(mEntity);
+    mSceneNode->attachObject(mActive ? mEntityActive : mEntityInactive);
     updateSceneNode();
 
     return *this;
 }
 
 OrientedBoundingBox& OrientedBoundingBox::operator=(OrientedBoundingBox&& other) {
-    if(mSceneMgr) {
-        mEntity->detachFromParent();
-        mSceneMgr->destroyEntity(mEntity);
-        mSceneMgr->destroySceneNode(mSceneNode);
-    }
+    destroy();
 
     mSceneMgr = other.mSceneMgr;
-    mEntity = other.mEntity;
+    mEntityActive = other.mEntityActive;
+    mEntityInactive = other.mEntityInactive;
     mSceneNode = other.mSceneNode;
     mCenter = other.mCenter;
     mExtents = other.mExtents;
     mOrientation = other.mOrientation;
+    mActive = other.mActive;
 
     other.mSceneMgr = nullptr;
-    other.mEntity = nullptr;
+    other.mEntityActive = nullptr;
+    other.mEntityInactive = nullptr;
     other.mSceneNode = nullptr;
 
     return *this;
@@ -192,12 +186,65 @@ void OrientedBoundingBox::setObjectType(ObjectType objectType) {
     mObjectType = objectType;
 }
 
-Ogre::Entity* OrientedBoundingBox::getEntity() const {
-    return mEntity;
-}
-
 Ogre::SceneNode* OrientedBoundingBox::getSceneNode() const {
     return mSceneNode;
+}
+
+bool OrientedBoundingBox::isActive() const {
+    return mActive;
+}
+
+void OrientedBoundingBox::setActive(bool active) {
+    mActive = active;
+
+    if(mActive) {
+        mEntityInactive->detachFromParent();
+        mSceneNode->attachObject(mEntityActive);
+    }
+    else {
+        mEntityActive->detachFromParent();
+        mSceneNode->attachObject(mEntityInactive);
+    }
+}
+
+void OrientedBoundingBox::destroy() {
+    if(mSceneMgr) {
+        mEntityActive->detachFromParent();
+        mEntityInactive->detachFromParent();
+        mSceneMgr->destroyEntity(mEntityActive);
+        mSceneMgr->destroyEntity(mEntityInactive);
+        mSceneMgr->destroySceneNode(mSceneNode);
+    }
+}
+
+void OrientedBoundingBox::createVertices(Ogre::ManualObject* m, const Ogre::ColourValue& c) {
+    // Create box corner vertices
+    m->position(0.5, 0.5, 0.5); m->colour(c);
+    m->position(0.5, 0.5, -0.5); m->colour(c);
+    m->position(0.5, -0.5, 0.5); m->colour(c);
+    m->position(0.5, -0.5, -0.5); m->colour(c);
+    m->position(-0.5, 0.5, 0.5); m->colour(c);
+    m->position(-0.5, 0.5, -0.5); m->colour(c);
+    m->position(-0.5, -0.5, 0.5); m->colour(c);
+    m->position(-0.5, -0.5, -0.5); m->colour(c);
+}
+
+void OrientedBoundingBox::createIndices(Ogre::ManualObject* m) {
+    // Connect vertices to cube wireframe
+    m->index(0); m->index(1);
+    m->index(1); m->index(3);
+    m->index(3); m->index(2);
+    m->index(2); m->index(0);
+
+    m->index(4); m->index(5);
+    m->index(5); m->index(7);
+    m->index(7); m->index(6);
+    m->index(6); m->index(4);
+
+    m->index(0); m->index(4);
+    m->index(1); m->index(5);
+    m->index(2); m->index(6);
+    m->index(3); m->index(7);
 }
 
 void OrientedBoundingBox::updateSceneNode() {

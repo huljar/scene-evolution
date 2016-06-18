@@ -5,6 +5,8 @@
 
 #include <QMessageBox>
 
+#include <iostream>
+
 BoundingBoxManager::BoundingBoxManager(Ogre::SceneManager* sceneMgr, unsigned int currentSceneIdx, const QString& initFilePath)
     : mCurrentSceneIdx(currentSceneIdx)
     , mCurrentOBB(nullptr)
@@ -65,7 +67,7 @@ void BoundingBoxManager::onMainWindowClosing(WindowClosingEventArgs& e) {
 void BoundingBoxManager::onPushButtonStartNewBoxClicked(bool checked) {
     Q_UNUSED(checked);
 
-    //std::cout << "New box" << std::endl;
+    std::cout << "New box" << std::endl;
     if(!mCurrentOBB) {
         Ogre::Matrix3 rot;
         rot.FromEulerAnglesXYZ(Ogre::Degree(Constants::InitialOBBEulerAngles.x), Ogre::Degree(Constants::InitialOBBEulerAngles.y), Ogre::Degree(Constants::InitialOBBEulerAngles.z));
@@ -74,21 +76,21 @@ void BoundingBoxManager::onPushButtonStartNewBoxClicked(bool checked) {
 }
 
 void BoundingBoxManager::onBoundingBoxCenterValueChanged(double x, double y, double z) {
-    //std::cout << "Center changed: (" << x << ", " << y << ", " << z << ")" << std::endl;
+    std::cout << "Center changed: (" << x << ", " << y << ", " << z << ")" << std::endl;
     if(mCurrentOBB) {
         mCurrentOBB->setCenter(x, y, z);
     }
 }
 
 void BoundingBoxManager::onBoundingBoxExtentsValueChanged(double x, double y, double z) {
-    //std::cout << "Extents changed: (" << x << ", " << y << ", " << z << ")" << std::endl;
+    std::cout << "Extents changed: (" << x << ", " << y << ", " << z << ")" << std::endl;
     if(mCurrentOBB) {
         mCurrentOBB->setExtents(x, y, z);
     }
 }
 
 void BoundingBoxManager::onBoundingBoxEulerAnglesValueChanged(double x, double y, double z) {
-    //std::cout << "Euler angles changed: (" << x << ", " << y << ", " << z << ")" << std::endl;
+    std::cout << "Euler angles changed: (" << x << ", " << y << ", " << z << ")" << std::endl;
     if(mCurrentOBB) {
         Ogre::Matrix3 rot;
         rot.FromEulerAnglesXYZ(Ogre::Degree(x), Ogre::Degree(y), Ogre::Degree(z));
@@ -97,7 +99,7 @@ void BoundingBoxManager::onBoundingBoxEulerAnglesValueChanged(double x, double y
 }
 
 void BoundingBoxManager::onComboBoxBoundingBoxTypeCurrentIndexChanged(const QString& text) {
-    //std::cout << "Type changed: " << text.toStdString() << std::endl;
+    std::cout << "Type changed: " << text.toStdString() << std::endl;
     if(mCurrentOBB) {
         // TODO: set object type
     }
@@ -106,8 +108,9 @@ void BoundingBoxManager::onComboBoxBoundingBoxTypeCurrentIndexChanged(const QStr
 void BoundingBoxManager::onPushButtonFinalizeBoxClicked(bool checked) {
     Q_UNUSED(checked);
 
-    //std::cout << "Finalized box" << std::endl;
+    std::cout << "Finalized box" << std::endl;
     if(mCurrentOBB) {
+        mCurrentOBB->setActive(false);
         mCurrentOBB = nullptr;
     }
 }

@@ -40,14 +40,21 @@ public:
     ObjectType getObjectType() const;
     void setObjectType(ObjectType objectType);
 
-    Ogre::Entity* getEntity() const;
     Ogre::SceneNode* getSceneNode() const;
 
+    bool isActive() const;
+    void setActive(bool active);
+
 protected:
+    void destroy();
+
+    void createVertices(Ogre::ManualObject* m, const Ogre::ColourValue& c = Ogre::ColourValue::White);
+    void createIndices(Ogre::ManualObject* m);
     void updateSceneNode();
 
     Ogre::SceneManager* mSceneMgr;
-    Ogre::Entity* mEntity;
+    Ogre::Entity* mEntityActive;
+    Ogre::Entity* mEntityInactive;
     Ogre::SceneNode* mSceneNode;
 
     Ogre::Vector3 mCenter;
@@ -55,6 +62,8 @@ protected:
     Ogre::Quaternion mOrientation;
 
     ObjectType mObjectType;
+
+    bool mActive;
 };
 
 #endif // ORIENTEDBOUNDINGBOX_H

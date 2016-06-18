@@ -3,6 +3,7 @@
 #include <scene-evolution/util.h>
 
 #include <QFileDialog>
+#include <QSignalBlocker>
 
 #include <iostream>
 
@@ -193,6 +194,17 @@ void MainWindow::onPushButtonFinalizeBoxClicked(bool checked) {
     setBoundingBoxControlStates(false);
 
     // Restore defaults
+    QSignalBlocker b1(ui->doubleSpinBoxBoundingBoxCenterX);
+    QSignalBlocker b2(ui->doubleSpinBoxBoundingBoxCenterY);
+    QSignalBlocker b3(ui->doubleSpinBoxBoundingBoxCenterZ);
+    QSignalBlocker b4(ui->doubleSpinBoxBoundingBoxExtentX);
+    QSignalBlocker b5(ui->doubleSpinBoxBoundingBoxExtentY);
+    QSignalBlocker b6(ui->doubleSpinBoxBoundingBoxExtentZ);
+    QSignalBlocker b7(ui->doubleSpinBoxBoundingBoxAngleX);
+    QSignalBlocker b8(ui->doubleSpinBoxBoundingBoxAngleY);
+    QSignalBlocker b9(ui->doubleSpinBoxBoundingBoxAngleZ);
+    QSignalBlocker b10(ui->comboBoxBoundingBoxType);
+
     ui->doubleSpinBoxBoundingBoxCenterX->setValue(Constants::InitialOBBCenter.x);
     ui->doubleSpinBoxBoundingBoxCenterY->setValue(Constants::InitialOBBCenter.y);
     ui->doubleSpinBoxBoundingBoxCenterZ->setValue(Constants::InitialOBBCenter.z);

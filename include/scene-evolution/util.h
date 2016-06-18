@@ -1,6 +1,7 @@
 #ifndef UTIL_H
 #define UTIL_H
 
+#include <OGRE/OgreColourValue.h>
 #include <OGRE/OgreVector3.h>
 
 #include <QString>
@@ -20,6 +21,9 @@ namespace Constants {
     const QStringList OBBSupportedObjects = (QStringList() << "Book"
                                                            << "Cup");
     const int InitialOBBObjectIndex = 0;
+
+    const Ogre::ColourValue BoundingBoxActiveColour(1.0, 1.0, 0.0);
+    const Ogre::ColourValue BoundingBoxInactiveColour = Ogre::ColourValue::White;
 }
 
 namespace Strings {
@@ -28,7 +32,8 @@ namespace Strings {
 
     const std::string StandardMaterialName = "BaseWhiteNoLighting";
     const std::string RGBDSceneNodeName = "rgbdScene";
-    const std::string BoundingBoxMeshName = "obbMesh";
+    const std::string BoundingBoxMeshNameInactive = "obbMesh";
+    const std::string BoundingBoxMeshNameActive = "obbMeshActive";
 }
 
 #endif // UTIL_H
