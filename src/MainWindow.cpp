@@ -194,27 +194,17 @@ void MainWindow::onPushButtonFinalizeBoxClicked(bool checked) {
     setBoundingBoxControlStates(false);
 
     // Restore defaults
-    QSignalBlocker b1(ui->doubleSpinBoxBoundingBoxCenterX);
-    QSignalBlocker b2(ui->doubleSpinBoxBoundingBoxCenterY);
-    QSignalBlocker b3(ui->doubleSpinBoxBoundingBoxCenterZ);
-    QSignalBlocker b4(ui->doubleSpinBoxBoundingBoxExtentX);
-    QSignalBlocker b5(ui->doubleSpinBoxBoundingBoxExtentY);
-    QSignalBlocker b6(ui->doubleSpinBoxBoundingBoxExtentZ);
-    QSignalBlocker b7(ui->doubleSpinBoxBoundingBoxAngleX);
-    QSignalBlocker b8(ui->doubleSpinBoxBoundingBoxAngleY);
-    QSignalBlocker b9(ui->doubleSpinBoxBoundingBoxAngleZ);
-    QSignalBlocker b10(ui->comboBoxBoundingBoxType);
+    restoreBoxDefaultsNoSignals();
+}
 
-    ui->doubleSpinBoxBoundingBoxCenterX->setValue(Constants::InitialOBBCenter.x);
-    ui->doubleSpinBoxBoundingBoxCenterY->setValue(Constants::InitialOBBCenter.y);
-    ui->doubleSpinBoxBoundingBoxCenterZ->setValue(Constants::InitialOBBCenter.z);
-    ui->doubleSpinBoxBoundingBoxExtentX->setValue(Constants::InitialOBBExtents.x);
-    ui->doubleSpinBoxBoundingBoxExtentY->setValue(Constants::InitialOBBExtents.y);
-    ui->doubleSpinBoxBoundingBoxExtentZ->setValue(Constants::InitialOBBExtents.z);
-    ui->doubleSpinBoxBoundingBoxAngleX->setValue(Constants::InitialOBBEulerAngles.x);
-    ui->doubleSpinBoxBoundingBoxAngleY->setValue(Constants::InitialOBBEulerAngles.y);
-    ui->doubleSpinBoxBoundingBoxAngleZ->setValue(Constants::InitialOBBEulerAngles.z);
-    ui->comboBoxBoundingBoxType->setCurrentIndex(Constants::InitialOBBObjectIndex);
+void MainWindow::onPushButtonCancelBoxClicked(bool checked) {
+    Q_UNUSED(checked);
+
+    // Enable/disable controls
+    setBoundingBoxControlStates(false);
+
+    // Restore defaults
+    restoreBoxDefaultsNoSignals();
 }
 
 void MainWindow::onDatasetChanging(DatasetChangingEventArgs& e) {
@@ -250,6 +240,10 @@ void MainWindow::onSceneChanged(SceneChangedEventArgs& e) {
 
     // Set scene number in spin box
     ui->spinBoxGoToScene->setValue(e.sceneIdx);
+
+    // Restore bounding box UI controls in case they are still active
+    setBoundingBoxControlStates(false);
+    restoreBoxDefaultsNoSignals();
 }
 
 void MainWindow::closeEvent(QCloseEvent* e) {
@@ -296,6 +290,7 @@ void MainWindow::setUpConnections() {
 
     connect(ui->pushButtonStartNewBox, SIGNAL(clicked(bool)), this, SLOT(onPushButtonStartNewBoxClicked(bool)));
     connect(ui->pushButtonFinalizeBox, SIGNAL(clicked(bool)), this, SLOT(onPushButtonFinalizeBoxClicked(bool)));
+    connect(ui->pushButtonCancelBox, SIGNAL(clicked(bool)), this, SLOT(onPushButtonCancelBoxClicked(bool)));
 
     connect(this, SIGNAL(datasetChanging(DatasetChangingEventArgs&)), this, SLOT(onDatasetChanging(DatasetChangingEventArgs&)));
     connect(this, SIGNAL(datasetChanged(DatasetChangedEventArgs&)), this, SLOT(onDatasetChanged(DatasetChangedEventArgs&)));
@@ -348,6 +343,7 @@ void MainWindow::setUpBBMConnections() {
     connect(ui->comboBoxBoundingBoxType, SIGNAL(currentIndexChanged(QString)), mBoundingBoxManager, SLOT(onComboBoxBoundingBoxTypeCurrentIndexChanged(QString)));
 
     connect(ui->pushButtonFinalizeBox, SIGNAL(clicked(bool)), mBoundingBoxManager, SLOT(onPushButtonFinalizeBoxClicked(bool)));
+    connect(ui->pushButtonCancelBox, SIGNAL(clicked(bool)), mBoundingBoxManager, SLOT(onPushButtonCancelBoxClicked(bool)));
 }
 
 QString MainWindow::buildWindowTitle() {
@@ -366,5 +362,30 @@ void MainWindow::setBoundingBoxControlStates(bool enable) {
     for(QList<QComboBox*>::iterator it = comboboxes.begin(); it != comboboxes.end(); ++it)
         (*it)->setEnabled(enable);
     ui->pushButtonFinalizeBox->setEnabled(enable);
+    ui->pushButtonCancelBox->setEnabled(enable);
     ui->pushButtonStartNewBox->setEnabled(!enable);
+}
+
+void MainWindow::restoreBoxDefaultsNoSignals() {
+    QSignalBlocker b1(ui->doubleSpinBoxBoundingBoxCenterX);
+    QSignalBlocker b2(ui->doubleSpinBoxBoundingBoxCenterY);
+    QSignalBlocker b3(ui->doubleSpinBoxBoundingBoxCenterZ);
+    QSignalBlocker b4(ui->doubleSpinBoxBoundingBoxExtentX);
+    QSignalBlocker b5(ui->doubleSpinBoxBoundingBoxExtentY);
+    QSignalBlocker b6(ui->doubleSpinBoxBoundingBoxExtentZ);
+    QSignalBlocker b7(ui->doubleSpinBoxBoundingBoxAngleX);
+    QSignalBlocker b8(ui->doubleSpinBoxBoundingBoxAngleY);
+    QSignalBlocker b9(ui->doubleSpinBoxBoundingBoxAngleZ);
+    QSignalBlocker b10(ui->comboBoxBoundingBoxType);
+
+    ui->doubleSpinBoxBoundingBoxCenterX->setValue(Constants::InitialOBBCenter.x);
+    ui->doubleSpinBoxBoundingBoxCenterY->setValue(Constants::InitialOBBCenter.y);
+    ui->doubleSpinBoxBoundingBoxCenterZ->setValue(Constants::InitialOBBCenter.z);
+    ui->doubleSpinBoxBoundingBoxExtentX->setValue(Constants::InitialOBBExtents.x);
+    ui->doubleSpinBoxBoundingBoxExtentY->setValue(Constants::InitialOBBExtents.y);
+    ui->doubleSpinBoxBoundingBoxExtentZ->setValue(Constants::InitialOBBExtents.z);
+    ui->doubleSpinBoxBoundingBoxAngleX->setValue(Constants::InitialOBBEulerAngles.x);
+    ui->doubleSpinBoxBoundingBoxAngleY->setValue(Constants::InitialOBBEulerAngles.y);
+    ui->doubleSpinBoxBoundingBoxAngleZ->setValue(Constants::InitialOBBEulerAngles.z);
+    ui->comboBoxBoundingBoxType->setCurrentIndex(Constants::InitialOBBObjectIndex);
 }

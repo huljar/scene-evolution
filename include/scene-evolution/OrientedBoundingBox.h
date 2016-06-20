@@ -6,16 +6,14 @@
 #include <OGRE/OgreEntity.h>
 #include <OGRE/OgreSceneManager.h>
 
+#include <QString>
+
 class OrientedBoundingBox
 {
 public:
-    enum class ObjectType {
-        BOOK,
-        CUP
-    };
-
     // Constructors and destructor
-    OrientedBoundingBox(Ogre::SceneManager* sceneMgr, const Ogre::Vector3& center, const Ogre::Vector3& extents, const Ogre::Quaternion& orientation);
+    OrientedBoundingBox(Ogre::SceneManager* sceneMgr, const Ogre::Vector3& center, const Ogre::Vector3& extents,
+                        const Ogre::Quaternion& orientation, const QString& objectType = QString());
     OrientedBoundingBox(const OrientedBoundingBox& other);
     OrientedBoundingBox(OrientedBoundingBox&& other);
     ~OrientedBoundingBox();
@@ -23,6 +21,10 @@ public:
     // Assignment operators
     OrientedBoundingBox& operator=(const OrientedBoundingBox& other);
     OrientedBoundingBox& operator=(OrientedBoundingBox&& other);
+
+    // Visibility
+    void hide();
+    void show();
 
     // Getters and setters
     Ogre::Vector3 getCenter() const;
@@ -37,8 +39,8 @@ public:
     void setOrientation(const Ogre::Quaternion& orientation);
     void setOrientation(Ogre::Real w, Ogre::Real x, Ogre::Real y, Ogre::Real z);
 
-    ObjectType getObjectType() const;
-    void setObjectType(ObjectType objectType);
+    QString getObjectType() const;
+    void setObjectType(const QString& objectType);
 
     Ogre::SceneNode* getSceneNode() const;
 
@@ -61,9 +63,10 @@ protected:
     Ogre::Vector3 mExtents;
     Ogre::Quaternion mOrientation;
 
-    ObjectType mObjectType;
+    QString mObjectType;
 
     bool mActive;
+    bool mAttached;
 };
 
 #endif // ORIENTEDBOUNDINGBOX_H

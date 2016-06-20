@@ -6,15 +6,18 @@
 
 #include <iostream>
 
-OrientedBoundingBox::OrientedBoundingBox(Ogre::SceneManager* sceneMgr, const Ogre::Vector3& center, const Ogre::Vector3& extents, const Ogre::Quaternion& orientation)
+OrientedBoundingBox::OrientedBoundingBox(Ogre::SceneManager* sceneMgr, const Ogre::Vector3& center, const Ogre::Vector3& extents,
+                                         const Ogre::Quaternion& orientation, const QString& objectType)
     : mSceneMgr(sceneMgr)
     , mEntityActive(nullptr)
     , mEntityInactive(nullptr)
     , mSceneNode(nullptr)
     , mCenter(center)
     , mExtents(extents)
-    , mOrientation(orientation) // TODO: init object type, also in other constructors/assignment
+    , mOrientation(orientation)
+    , mObjectType(objectType)
     , mActive(true)
+    , mAttached(true)
 {
     // Check if the meshes already exists, if not, create them
     Ogre::MeshPtr meshActive = Ogre::MeshManager::getSingletonPtr()->getByName(Strings::BoundingBoxMeshNameActive);
@@ -67,13 +70,16 @@ OrientedBoundingBox::OrientedBoundingBox(const OrientedBoundingBox& other)
     , mCenter(other.mCenter)
     , mExtents(other.mExtents)
     , mOrientation(other.mOrientation)
+    , mObjectType(other.mObjectType)
     , mActive(other.mActive)
+    , mAttached(other.mAttached)
 {
     // Create new entities and scene node
     mEntityActive = mSceneMgr->createEntity(Strings::BoundingBoxMeshNameActive);
     mEntityInactive = mSceneMgr->createEntity(Strings::BoundingBoxMeshNameInactive);
     mSceneNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
-    mSceneNode->attachObject(mActive ? mEntityActive : mEntityInactive);
+    if(mAttached)
+        mSceneNode->attachObject(mActive ? mEntityActive : mEntityInactive);
     updateSceneNode();
 }
 
@@ -82,10 +88,12 @@ OrientedBoundingBox::OrientedBoundingBox(OrientedBoundingBox&& other)
     , mEntityActive(other.mEntityActive)
     , mEntityInactive(other.mEntityInactive)
     , mSceneNode(other.mSceneNode)
-    , mCenter(other.mCenter)
-    , mExtents(other.mExtents)
-    , mOrientation(other.mOrientation)
+    , mCenter(std::move(other.mCenter))
+    , mExtents(std::move(other.mExtents))
+    , mOrientation(std::move(other.mOrientation))
+    , mObjectType(std::move(other.mObjectType))
     , mActive(other.mActive)
+    , mAttached(other.mAttached)
 {
     // Make other resource-less
     other.mSceneMgr = nullptr;
@@ -105,12 +113,15 @@ OrientedBoundingBox& OrientedBoundingBox::operator=(const OrientedBoundingBox& o
     mCenter = other.mCenter;
     mExtents = other.mExtents;
     mOrientation = other.mOrientation;
+    mObjectType = other.mObjectType;
     mActive = other.mActive;
+    mAttached = other.mAttached;
 
     mEntityActive = mSceneMgr->createEntity(Strings::BoundingBoxMeshNameActive);
     mEntityInactive = mSceneMgr->createEntity(Strings::BoundingBoxMeshNameInactive);
     mSceneNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
-    mSceneNode->attachObject(mActive ? mEntityActive : mEntityInactive);
+    if(mAttached)
+        mSceneNode->attachObject(mActive ? mEntityActive : mEntityInactive);
     updateSceneNode();
 
     return *this;
@@ -123,10 +134,12 @@ OrientedBoundingBox& OrientedBoundingBox::operator=(OrientedBoundingBox&& other)
     mEntityActive = other.mEntityActive;
     mEntityInactive = other.mEntityInactive;
     mSceneNode = other.mSceneNode;
-    mCenter = other.mCenter;
-    mExtents = other.mExtents;
-    mOrientation = other.mOrientation;
+    mCenter = std::move(other.mCenter);
+    mExtents = std::move(other.mExtents);
+    mOrientation = std::move(other.mOrientation);
+    mObjectType = std::move(other.mObjectType);
     mActive = other.mActive;
+    mAttached = other.mAttached;
 
     other.mSceneMgr = nullptr;
     other.mEntityActive = nullptr;
@@ -134,6 +147,16 @@ OrientedBoundingBox& OrientedBoundingBox::operator=(OrientedBoundingBox&& other)
     other.mSceneNode = nullptr;
 
     return *this;
+}
+
+void OrientedBoundingBox::hide() {
+    mAttached = false;
+    mSceneNode->detachAllObjects();
+}
+
+void OrientedBoundingBox::show() {
+    mAttached = true;
+    mSceneNode->attachObject(mActive ? mEntityActive : mEntityInactive);
 }
 
 Ogre::Vector3 OrientedBoundingBox::getCenter() const {
@@ -178,11 +201,11 @@ void OrientedBoundingBox::setOrientation(Ogre::Real w, Ogre::Real x, Ogre::Real 
     updateSceneNode();
 }
 
-OrientedBoundingBox::ObjectType OrientedBoundingBox::getObjectType() const {
+QString OrientedBoundingBox::getObjectType() const {
     return mObjectType;
 }
 
-void OrientedBoundingBox::setObjectType(ObjectType objectType) {
+void OrientedBoundingBox::setObjectType(const QString& objectType) {
     mObjectType = objectType;
 }
 

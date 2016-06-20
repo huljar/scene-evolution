@@ -22,6 +22,7 @@ public:
     typedef QMap<unsigned int, BoxSet> SceneBoxMap;
 
     BoundingBoxManager(Ogre::SceneManager* sceneMgr, unsigned int currentSceneIdx, const QString& initFilePath = QString());
+    ~BoundingBoxManager();
 
     OrientedBoundingBox* createBox(const Ogre::Vector3& center,
                                    const Ogre::Vector3& extents,
@@ -47,6 +48,7 @@ public slots:
     void onComboBoxBoundingBoxTypeCurrentIndexChanged(const QString& text);
 
     void onPushButtonFinalizeBoxClicked(bool checked);
+    void onPushButtonCancelBoxClicked(bool checked);
 
 private:
     unsigned int mCurrentSceneIdx;
