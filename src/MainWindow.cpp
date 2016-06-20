@@ -179,7 +179,7 @@ void MainWindow::onPushButtonStartNewBoxClicked(bool checked) {
 
     // Check if bounding box manager exists
     if(!mBoundingBoxManager) {
-        mBoundingBoxManager = new BoundingBoxManager(mOgreWindow->getOgreSceneManager(), mCurrentSceneIdx);
+        mBoundingBoxManager = new BoundingBoxManager(mOgreWindow->getOgreSceneManager(), mCurrentSceneIdx, mDatasetManager->getDatasetDir().absolutePath());
         setUpBBMConnections();
 
         // "Emit" button click again so the bounding box manager sees it

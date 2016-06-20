@@ -21,14 +21,16 @@ public:
     typedef QSet<OrientedBoundingBox*> BoxSet;
     typedef QMap<unsigned int, BoxSet> SceneBoxMap;
 
-    BoundingBoxManager(Ogre::SceneManager* sceneMgr, unsigned int currentSceneIdx, const QString& initFilePath = QString());
+    BoundingBoxManager(Ogre::SceneManager* sceneMgr, unsigned int currentSceneIdx, const QString& defaultSavePath = QString());
     ~BoundingBoxManager();
 
-    OrientedBoundingBox* createBox(const Ogre::Vector3& center,
-                                   const Ogre::Vector3& extents,
-                                   const Ogre::Quaternion& orientation);
+    OrientedBoundingBox* createBox(const Ogre::Vector3& center, const Ogre::Vector3& extents,
+                                   const Ogre::Quaternion& orientation, const QString& objectType);
     void destroyBox(OrientedBoundingBox* box);
     void destroyBox(OrientedBoundingBox* box, unsigned int sceneIdx);
+
+    bool loadFromFile(const QString& path);
+    bool saveToFile(const QString& path);
 
 public slots:
     void onDatasetChanging(DatasetChangingEventArgs& e);
@@ -58,6 +60,8 @@ private:
 
     QString mFilePath;
     Ogre::SceneManager* mSceneMgr;
+
+    bool mUnsavedChanges;
 };
 
 #endif // BOUNDINGBOXMANAGER_H

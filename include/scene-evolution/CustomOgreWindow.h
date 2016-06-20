@@ -5,6 +5,8 @@
 
 class CustomOgreWindow : public QTOgreWindow
 {
+    Q_OBJECT
+
 public:
     explicit CustomOgreWindow(QWindow *parent = NULL);
     virtual ~CustomOgreWindow();

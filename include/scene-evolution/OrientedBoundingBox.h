@@ -13,7 +13,7 @@ class OrientedBoundingBox
 public:
     // Constructors and destructor
     OrientedBoundingBox(Ogre::SceneManager* sceneMgr, const Ogre::Vector3& center, const Ogre::Vector3& extents,
-                        const Ogre::Quaternion& orientation, const QString& objectType = QString());
+                        const Ogre::Quaternion& orientation, const QString& objectType);
     OrientedBoundingBox(const OrientedBoundingBox& other);
     OrientedBoundingBox(OrientedBoundingBox&& other);
     ~OrientedBoundingBox();
