@@ -53,6 +53,9 @@ public slots:
     void onPushButtonCancelBoxClicked(bool checked);
 
 private:
+    bool checkUnfinalizedBox();
+    bool checkUnsavedChanges();
+
     unsigned int mCurrentSceneIdx;
     OrientedBoundingBox* mCurrentOBB;
 

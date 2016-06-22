@@ -86,63 +86,30 @@ bool BoundingBoxManager::saveToFile(const QString& path) {
 
     file.close();
 
-    mUnsavedChanges = false;
-
     return true;
 }
 
 void BoundingBoxManager::onDatasetChanging(DatasetChangingEventArgs& e) {
-    if(mUnsavedChanges) {
-        int ret = QMessageBox::warning(nullptr, tr("Scene Evolution"),
-                                       tr("There are unsaved changes to the bounding boxes of the current dataset.\nDo you want to save your changes?"),
-                                       QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel, QMessageBox::Save);
-
-        if(ret == QMessageBox::Save) {
-            // Save all changes
-            QString path = QFileDialog::getSaveFileName(nullptr, tr("Save File"), (mFilePath.isEmpty() ? QDir::homePath() : mFilePath),
-                                                        tr("Oriented Bounding Box Collections (*.obbc)"));
-            if(path.isEmpty()) {
-                // If the file dialog is canceled, abort the window closing
-                e.abort = true;
-            }
-            else {
-                mFilePath = path;
-                bool success = saveToFile(path);
-                if(!success) {
-                    QMessageBox::critical(nullptr, tr("Scene Evolution"), tr("An error occurred while saving the file."), QMessageBox::Ok, QMessageBox::Ok);
-                    e.abort = true;
-                }
-            }
-        }
-        else if(ret == QMessageBox::Cancel) {
-            // Indicate that the window should not be closed
-            e.abort = true;
-        }
-    }
+    // Check if there is an unfinalized box
+    // Doing this in onSceneChanged is not enough because otherwise the check for unsaved changes will be performed before the box check
+    if(checkUnfinalizedBox())
+        e.abort = true;
+    else if(checkUnsavedChanges())
+        e.abort = true;
 }
 
 void BoundingBoxManager::onDatasetChanged(DatasetChangedEventArgs& e) {
-    // TODO: clear map, set scene idx
+    // Clear box map
+    for(SceneBoxMap::iterator it = mSceneBoxMap.begin(); it != mSceneBoxMap.end(); ++it) {
+        for(BoxSet::iterator jt = it->begin(); jt != it->end(); ++jt) {
+            delete *jt;
+        }
+    }
+    mSceneBoxMap.clear();
 }
 
 void BoundingBoxManager::onSceneChanging(SceneChangingEventArgs& e) {
-    // Check if there is an unfinalized box
-    if(mCurrentOBB) {
-        int ret = QMessageBox::warning(nullptr, tr("Scene Evolution"),
-                                       tr("You have an unfinalized bounding box for the current scene.\nDo you want to finalize it (will be deleted otherwise)?"),
-                                       QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel, QMessageBox::Yes);
-
-        if(ret == QMessageBox::Yes) {
-            onPushButtonFinalizeBoxClicked(false);
-        }
-        else if(ret == QMessageBox::No) {
-            onPushButtonCancelBoxClicked(false);
-        }
-        else { // ret == Cancel
-            e.abort = true;
-        }
-    }
-    // TODO: perform this check also on window closing and on dataset changing
+    e.abort = checkUnfinalizedBox();
 }
 
 void BoundingBoxManager::onSceneChanged(SceneChangedEventArgs& e) {
@@ -167,32 +134,10 @@ void BoundingBoxManager::onSceneChanged(SceneChangedEventArgs& e) {
 }
 
 void BoundingBoxManager::onMainWindowClosing(WindowClosingEventArgs& e) {
-    if(mUnsavedChanges) {
-        int ret = QMessageBox::warning(nullptr, tr("Scene Evolution"), tr("There are unsaved changes to the bounding boxes.\nDo you want to save your changes?"),
-                                       QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel, QMessageBox::Save);
-
-        if(ret == QMessageBox::Save) {
-            // Save all changes
-            QString path = QFileDialog::getSaveFileName(nullptr, tr("Save File"), (mFilePath.isEmpty() ? QDir::homePath() : mFilePath),
-                                                        tr("Oriented Bounding Box Collections (*.obbc)"));
-            if(path.isEmpty()) {
-                // If the file dialog is canceled, abort the window closing
-                e.abort = true;
-            }
-            else {
-                mFilePath = path;
-                bool success = saveToFile(path);
-                if(!success) {
-                    QMessageBox::critical(nullptr, tr("Scene Evolution"), tr("An error occurred while saving the file."), QMessageBox::Ok, QMessageBox::Ok);
-                    e.abort = true;
-                }
-            }
-        }
-        else if(ret == QMessageBox::Cancel) {
-            // Indicate that the window should not be closed
-            e.abort = true;
-        }
-    }
+    if(checkUnfinalizedBox())
+        e.abort = true;
+    else if(checkUnsavedChanges())
+        e.abort = true;
 }
 
 void BoundingBoxManager::onPushButtonStartNewBoxClicked(bool checked) {
@@ -256,4 +201,63 @@ void BoundingBoxManager::onPushButtonCancelBoxClicked(bool checked) {
         destroyBox(mCurrentOBB);
         mCurrentOBB = nullptr;
     }
+}
+
+bool BoundingBoxManager::checkUnfinalizedBox() {
+    // Check if there is an unfinalized box
+    if(mCurrentOBB) {
+        int ret = QMessageBox::warning(nullptr, tr("Scene Evolution"),
+                                       tr("You have an unfinalized bounding box for the current scene.\nDo you want to finalize it (will be deleted otherwise)?"),
+                                       QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel, QMessageBox::Yes);
+
+        if(ret == QMessageBox::Yes) {
+            onPushButtonFinalizeBoxClicked(false);
+        }
+        else if(ret == QMessageBox::No) {
+            onPushButtonCancelBoxClicked(false);
+        }
+        else { // ret == Cancel
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool BoundingBoxManager::checkUnsavedChanges() {
+    // Check for unsaved changes
+    if(mUnsavedChanges) {
+        int ret = QMessageBox::warning(nullptr, tr("Scene Evolution"), tr("There are unsaved changes to the bounding boxes.\nDo you want to save your changes?"),
+                                       QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel, QMessageBox::Save);
+
+        if(ret == QMessageBox::Save) {
+            // Save all changes
+            QString path = QFileDialog::getSaveFileName(nullptr, tr("Save File"), (mFilePath.isEmpty() ? QDir::homePath() : mFilePath),
+                                                        tr("Oriented Bounding Box Collections (*.obbc)"));
+            if(path.isEmpty()) {
+                // If the file dialog is canceled, abort the window closing
+                return true;
+            }
+            else {
+                mFilePath = path;
+                bool success = saveToFile(path);
+                if(success) {
+                    mUnsavedChanges = false;
+                }
+                else {
+                    QMessageBox::critical(nullptr, tr("Scene Evolution"), tr("An error occurred while saving the file."), QMessageBox::Ok, QMessageBox::Ok);
+                    return true;
+                }
+            }
+        }
+        else if(ret == QMessageBox::Discard) {
+            mUnsavedChanges = false;
+        }
+        else { // ret == Cancel
+            // Indicate that the window should not be closed
+            return true;
+        }
+    }
+
+    return false;
 }
