@@ -32,6 +32,9 @@ public slots:
     void onActionChangeNYUDirectoryTriggered(bool checked);
     void onActionExitTriggered(bool checked);
 
+    void onActionLoadOBBsFromFileTriggered(bool checked);
+    void onActionSaveOBBsToFileTriggered(bool checked);
+
     void onPushButtonPrevSceneClicked(bool checked);
     void onPushButtonNextSceneClicked(bool checked);
     void onPushButtonGoToSceneClicked(bool checked);

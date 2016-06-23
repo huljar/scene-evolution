@@ -143,6 +143,25 @@ void MainWindow::onActionExitTriggered(bool checked) {
         QApplication::quit();
 }
 
+void MainWindow::onActionLoadOBBsFromFileTriggered(bool checked) {
+    Q_UNUSED(checked);
+
+    // Check if bounding box manager exists
+    if(!mBoundingBoxManager) {
+        mBoundingBoxManager = new BoundingBoxManager(mOgreWindow->getOgreSceneManager(), mCurrentSceneIdx, mDatasetManager->getDatasetDir().absolutePath());
+        setUpBBMConnections();
+        ui->actionSaveOBBsToFile->setEnabled(true);
+    }
+
+    mBoundingBoxManager->loadFromFile();
+}
+
+void MainWindow::onActionSaveOBBsToFileTriggered(bool checked) {
+    Q_UNUSED(checked);
+
+    mBoundingBoxManager->saveToFile();
+}
+
 void MainWindow::onPushButtonPrevSceneClicked(bool checked) {
     Q_UNUSED(checked);
 
@@ -181,6 +200,7 @@ void MainWindow::onPushButtonStartNewBoxClicked(bool checked) {
     if(!mBoundingBoxManager) {
         mBoundingBoxManager = new BoundingBoxManager(mOgreWindow->getOgreSceneManager(), mCurrentSceneIdx, mDatasetManager->getDatasetDir().absolutePath());
         setUpBBMConnections();
+        ui->actionSaveOBBsToFile->setEnabled(true);
 
         // "Emit" button click again so the bounding box manager sees it
         mBoundingBoxManager->onPushButtonStartNewBoxClicked(false);
@@ -283,6 +303,9 @@ void MainWindow::setUpConnections() {
 
     connect(ui->actionChangeNYUdirectory, SIGNAL(triggered(bool)), this, SLOT(onActionChangeNYUDirectoryTriggered(bool)));
     connect(ui->actionExit, SIGNAL(triggered(bool)), this, SLOT(onActionExitTriggered(bool)));
+
+    connect(ui->actionLoadOBBsFromFile, SIGNAL(triggered(bool)), this, SLOT(onActionLoadOBBsFromFileTriggered(bool)));
+    connect(ui->actionSaveOBBsToFile, SIGNAL(triggered(bool)), this, SLOT(onActionSaveOBBsToFileTriggered(bool)));
 
     connect(ui->pushButtonPrevScene, SIGNAL(clicked(bool)), this, SLOT(onPushButtonPrevSceneClicked(bool)));
     connect(ui->pushButtonNextScene, SIGNAL(clicked(bool)), this, SLOT(onPushButtonNextSceneClicked(bool)));

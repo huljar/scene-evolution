@@ -46,7 +46,132 @@ void BoundingBoxManager::destroyBox(OrientedBoundingBox* box, unsigned int scene
     delete box;
 }
 
+bool BoundingBoxManager::loadFromFile() {
+    if(checkUnfinalizedBox())
+        return false;
+    if(checkUnsavedChanges())
+        return false;
+
+    // Get file path
+    QString path = QFileDialog::getOpenFileName(nullptr, tr("Load File"), (mFilePath.isEmpty() ? QDir::homePath() : mFilePath),
+                                                tr("Oriented Bounding Box Collections (*.obbc)"));
+
+    if(path.isEmpty())
+        return false;
+
+    if(!loadFromFile(path)) {
+        QMessageBox::warning(nullptr, tr("Scene Evolution"), tr("Unable to load specified file."), QMessageBox::Ok, QMessageBox::Ok);
+        return false;
+    }
+
+    mUnsavedChanges = false;
+    return true;
+}
+
 bool BoundingBoxManager::loadFromFile(const QString& path) {
+    QFile file(path);
+    if(!file.open(QIODevice::ReadOnly | QIODevice::Text))
+        return false;
+
+    // Save current scene index
+    unsigned int oldSceneIdx = mCurrentSceneIdx;
+
+    // Clear map
+    for(SceneBoxMap::iterator it = mSceneBoxMap.begin(); it != mSceneBoxMap.end(); ++it) {
+        for(BoxSet::iterator jt = it->begin(); jt != it->end(); ++jt) {
+            delete *jt;
+        }
+    }
+    mSceneBoxMap.clear();
+
+    // Parse file
+    QTextStream in(&file);
+
+    mCurrentSceneIdx = 0;
+    OrientedBoundingBox* currentBox = nullptr;
+
+    while(!in.atEnd()) {
+        QString line = in.readLine();
+
+        // Discard comments and empty lines
+        if(line.length() == 0 || line.startsWith('#'))
+            continue;
+
+        // Scene index
+        if(line.startsWith("begin scene ") && line.length() > 12)
+            mCurrentSceneIdx = line.mid(12).toUInt();
+
+        // New box start
+        else if(line.startsWith("begin box")) {
+            Ogre::Matrix3 rot;
+            rot.FromEulerAnglesXYZ(Ogre::Degree(Constants::InitialOBBEulerAngles.x), Ogre::Degree(Constants::InitialOBBEulerAngles.y), Ogre::Degree(Constants::InitialOBBEulerAngles.z));
+            currentBox = createBox(Constants::InitialOBBCenter, Constants::InitialOBBExtents, Ogre::Quaternion(rot), Constants::OBBSupportedObjects.at(Constants::InitialOBBObjectIndex));
+            currentBox->setActive(false);
+            currentBox->hide();
+        }
+
+        // Box center
+        else if(line.startsWith("center ")) {
+            QTextStream lineStream(&line);
+            QString tmp;
+            Ogre::Vector3 center;
+            lineStream >> tmp >> center.x >> center.y >> center.z;
+            currentBox->setCenter(center);
+        }
+
+        // Box extents
+        else if(line.startsWith("extents ")) {
+            QTextStream lineStream(&line);
+            QString tmp;
+            Ogre::Vector3 extents;
+            lineStream >> tmp >> extents.x >> extents.y >> extents.z;
+            currentBox->setExtents(extents);
+        }
+
+        // Box orientation
+        else if(line.startsWith("orient ")) {
+            QTextStream lineStream(&line);
+            QString tmp;
+            Ogre::Quaternion orient;
+            lineStream >> tmp >> orient.w >> orient.x >> orient.y >> orient.z;
+            currentBox->setOrientation(orient);
+        }
+
+        // Box object type
+        else if(line.startsWith("objtype "))
+            currentBox->setObjectType(line.mid(8));
+    }
+
+    // Reset scene index
+    mCurrentSceneIdx = oldSceneIdx;
+
+    // Show boxes of current scene
+    if(mSceneBoxMap.contains(mCurrentSceneIdx)) {
+        BoxSet& boxes = mSceneBoxMap[mCurrentSceneIdx];
+        for(BoxSet::iterator it = boxes.begin(); it != boxes.end(); ++it) {
+            (*it)->show();
+        }
+    }
+
+    return true;
+}
+
+bool BoundingBoxManager::saveToFile() {
+    if(checkUnfinalizedBox())
+        return false;
+
+    QString path = QFileDialog::getSaveFileName(nullptr, tr("Save File"), (mFilePath.isEmpty() ? QDir::homePath() : mFilePath),
+                                                tr("Oriented Bounding Box Collections (*.obbc)"));
+
+    if(path.isEmpty())
+        return false;
+
+    if(!saveToFile(path)) {
+        QMessageBox::critical(nullptr, tr("Scene Evolution"), tr("An error occurred while saving the file."), QMessageBox::Ok, QMessageBox::Ok);
+        return false;
+    }
+
+    mUnsavedChanges = false;
     return true;
 }
 
@@ -99,6 +224,8 @@ void BoundingBoxManager::onDatasetChanging(DatasetChangingEventArgs& e) {
 }
 
 void BoundingBoxManager::onDatasetChanged(DatasetChangedEventArgs& e) {
+    Q_UNUSED(e);
+
     // Clear box map
     for(SceneBoxMap::iterator it = mSceneBoxMap.begin(); it != mSceneBoxMap.end(); ++it) {
         for(BoxSet::iterator jt = it->begin(); jt != it->end(); ++jt) {
@@ -207,7 +334,7 @@ bool BoundingBoxManager::checkUnfinalizedBox() {
     // Check if there is an unfinalized box
     if(mCurrentOBB) {
         int ret = QMessageBox::warning(nullptr, tr("Scene Evolution"),
-                                       tr("You have an unfinalized bounding box for the current scene.\nDo you want to finalize it (will be deleted otherwise)?"),
+                                       tr("You have an unfinalized bounding box for the current scene.\nDo you want to finalize it?"),
                                        QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel, QMessageBox::Yes);
 
         if(ret == QMessageBox::Yes) {

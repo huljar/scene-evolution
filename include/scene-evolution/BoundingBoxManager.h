@@ -29,7 +29,10 @@ public:
     void destroyBox(OrientedBoundingBox* box);
     void destroyBox(OrientedBoundingBox* box, unsigned int sceneIdx);
 
+    bool loadFromFile();
     bool loadFromFile(const QString& path);
+
+    bool saveToFile();
     bool saveToFile(const QString& path);
 
 public slots:
