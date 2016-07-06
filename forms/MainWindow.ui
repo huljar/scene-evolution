@@ -470,8 +470,15 @@
     <addaction name="actionLoadOBBsFromFile"/>
     <addaction name="actionSaveOBBsToFile"/>
    </widget>
+   <widget class="QMenu" name="menu_SEL">
+    <property name="title">
+     <string>&amp;SEL</string>
+    </property>
+    <addaction name="actionLoadSELFromFile"/>
+   </widget>
    <addaction name="menu_File"/>
    <addaction name="menuOriented_Bounding_Boxes"/>
+   <addaction name="menu_SEL"/>
   </widget>
   <widget class="QToolBar" name="toolBarMain">
    <property name="movable">
@@ -509,6 +516,11 @@
    </property>
    <property name="text">
     <string>&amp;Save to file</string>
+   </property>
+  </action>
+  <action name="actionLoadSELFromFile">
+   <property name="text">
+    <string>&amp;Load from file</string>
    </property>
   </action>
  </widget>

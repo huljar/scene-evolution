@@ -16,6 +16,7 @@ MainWindow::MainWindow(QWidget *parent)
     , mCurrentSceneIdx(0)
     , mRGBDScene(nullptr)
     , mRGBDSceneNode(nullptr)
+    , mSELManager(nullptr)
 {
     ui->setupUi(this);
 
@@ -160,6 +161,17 @@ void MainWindow::onActionSaveOBBsToFileTriggered(bool checked) {
     Q_UNUSED(checked);
 
     mBoundingBoxManager->saveToFile();
+}
+
+void MainWindow::onActionLoadSELFromFileTriggered(bool checked) {
+    Q_UNUSED(checked);
+
+    // Check if SEL manager exists
+    if(!mSELManager) {
+        mSELManager = new SELManager;
+    }
+
+    mSELManager->loadFromFile();
 }
 
 void MainWindow::onPushButtonPrevSceneClicked(bool checked) {

@@ -8,6 +8,7 @@
 #include <scene-evolution/CameraManager.h>
 #include <scene-evolution/EventArgs.h>
 #include <scene-evolution/BoundingBoxManager.h>
+#include <scene-evolution/SELManager.h>
 
 #include <QMainWindow>
 
@@ -34,6 +35,8 @@ public slots:
 
     void onActionLoadOBBsFromFileTriggered(bool checked);
     void onActionSaveOBBsToFileTriggered(bool checked);
+
+    void onActionLoadSELFromFileTriggered(bool checked);
 
     void onPushButtonPrevSceneClicked(bool checked);
     void onPushButtonNextSceneClicked(bool checked);
@@ -80,6 +83,8 @@ private:
 
     RGBDScene* mRGBDScene;
     Ogre::SceneNode* mRGBDSceneNode;
+
+    SELManager* mSELManager;
 };
 
 #endif // MAINWINDOW_H

@@ -19,7 +19,8 @@ namespace Constants {
     const Ogre::Vector3 InitialOBBEulerAngles(0.0, 0.0, 0.0);
 
     const QStringList OBBSupportedObjects = (QStringList() << "Book"
-                                                           << "Cup");
+                                                           << "Cup"
+                                                           << "Phone");
     const int InitialOBBObjectIndex = 0;
 
     const Ogre::ColourValue BoundingBoxActiveColour(1.0, 1.0, 0.0);

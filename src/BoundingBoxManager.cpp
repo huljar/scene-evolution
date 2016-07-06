@@ -153,6 +153,8 @@ bool BoundingBoxManager::loadFromFile(const QString& path) {
         }
     }
 
+    file.close();
+
     return true;
 }
 
