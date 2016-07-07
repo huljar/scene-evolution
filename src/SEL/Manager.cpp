@@ -1,4 +1,4 @@
-#include <SEL/SELManager.h>
+#include <SEL/Manager.h>
 #include <SEL/sel-flex.h>
 #include <SEL/sel-bison.h>
 

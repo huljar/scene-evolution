@@ -1,5 +1,5 @@
-#include <SEL/SELDriver.h>
-#include <SEL/SELParser.h>
+#include <SEL/Driver.h>
+#include <SEL/Parser.h>
 
 #include <iostream>
 
