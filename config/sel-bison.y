@@ -1,8 +1,6 @@
 %skeleton "lalr1.cc"                    // Request C++ usage
 %require "3.0.4"                        // Require specific version for safety reasons
 
-%defines                                // Generate a header file for the scanner to use
-
 %define api.namespace {SEL}
 %define parser_class_name {Parser}
 
@@ -10,25 +8,12 @@
 %define api.value.type variant
 %define parse.assert
 
-%code requires {                        // Code to put in the parser header file
+// Code to put in the parser header file
+%code requires {
 namespace SEL {
     class Driver;                       // Forward declaration of driver class (to dissolve mutual dependency)
 }
-}
 
-%param {SELDriver& driver}              // Add the parsing context as parameter to yylex/yyparse
-
-%locations                              // Request location tracking
-%initial-action {
-    @$.begin.filename = &driver.file;
-    @$.end.filename = &driver.file;     // Initialize the initial location to the file name from the driver
-}
-
-%define parse.trace                     // Enable parser tracing
-%define parse.error verbose             // Enable verbose error messages (may contain incorrect information)
-
-%code {                                 // Code to put in the parser implementation file
-#include <SEL/Driver.h>
 #include <SEL/Query.h>
 #include <SEL/SelectStatement.h>
 #include <SEL/Object.h>
@@ -48,13 +33,32 @@ namespace SEL {
 #include <SEL/Action.h>
 #include <SEL/MoveAction.h>
 #include <SEL/RemoveAction.h>
+}
+
+%param {SEL::Driver& driver}            // Add the parsing context as parameter to yylex/yyparse
+
+%locations                              // Request location tracking
+
+// Initialize the initial location to the file name from the driver
+%initial-action {
+    @$.begin.filename = driver.getFilePathPtr();
+    @$.end.filename = driver.getFilePathPtr();
+}
+
+%define parse.trace                     // Enable parser tracing
+%define parse.error verbose             // Enable verbose error messages (may contain incorrect information)
+
+// Code to put in the parser implementation file
+%code {
+#include <SEL/Driver.h>                 // Here we do not need to worry about mutual inclusion
 #include <QString>
-#include <QVariant>
 #include <list>
 }
 
 %define api.token.prefix {TOK_}         // Token prefix to avoid name clashes
-%token                                  // Declare tokens without semantic values
+
+// Declare tokens without semantic values
+%token
     END 0   "end of file"
     SELECT  "select"
     FROM    "from"
@@ -63,13 +67,13 @@ namespace SEL {
     SUPPORT "supported by"
     MOVE    "move to"
     REMOVE  "remove"
+    OR      "or"
+    AND     "and"
+    NOT     "not"
     LPAREN  "("
     RPAREN  ")"
     COMMA   ","
     SEMICOL ";"
-    OR      "or"
-    AND     "and"
-    NOT     "not"
     EQ      "="
     NE      "!="
     LT      "<"
@@ -78,13 +82,15 @@ namespace SEL {
     GE      ">="
 ;
 
-%token <QString> QUALIFIER "qualifier"  // Declare tokens with semantic values
+// Declare tokens with semantic values
+%token <QString> QUALIFIER "qualifier"
 %token <QString> IDENTIFIER "identifier"
 %token <int> INTEGER "integer"
 %token <float> FLOAT "float"
 %token <bool> BOOLEAN "boolean"
 
-%type <std::list<SEL::Query*>> query_list     // Declare types of non-terminals
+// Declare types of non-terminals
+%type <std::list<SEL::Query*>> query_list
 %type <SEL::Query*> query
 %type <SEL::SelectStatement*> select_statement
 %type <std::list<SEL::Object*>> object_list
@@ -108,15 +114,15 @@ namespace SEL {
 %type <SEL::MoveAction*> move_action
 %type <SEL::RemoveAction*> remove_action
 
-                          // TODO: destructors
+%destructor { delete $$; } <*>
+%destructor { for(auto it = $$.begin(); it != $$.end(); ++it) delete *it; } query_list object_list qualifier_list action_list
+%destructor { } "qualifier" "identifier" "integer" "float" "boolean"
 
-%printer { yyoutput << $$; } <*>;       // Default printing action
+%printer { yyoutput << *$$; } action object;
 
 /*******************************/
 %% // begin grammar definition //
 /*******************************/
-
-%start query_list;
 
 query_list:
     query { $$ = std::list<SEL::Query*>({$1}); }
@@ -130,14 +136,17 @@ select_statement:
 
 object_list:
     object { $$ = std::list<SEL::Object*>({$1}); }
-  | object_list "," object { $1.push_back($2); $$ = std::move($1); };
+  | object_list "," object { $1.push_back($3); $$ = std::move($1); };
 
 object:
     qualifier_list "identifier" { $$ = new SEL::Object($1, $2); };
 
 qualifier_list:
     { $$ = std::list<SEL::Qualifier*>(); }
-  | qualifier_list "qualifier" { $1.push_back(new SEL::Qualifier($2)); $$ = $1; };
+  | qualifier_list qualifier { $1.push_back($2); $$ = $1; };
+
+qualifier:
+    "qualifier" { $$ = new SEL::Qualifier($1); };
 
 search_condition:
     boolean_term { $$ = new SEL::SearchCondition(nullptr, $1); }
@@ -193,8 +202,8 @@ action_list:
   | action_list action { $1.push_back($2); $$ = $1; };
 
 action:
-    move_action { }
-  | remove_action { };
+    move_action { $$ = $1; }
+  | remove_action { $$ = $1; };
 
 move_action:
     "move to" object "where" search_condition { $$ = new SEL::MoveAction($2, $4); };
@@ -206,6 +215,6 @@ remove_action:
 %% // end grammar definition //
 /*****************************/
 
-void SEL::SELParser::error(const location_type& loc, const std::string& message) {
+void SEL::Parser::error(const location& loc, const std::string& message) {
     driver.error(loc, message);
 }

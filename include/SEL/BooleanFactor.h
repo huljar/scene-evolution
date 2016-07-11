@@ -8,6 +8,7 @@ namespace SEL {
     {
     public:
         BooleanFactor(BooleanTest* child, bool negate);
+        virtual ~BooleanFactor();
 
     protected:
         BooleanTest* mChild;

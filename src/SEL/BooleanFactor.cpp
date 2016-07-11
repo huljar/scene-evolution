@@ -7,3 +7,7 @@ BooleanFactor::BooleanFactor(BooleanTest* child, bool negate)
     , mNegate(negate)
 {
 }
+
+BooleanFactor::~BooleanFactor() {
+    delete mChild;
+}

@@ -7,6 +7,10 @@ NumericValue::NumericValue(QVariant value)
 {
 }
 
+NumericValue::~NumericValue() {
+
+}
+
 QVariant NumericValue::calc() const {
     return mValue;
 }

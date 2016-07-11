@@ -2,7 +2,10 @@
 
 using namespace SEL;
 
-CompElement::CompElement(QVariant* value)
-    : mValue(value)
-{
+CompElement::CompElement() {
+
+}
+
+CompElement::~CompElement() {
+
 }

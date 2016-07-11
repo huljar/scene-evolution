@@ -7,3 +7,8 @@ SearchCondition::SearchCondition(SearchCondition* left, BooleanTerm* right)
     , mRight(right)
 {
 }
+
+SearchCondition::~SearchCondition() {
+    delete mLeft;
+    delete mRight;
+}

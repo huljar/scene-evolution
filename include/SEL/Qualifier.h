@@ -8,6 +8,7 @@ namespace SEL {
     {
     public:
         Qualifier(QString text);
+        virtual ~Qualifier();
 
     protected:
         QString mText;

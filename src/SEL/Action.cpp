@@ -2,7 +2,10 @@
 
 using namespace SEL;
 
-Action::Action()
-{
+Action::Action() {
+
+}
+
+Action::~Action() {
 
 }

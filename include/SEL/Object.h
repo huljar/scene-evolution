@@ -10,6 +10,11 @@ namespace SEL {
     {
     public:
         Object(std::list<Qualifier*> qualList, QString objName);
+        virtual ~Object();
+
+        QString getObjName() const;
+
+        friend std::ostream& operator<<(std::ostream& o, const Object& obj) { o << "operator<< called on Object " << obj.mObjName.toStdString(); return o; }
 
     protected:
         std::list<Qualifier*> mQualList;

@@ -9,7 +9,7 @@ namespace SEL {
     class MoveAction : public Action
     {
     public:
-        MoveAction(Object* obj, SearchCondition* searchCond);
+        MoveAction(Object* toObj, SearchCondition* searchCond);
         virtual ~MoveAction();
 
         virtual void exec() const;

@@ -8,3 +8,12 @@ CompPredicate::CompPredicate(CompElement* left, Operator op, CompElement* right)
     , mOp(op)
 {
 }
+
+CompPredicate::~CompPredicate() {
+    delete mLeft;
+    delete mRight;
+}
+
+bool CompPredicate::eval() const {
+    return true; // TODO: implement
+}

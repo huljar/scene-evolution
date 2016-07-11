@@ -1,2 +1,11 @@
 *.user
 build/
+
+# Flex/Bison generated files
+include/SEL/sel-bison.h
+include/SEL/sel-flex.h
+src/SEL/sel-bison.cpp
+src/SEL/sel-flex.cpp
+src/SEL/location.hh
+src/SEL/position.hh
+src/SEL/stack.hh

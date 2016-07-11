@@ -11,6 +11,7 @@ namespace SEL {
     public:
         BooleanTest(Predicate* pred);
         BooleanTest(SearchCondition* searchCond);
+        virtual ~BooleanTest();
 
         bool isPredicate() const;
 

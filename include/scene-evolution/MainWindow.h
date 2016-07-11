@@ -8,7 +8,7 @@
 #include <scene-evolution/CameraManager.h>
 #include <scene-evolution/EventArgs.h>
 #include <scene-evolution/BoundingBoxManager.h>
-#include <scene-evolution/SELManager.h>
+#include <SEL/Driver.h>
 
 #include <QMainWindow>
 
@@ -83,8 +83,6 @@ private:
 
     RGBDScene* mRGBDScene;
     Ogre::SceneNode* mRGBDSceneNode;
-
-    SELManager* mSELManager;
 };
 
 #endif // MAINWINDOW_H

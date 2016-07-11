@@ -1,7 +1,7 @@
 #ifndef SELDRIVER_H
 #define SELDRIVER_H
 
-#include <SEL/SELParser.h>
+#include <SEL/sel-bison.h>
 
 #include <QString>
 #include <QMap>
@@ -9,16 +9,16 @@
 #include <string>
 
 // Tell Flex the lexer's prototype ...
-#define YY_DECL SEL::SELParser::SymbolType yylex(SEL::SELDriver& driver)
+#define YY_DECL SEL::Parser::symbol_type yylex(SEL::Driver& driver)
 // ... and declare it for the parser's sake
 YY_DECL;
 
 namespace SEL {
-    class SELDriver
+    class Driver
     {
     public:
-        SELDriver();
-        virtual ~SELDriver();
+        Driver();
+        virtual ~Driver();
 
         // Scanner handling
         void scanBegin();
@@ -31,8 +31,17 @@ namespace SEL {
         void error(const SEL::location& loc, const std::string& message);
         void error(const std::string& message);
 
+        bool getTraceScanning() const;
+        void setTraceScanning(bool traceScanning);
+
+        bool getTraceParsing() const;
+        void setTraceParsing(bool traceParsing);
+
+        QString getFilePath() const;
+        std::string* getFilePathPtr();
+
     protected:
-        QString mFilePath;
+        std::string mFilePath;
 
         bool mTraceScanning;
         bool mTraceParsing;

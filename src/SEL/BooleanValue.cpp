@@ -7,6 +7,10 @@ BooleanValue::BooleanValue(bool value)
 {
 }
 
+BooleanValue::~BooleanValue() {
+
+}
+
 bool BooleanValue::eval() const {
     return mValue;
 }

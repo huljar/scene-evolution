@@ -7,7 +7,8 @@ namespace SEL {
     class BooleanTerm
     {
     public:
-        BooleanTerm(BooleanTerm* left, BooleanFactor right);
+        BooleanTerm(BooleanTerm* left, BooleanFactor* right);
+        virtual ~BooleanTerm();
 
     protected:
         BooleanTerm* mLeft;

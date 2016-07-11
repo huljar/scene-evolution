@@ -7,3 +7,12 @@ Object::Object(std::list<Qualifier*> qualList, QString objName)
     , mObjName(std::move(objName))
 {
 }
+
+Object::~Object() {
+    for(auto it = mQualList.begin(); it != mQualList.end(); ++it)
+        delete *it;
+}
+
+QString Object::getObjName() const {
+    return mObjName;
+}

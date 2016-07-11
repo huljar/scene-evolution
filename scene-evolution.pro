@@ -27,7 +27,6 @@ SOURCES += src/main.cpp\
         src/EventArgs.cpp \
         src/OrientedBoundingBox.cpp \
         src/BoundingBoxManager.cpp \
-        src/SEL/Manager.cpp \
         src/SEL/Driver.cpp \
         src/SEL/Query.cpp \
         src/SEL/SelectStatement.cpp \
@@ -62,7 +61,6 @@ HEADERS  += include/scene-evolution/MainWindow.h \
         include/scene-evolution/interop.h \
         include/scene-evolution/OrientedBoundingBox.h \
         include/scene-evolution/BoundingBoxManager.h \
-        include/SEL/Manager.h \
         include/SEL/Driver.h \
         include/SEL/Query.h \
         include/SEL/SelectStatement.h \
@@ -104,6 +102,8 @@ LIBS += -lopencv_core -lopencv_imgproc -lopencv_highgui
 # Flex/Bison
 LIBS += -lfl -ly
 
+INCLUDEPATH += src/SEL include/SEL #necessary for Bison to locate auxiliary classes and header files
+
 FLEXSOURCES = config/sel-flex.l
 BISONSOURCES = config/sel-bison.y
 
@@ -112,8 +112,8 @@ OTHER_FILES += \
     $$BISONSOURCES
 
 flexsource.input = FLEXSOURCES
-flexsource.output = $$PWD/src/${QMAKE_FILE_BASE}.cpp
-flexsource.commands = flex++ --header-file=$$PWD/include/SEL/${QMAKE_FILE_BASE}.h -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_IN}
+flexsource.output = $$PWD/src/SEL/${QMAKE_FILE_BASE}.cpp
+flexsource.commands = flex --header-file=$$PWD/include/SEL/${QMAKE_FILE_BASE}.h -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_IN}
 flexsource.variable_out = SOURCES
 flexsource.name = Flex Sources ${QMAKE_FILE_IN}
 flexsource.CONFIG += target_predeps
@@ -130,7 +130,7 @@ flexheader.CONFIG += target_predeps no_link
 QMAKE_EXTRA_COMPILERS += flexheader
 
 bisonsource.input = BISONSOURCES
-bisonsource.output = $$PWD/src/${QMAKE_FILE_BASE}.cpp
+bisonsource.output = $$PWD/src/SEL/${QMAKE_FILE_BASE}.cpp
 bisonsource.commands = bison -d --defines=$$PWD/include/SEL/${QMAKE_FILE_BASE}.h -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_IN}
 bisonsource.variable_out = SOURCES
 bisonsource.name = Bison Sources ${QMAKE_FILE_IN}
@@ -146,3 +146,30 @@ bisonheader.name = Bison Headers ${QMAKE_FILE_IN}
 bisonheader.CONFIG += target_predeps no_link
 
 QMAKE_EXTRA_COMPILERS += bisonheader
+
+bisonaux1.input = BISONSOURCES
+bisonaux1.output = $$PWD/src/SEL/location.hh
+bisonaux1.commands = @true
+bisonaux1.variable_out = HEADERS
+bisonaux1.name = Bison Headers ${QMAKE_FILE_IN}
+bisonaux1.CONFIG += target_predeps no_link
+
+QMAKE_EXTRA_COMPILERS += bisonaux1
+
+bisonaux2.input = BISONSOURCES
+bisonaux2.output = $$PWD/src/SEL/position.hh
+bisonaux2.commands = @true
+bisonaux2.variable_out = HEADERS
+bisonaux2.name = Bison Headers ${QMAKE_FILE_IN}
+bisonaux2.CONFIG += target_predeps no_link
+
+QMAKE_EXTRA_COMPILERS += bisonaux2
+
+bisonaux3.input = BISONSOURCES
+bisonaux3.output = $$PWD/src/SEL/stack.hh
+bisonaux3.commands = @true
+bisonaux3.variable_out = HEADERS
+bisonaux3.name = Bison Headers ${QMAKE_FILE_IN}
+bisonaux3.CONFIG += target_predeps no_link
+
+QMAKE_EXTRA_COMPILERS += bisonaux3

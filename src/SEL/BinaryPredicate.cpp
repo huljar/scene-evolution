@@ -2,7 +2,10 @@
 
 using namespace SEL;
 
-BinaryPredicate::BinaryPredicate()
-{
+BinaryPredicate::BinaryPredicate() {
+
+}
+
+BinaryPredicate::~BinaryPredicate() {
 
 }

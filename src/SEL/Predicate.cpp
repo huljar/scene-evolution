@@ -2,7 +2,10 @@
 
 using namespace SEL;
 
-Predicate::Predicate()
-{
+Predicate::Predicate() {
+
+}
+
+Predicate::~Predicate() {
 
 }

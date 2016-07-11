@@ -8,6 +8,7 @@ namespace SEL {
     {
     public:
         SearchCondition(SearchCondition* left, BooleanTerm* right);
+        virtual ~SearchCondition();
 
     protected:
         SearchCondition* mLeft;

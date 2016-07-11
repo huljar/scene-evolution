@@ -16,7 +16,6 @@ MainWindow::MainWindow(QWidget *parent)
     , mCurrentSceneIdx(0)
     , mRGBDScene(nullptr)
     , mRGBDSceneNode(nullptr)
-    , mSELManager(nullptr)
 {
     ui->setupUi(this);
 
@@ -166,12 +165,13 @@ void MainWindow::onActionSaveOBBsToFileTriggered(bool checked) {
 void MainWindow::onActionLoadSELFromFileTriggered(bool checked) {
     Q_UNUSED(checked);
 
-    // Check if SEL manager exists
-    if(!mSELManager) {
-        mSELManager = new SELManager;
+    QString path = QFileDialog::getOpenFileName(nullptr, tr("Open file"), QDir::homePath(), tr("Scene Evolution Language scripts (*.sel)"));
+    if(!path.isEmpty()) {
+        SEL::Driver driver;
+        driver.setTraceParsing(true);
+        driver.setTraceScanning(false);
+        driver.parse(path);
     }
-
-    mSELManager->loadFromFile();
 }
 
 void MainWindow::onPushButtonPrevSceneClicked(bool checked) {
@@ -318,6 +318,8 @@ void MainWindow::setUpConnections() {
 
     connect(ui->actionLoadOBBsFromFile, SIGNAL(triggered(bool)), this, SLOT(onActionLoadOBBsFromFileTriggered(bool)));
     connect(ui->actionSaveOBBsToFile, SIGNAL(triggered(bool)), this, SLOT(onActionSaveOBBsToFileTriggered(bool)));
+
+    connect(ui->actionLoadSELFromFile, SIGNAL(triggered(bool)), this, SLOT(onActionLoadSELFromFileTriggered(bool)));
 
     connect(ui->pushButtonPrevScene, SIGNAL(clicked(bool)), this, SLOT(onPushButtonPrevSceneClicked(bool)));
     connect(ui->pushButtonNextScene, SIGNAL(clicked(bool)), this, SLOT(onPushButtonNextSceneClicked(bool)));

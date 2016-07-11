@@ -23,7 +23,7 @@ namespace SEL {
         virtual bool eval() const;
 
     protected:
-        CompElement* mLeft, mRight;
+        CompElement* mLeft, *mRight;
         Operator mOp;
     };
 }
