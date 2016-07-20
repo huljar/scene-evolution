@@ -114,19 +114,25 @@ namespace SEL {
 %type <SEL::MoveAction*> move_action
 %type <SEL::RemoveAction*> remove_action
 
-%destructor { delete $$; } <*>
-%destructor { for(auto it = $$.begin(); it != $$.end(); ++it) delete *it; } query_list object_list qualifier_list action_list
-%destructor { } "qualifier" "identifier" "integer" "float" "boolean"
+// Destructors are also called on stack reduce even though the documentation says this is
+// not the case, so disable them for now (will cause memory leaks during error recovery)
+//%destructor { delete $$; } <*>
+//%destructor { for(auto it = $$.begin(); it != $$.end(); ++it) delete *it; } query_list object_list qualifier_list action_list
+//%destructor { } "qualifier" "identifier" "integer" "float" "boolean"
 
-%printer { yyoutput << *$$; } action object;
+// Specify how to print a symbol
+%printer { yyoutput << *$$; } <*>;
+%printer { yyoutput << "List containig " << $$.size() << " elements"; } query_list object_list qualifier_list action_list
+%printer { yyoutput << $$.toStdString(); } "qualifier" "identifier"
+%printer { yyoutput << $$; } "integer" "float" "boolean"
 
 /*******************************/
 %% // begin grammar definition //
 /*******************************/
 
 query_list:
-    query { $$ = std::list<SEL::Query*>({$1}); }
-  | query_list query { $1.push_back($2); $$ = std::move($1); };
+    query { $$ = std::list<SEL::Query*>({$1}); driver.setResult($$); }
+  | query_list query { $1.push_back($2); $$ = std::move($1); driver.setResult($$); };
 
 query:
     select_statement ";" action_list ";" { $$ = new SEL::Query($1, $3); };
@@ -143,7 +149,7 @@ object:
 
 qualifier_list:
     { $$ = std::list<SEL::Qualifier*>(); }
-  | qualifier_list qualifier { $1.push_back($2); $$ = $1; };
+  | qualifier_list qualifier { $1.push_back($2); $$ = std::move($1); };
 
 qualifier:
     "qualifier" { $$ = new SEL::Qualifier($1); };
@@ -199,7 +205,7 @@ boolean_value:
 
 action_list:
     action { $$ = std::list<Action*>({$1}); }
-  | action_list action { $1.push_back($2); $$ = $1; };
+  | action_list action { $1.push_back($2); $$ = std::move($1); };
 
 action:
     move_action { $$ = $1; }

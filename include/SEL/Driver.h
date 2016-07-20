@@ -2,10 +2,12 @@
 #define SELDRIVER_H
 
 #include <SEL/sel-bison.h>
+#include <SEL/Query.h>
 
 #include <QString>
 #include <QMap>
 
+#include <list>
 #include <string>
 
 // Tell Flex the lexer's prototype ...
@@ -40,11 +42,17 @@ namespace SEL {
         QString getFilePath() const;
         std::string* getFilePathPtr();
 
+        std::list<Query*> getResult() const;
+        void setResult(const std::list<Query*>& result);
+        void setResult(std::list<Query*>&& result);
+
     protected:
         std::string mFilePath;
 
         bool mTraceScanning;
         bool mTraceParsing;
+
+        std::list<Query*> mResult;
     };
 }
 

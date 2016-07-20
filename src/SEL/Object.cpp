@@ -39,5 +39,5 @@ Object* Object::clone() const {
 }
 
 void Object::print(std::ostream& os) const {
-    os << "Object with " << mQualList.size() << " qualifiers";
+    os << "Object " << mObjName.toStdString() << " with " << mQualList.size() << " qualifiers";
 }

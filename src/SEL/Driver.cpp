@@ -74,3 +74,15 @@ QString Driver::getFilePath() const {
 std::string* Driver::getFilePathPtr() {
     return &mFilePath;
 }
+
+std::list<Query*> Driver::getResult() const {
+    return mResult;
+}
+
+void Driver::setResult(const std::list<Query*>& result) {
+    mResult = result;
+}
+
+void Driver::setResult(std::list<Query*>&& result) {
+    mResult = result;
+}

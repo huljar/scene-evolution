@@ -171,6 +171,10 @@ void MainWindow::onActionLoadSELFromFileTriggered(bool checked) {
         driver.setTraceParsing(true);
         driver.setTraceScanning(false);
         driver.parse(path);
+
+        std::list<SEL::Query*> res = driver.getResult();
+        std::cout << "res contains " << res.size() << " queries" << std::endl;
+        if(res.size() > 0) std::cout << *res.front() << std::endl;
     }
 }
 

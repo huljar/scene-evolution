@@ -6,11 +6,12 @@ RemoveAction::RemoveAction() {
 
 }
 
-RemoveAction::RemoveAction(const RemoveAction& other){
-
+RemoveAction::RemoveAction(const RemoveAction& other) {
+    (void)other;
 }
 
 RemoveAction& RemoveAction::operator=(const RemoveAction& other) {
+    (void)other;
     return *this;
 }
 
