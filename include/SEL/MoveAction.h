@@ -10,11 +10,17 @@ namespace SEL {
     {
     public:
         MoveAction(Object* toObj, SearchCondition* searchCond);
+        MoveAction(const MoveAction& other);
+        MoveAction& operator=(const MoveAction& other);
         virtual ~MoveAction();
 
         virtual void exec() const;
 
+        virtual MoveAction* clone() const;
+
     protected:
+        virtual void print(std::ostream& os) const;
+
         Object* mObj;
         SearchCondition* mSearchCond;
     };

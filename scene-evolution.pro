@@ -45,8 +45,8 @@ SOURCES += src/main.cpp\
         src/SEL/Action.cpp \
         src/SEL/MoveAction.cpp \
         src/SEL/RemoveAction.cpp \
-    src/SEL/BooleanValue.cpp \
-    src/SEL/NumericValue.cpp
+        src/SEL/BooleanValue.cpp \
+        src/SEL/NumericValue.cpp
 
 HEADERS  += include/scene-evolution/MainWindow.h \
         include/scene-evolution/QtOgreWindow.h \
@@ -79,8 +79,9 @@ HEADERS  += include/scene-evolution/MainWindow.h \
         include/SEL/Action.h \
         include/SEL/MoveAction.h \
         include/SEL/RemoveAction.h \
-    include/SEL/BooleanValue.h \
-    include/SEL/NumericValue.h
+        include/SEL/BooleanValue.h \
+        include/SEL/NumericValue.h \
+        include/SEL/BisonSymbol.h
 
 FORMS    += forms/MainWindow.ui
 

@@ -9,11 +9,17 @@ namespace SEL {
     {
     public:
         SupportTerm(Object* obj);
+        SupportTerm(const SupportTerm& other);
+        SupportTerm& operator=(const SupportTerm& other);
         virtual ~SupportTerm();
 
         virtual bool eval() const;
 
+        virtual SupportTerm* clone() const;
+
     protected:
+        virtual void print(std::ostream& os) const;
+
         Object* mObj;
     };
 }

@@ -15,11 +15,36 @@ BooleanTest::BooleanTest(SearchCondition* searchCond)
 {
 }
 
+BooleanTest::BooleanTest(const BooleanTest& other)
+    : mPred(other.mPred)
+    , mSearchCond(other.mSearchCond)
+{
+}
+
+BooleanTest& BooleanTest::operator=(const BooleanTest& other) {
+    delete mPred;
+    delete mSearchCond;
+
+    mPred = other.mPred;
+    mSearchCond = other.mSearchCond;
+
+    return *this;
+}
+
 BooleanTest::~BooleanTest() {
     delete mPred;
     delete mSearchCond;
+    std::cerr << "Deleting BooleanTest" << std::endl;
 }
 
 bool BooleanTest::isPredicate() const {
     return mPred != nullptr;
+}
+
+BooleanTest* BooleanTest::clone() const {
+    return new BooleanTest(*this);
+}
+
+void BooleanTest::print(std::ostream& os) const {
+    os << "BooleanTest with " << (isPredicate() ? "predicate" : "nested search condition");
 }

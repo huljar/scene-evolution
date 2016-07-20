@@ -9,11 +9,17 @@ namespace SEL {
     {
     public:
         DistanceTerm(Object* obj);
+        DistanceTerm(const DistanceTerm& other);
+        DistanceTerm& operator=(const DistanceTerm& other);
         virtual ~DistanceTerm();
 
         virtual QVariant calc() const;
 
+        virtual DistanceTerm* clone() const;
+
     protected:
+        virtual void print(std::ostream& os) const;
+
         Object* mObj;
     };
 }

@@ -1,22 +1,27 @@
 #ifndef OBJECT_H
 #define OBJECT_H
 
+#include <SEL/BisonSymbol.h>
 #include <SEL/Qualifier.h>
 #include <QString>
 #include <list>
 
 namespace SEL {
-    class Object
+    class Object : public BisonSymbol
     {
     public:
         Object(std::list<Qualifier*> qualList, QString objName);
+        Object(const Object& other);
+        Object& operator=(const Object& other);
         virtual ~Object();
 
-        QString getObjName() const;
+        QString getName() const;
 
-        friend std::ostream& operator<<(std::ostream& o, const Object& obj) { o << "operator<< called on Object " << obj.mObjName.toStdString(); return o; }
+        virtual Object* clone() const;
 
     protected:
+        virtual void print(std::ostream& os) const;
+
         std::list<Qualifier*> mQualList;
         QString mObjName;
     };

@@ -7,10 +7,32 @@ SupportTerm::SupportTerm(Object* obj)
 {
 }
 
+SupportTerm::SupportTerm(const SupportTerm& other)
+    : mObj(other.mObj)
+{
+}
+
+SupportTerm& SupportTerm::operator=(const SupportTerm& other) {
+    delete mObj;
+
+    mObj = other.mObj;
+
+    return *this;
+}
+
 SupportTerm::~SupportTerm() {
     delete mObj;
+    std::cerr << "Deleting SupportTerm" << std::endl;
 }
 
 bool SupportTerm::eval() const {
     return true; // TODO: implement
+}
+
+SupportTerm* SupportTerm::clone() const {
+    return new SupportTerm(*this);
+}
+
+void SupportTerm::print(std::ostream& os) const {
+    os << "SupportTerm";
 }

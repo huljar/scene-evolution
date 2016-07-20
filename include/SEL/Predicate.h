@@ -1,8 +1,10 @@
 #ifndef PREDICATE_H
 #define PREDICATE_H
 
+#include <SEL/BisonSymbol.h>
+
 namespace SEL {
-    class Predicate
+    class Predicate : public BisonSymbol
     {
     public:
         Predicate();

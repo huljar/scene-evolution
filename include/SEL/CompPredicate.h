@@ -18,11 +18,17 @@ namespace SEL {
         };
 
         CompPredicate(CompElement* left, Operator op, CompElement* right);
+        CompPredicate(const CompPredicate& other);
+        CompPredicate& operator=(const CompPredicate& other);
         virtual ~CompPredicate();
 
         virtual bool eval() const;
 
+        virtual CompPredicate* clone() const;
+
     protected:
+        virtual void print(std::ostream& os) const;
+
         CompElement* mLeft, *mRight;
         Operator mOp;
     };

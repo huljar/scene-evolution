@@ -1,10 +1,11 @@
 #ifndef COMPELEMENT_H
 #define COMPELEMENT_H
 
+#include <SEL/BisonSymbol.h>
 #include <QVariant>
 
 namespace SEL {
-    class CompElement
+    class CompElement : public BisonSymbol
     {
     public:
         CompElement();

@@ -1,21 +1,28 @@
 #ifndef BOOLEANTEST_H
 #define BOOLEANTEST_H
 
+#include <SEL/BisonSymbol.h>
 #include <SEL/Predicate.h>
 
 namespace SEL {
     class SearchCondition; // forward declaration to prevent cycle in inclusion graph
 
-    class BooleanTest
+    class BooleanTest : public BisonSymbol
     {
     public:
         BooleanTest(Predicate* pred);
         BooleanTest(SearchCondition* searchCond);
+        BooleanTest(const BooleanTest& other);
+        BooleanTest& operator=(const BooleanTest& other);
         virtual ~BooleanTest();
 
         bool isPredicate() const;
 
+        virtual BooleanTest* clone() const;
+
     protected:
+        virtual void print(std::ostream& os) const;
+
         Predicate* mPred;
         SearchCondition* mSearchCond;
     };

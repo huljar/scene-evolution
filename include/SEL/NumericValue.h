@@ -8,11 +8,17 @@ namespace SEL {
     {
     public:
         NumericValue(QVariant value);
+        NumericValue(const NumericValue& other);
+        NumericValue& operator=(const NumericValue& other);
         virtual ~NumericValue();
 
         virtual QVariant calc() const;
 
+        virtual NumericValue* clone() const;
+
     protected:
+        virtual void print(std::ostream& os) const;
+
         QVariant mValue;
     };
 }

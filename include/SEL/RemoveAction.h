@@ -8,9 +8,16 @@ namespace SEL {
     {
     public:
         RemoveAction();
+        RemoveAction(const RemoveAction& other);
+        RemoveAction& operator=(const RemoveAction& other);
         virtual ~RemoveAction();
 
         virtual void exec() const;
+
+        virtual RemoveAction* clone() const;
+
+    protected:
+        virtual void print(std::ostream& os) const;
     };
 }
 

@@ -9,8 +9,6 @@ namespace SEL {
     public:
         BinaryPredicate();
         virtual ~BinaryPredicate();
-
-        virtual bool eval() const = 0;
     };
 }
 

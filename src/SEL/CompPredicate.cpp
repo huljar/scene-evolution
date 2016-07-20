@@ -9,11 +9,48 @@ CompPredicate::CompPredicate(CompElement* left, Operator op, CompElement* right)
 {
 }
 
+CompPredicate::CompPredicate(const CompPredicate& other)
+    : mLeft(other.mLeft)
+    , mRight(other.mRight)
+    , mOp(other.mOp)
+{
+}
+
+CompPredicate& CompPredicate::operator=(const CompPredicate& other) {
+    delete mLeft;
+    delete mRight;
+
+    mLeft = other.mLeft;
+    mRight = other.mRight;
+    mOp = other.mOp;
+
+    return *this;
+}
+
 CompPredicate::~CompPredicate() {
     delete mLeft;
     delete mRight;
+    std::cerr << "Deleting CompPredicate" << std::endl;
 }
 
 bool CompPredicate::eval() const {
     return true; // TODO: implement
+}
+
+CompPredicate* CompPredicate::clone() const {
+    return new CompPredicate(*this);
+}
+
+void CompPredicate::print(std::ostream& os) const {
+    os << "CompPredicate containing ";
+    switch(mOp) {
+        case Operator::EQ: os << "equality"; break;
+        case Operator::NE: os << "non-equality"; break;
+        case Operator::LT: os << "less-than"; break;
+        case Operator::GT: os << "greater-than"; break;
+        case Operator::LE: os << "less-or-equal"; break;
+        case Operator::GE: os << "greater-or-equal"; break;
+        default: os << "unknown"; break;
+    }
+    os << " comparison";
 }
