@@ -30,6 +30,13 @@ SearchCondition::~SearchCondition() {
     std::cerr << "Deleting SearchCondition" << std::endl;
 }
 
+bool SearchCondition::eval(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj) const {
+    if(mLeft)
+        return mLeft->eval(rgbdScene, currentScene, obj) || mRight->eval(rgbdScene, currentScene, obj);
+
+    return mRight->eval(rgbdScene, currentScene, obj);
+}
+
 SearchCondition* SearchCondition::clone() const {
     return new SearchCondition(*this);
 }

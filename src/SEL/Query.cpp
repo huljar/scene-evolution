@@ -32,10 +32,22 @@ Query::~Query() {
     std::cerr << "Deleting Query" << std::endl;
 }
 
+void Query::exec(RGBDScene* rgbdScene, const Scene& currentScene, const QVector<QString>& labelNames) const {
+
+}
+
 Query* Query::clone() const {
     return new Query(*this);
 }
 
 void Query::print(std::ostream& os) const {
     os << "Query containing " << mActionList.size() << " actions";
+}
+
+SelectStatement* Query::getSelectStmt() const {
+    return mSelectStmt;
+}
+
+std::list<Action*> Query::getActionList() const {
+    return mActionList;
 }

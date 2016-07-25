@@ -1,5 +1,7 @@
 #include <SEL/SelectStatement.h>
 
+#include <queue>
+
 using namespace SEL;
 
 SelectStatement::SelectStatement(std::list<Object*> objList, SearchCondition* searchCond)

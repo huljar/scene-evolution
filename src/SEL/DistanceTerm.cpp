@@ -1,4 +1,5 @@
 #include <SEL/DistanceTerm.h>
+#include <limits>
 
 using namespace SEL;
 
@@ -25,8 +26,14 @@ DistanceTerm::~DistanceTerm() {
     std::cerr << "Deleting DistanceTerm" << std::endl;
 }
 
-QVariant DistanceTerm::calc() const {
-    return QVariant(5); // TODO: implement
+QVariant DistanceTerm::calc(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj) const {
+    // Iterate over label image
+    const cv::Mat& labelImg = currentScene.getLabelImg();
+    float shortest = std::numeric_limits<float>::infinity();
+
+    for(cv::Mat_<unsigned short>::const_iterator it = labelImg.begin<unsigned short>(); it != labelImg.end<unsigned short>(); ++it) {
+
+    }
 }
 
 DistanceTerm* DistanceTerm::clone() const {

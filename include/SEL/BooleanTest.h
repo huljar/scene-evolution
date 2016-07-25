@@ -3,6 +3,10 @@
 
 #include <SEL/BisonSymbol.h>
 #include <SEL/Predicate.h>
+#include <SEL/SceneObject.h>
+
+#include <scene-evolution/RGBDScene.h>
+#include <scene-evolution/Scene.h>
 
 namespace SEL {
     class SearchCondition; // forward declaration to prevent cycle in inclusion graph
@@ -17,6 +21,8 @@ namespace SEL {
         virtual ~BooleanTest();
 
         bool isPredicate() const;
+
+        virtual bool eval(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj) const;
 
         virtual BooleanTest* clone() const;
 

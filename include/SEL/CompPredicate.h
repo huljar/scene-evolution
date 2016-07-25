@@ -22,11 +22,24 @@ namespace SEL {
         CompPredicate& operator=(const CompPredicate& other);
         virtual ~CompPredicate();
 
-        virtual bool eval() const;
+        virtual bool eval(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj) const;
 
         virtual CompPredicate* clone() const;
 
     protected:
+        template<typename T>
+        virtual bool comp(T left, T right) const {
+            switch(mOp) {
+                case Operator::EQ: return left == right;
+                case Operator::NE: return left != right;
+                case Operator::LT: return left < right;
+                case Operator::GT: return left > right;
+                case Operator::LE: return left <= right;
+                case Operator::GE: return left >= right;
+                default: return false;
+            }
+        }
+
         virtual void print(std::ostream& os) const;
 
         CompElement* mLeft, *mRight;

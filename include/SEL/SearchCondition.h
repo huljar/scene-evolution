@@ -3,6 +3,11 @@
 
 #include <SEL/BisonSymbol.h>
 #include <SEL/BooleanTerm.h>
+#include <SEL/Object.h>
+#include <SEL/SceneObject.h>
+
+#include <scene-evolution/RGBDScene.h>
+#include <scene-evolution/Scene.h>
 
 namespace SEL {
     class SearchCondition : public BisonSymbol
@@ -12,6 +17,8 @@ namespace SEL {
         SearchCondition(const SearchCondition& other);
         SearchCondition& operator=(const SearchCondition& other);
         virtual ~SearchCondition();
+
+        virtual bool eval(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj) const;
 
         virtual SearchCondition* clone() const;
 

@@ -15,6 +15,8 @@ namespace SEL {
 
         virtual Qualifier* clone() const;
 
+        QString getText() const;
+
     protected:
         virtual void print(std::ostream& os) const;
 

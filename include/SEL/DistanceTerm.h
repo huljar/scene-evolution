@@ -13,7 +13,7 @@ namespace SEL {
         DistanceTerm& operator=(const DistanceTerm& other);
         virtual ~DistanceTerm();
 
-        virtual QVariant calc() const;
+        virtual QVariant calc(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj) const;
 
         virtual DistanceTerm* clone() const;
 

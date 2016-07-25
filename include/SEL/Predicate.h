@@ -2,6 +2,7 @@
 #define PREDICATE_H
 
 #include <SEL/BisonSymbol.h>
+#include <SEL/SceneObject.h>
 
 namespace SEL {
     class Predicate : public BisonSymbol
@@ -10,7 +11,7 @@ namespace SEL {
         Predicate();
         virtual ~Predicate();
 
-        virtual bool eval() const = 0;
+        virtual bool eval(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj) const = 0;
     };
 }
 

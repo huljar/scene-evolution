@@ -53,6 +53,9 @@ loc.step();
 
 (?i:rightmost)      return SEL::Parser::make_QUALIFIER("rightmost", loc);
 (?i:leftmost)       return SEL::Parser::make_QUALIFIER("leftmost", loc);
+(?i:topmost)        return SEL::Parser::make_QUALIFIER("topmost", loc);
+(?i:bottommost)     return SEL::Parser::make_QUALIFIER("bottommost", loc);
+(?i:all)            return SEL::Parser::make_QUALIFIER("all", loc);
 
 (?i:true)           return SEL::Parser::make_BOOLEAN(true, loc);
 (?i:false)          return SEL::Parser::make_BOOLEAN(false, loc);

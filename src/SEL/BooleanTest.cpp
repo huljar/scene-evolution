@@ -41,6 +41,10 @@ bool BooleanTest::isPredicate() const {
     return mPred != nullptr;
 }
 
+bool BooleanTest::eval(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj) const {
+    return isPredicate() ? mPred->eval(rgbdScene, currentScene, obj) : mSearchCond->eval(rgbdScene, currentScene, obj);
+}
+
 BooleanTest* BooleanTest::clone() const {
     return new BooleanTest(*this);
 }

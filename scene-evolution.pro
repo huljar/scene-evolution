@@ -27,6 +27,7 @@ SOURCES += src/main.cpp\
         src/EventArgs.cpp \
         src/OrientedBoundingBox.cpp \
         src/BoundingBoxManager.cpp \
+        src/KDTree.cpp \
         src/SEL/Driver.cpp \
         src/SEL/Query.cpp \
         src/SEL/SelectStatement.cpp \
@@ -46,7 +47,8 @@ SOURCES += src/main.cpp\
         src/SEL/MoveAction.cpp \
         src/SEL/RemoveAction.cpp \
         src/SEL/BooleanValue.cpp \
-        src/SEL/NumericValue.cpp
+        src/SEL/NumericValue.cpp \
+    src/SEL/SceneObject.cpp
 
 HEADERS  += include/scene-evolution/MainWindow.h \
         include/scene-evolution/QtOgreWindow.h \
@@ -61,6 +63,7 @@ HEADERS  += include/scene-evolution/MainWindow.h \
         include/scene-evolution/interop.h \
         include/scene-evolution/OrientedBoundingBox.h \
         include/scene-evolution/BoundingBoxManager.h \
+        include/scene-evolution/KDTree.h \
         include/SEL/Driver.h \
         include/SEL/Query.h \
         include/SEL/SelectStatement.h \
@@ -81,7 +84,8 @@ HEADERS  += include/scene-evolution/MainWindow.h \
         include/SEL/RemoveAction.h \
         include/SEL/BooleanValue.h \
         include/SEL/NumericValue.h \
-        include/SEL/BisonSymbol.h
+        include/SEL/BisonSymbol.h \
+    include/SEL/SceneObject.h
 
 FORMS    += forms/MainWindow.ui
 

@@ -16,6 +16,7 @@ MainWindow::MainWindow(QWidget *parent)
     , mCurrentSceneIdx(0)
     , mRGBDScene(nullptr)
     , mRGBDSceneNode(nullptr)
+    , mSELDriver(nullptr)
 {
     ui->setupUi(this);
 
@@ -51,6 +52,7 @@ MainWindow::MainWindow(QWidget *parent)
 }
 
 MainWindow::~MainWindow() {
+    delete mSELDriver;
     delete mBoundingBoxManager;
     delete mDatasetManager;
     delete mOgreWindow;
@@ -167,14 +169,12 @@ void MainWindow::onActionLoadSELFromFileTriggered(bool checked) {
 
     QString path = QFileDialog::getOpenFileName(nullptr, tr("Open file"), QDir::homePath(), tr("Scene Evolution Language scripts (*.sel)"));
     if(!path.isEmpty()) {
-        SEL::Driver driver;
-        driver.setTraceParsing(true);
-        driver.setTraceScanning(false);
-        driver.parse(path);
+        if(!mSELDriver)
+            mSELDriver = new SEL::Driver;
+
+        mSELDriver->parse(path);
 
         std::list<SEL::Query*> res = driver.getResult();
-        std::cout << "res contains " << res.size() << " queries" << std::endl;
-        if(res.size() > 0) std::cout << *res.front() << std::endl;
     }
 }
 

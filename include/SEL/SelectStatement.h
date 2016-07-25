@@ -4,6 +4,8 @@
 #include <SEL/BisonSymbol.h>
 #include <SEL/Object.h>
 #include <SEL/SearchCondition.h>
+
+#include <QString>
 #include <list>
 
 namespace SEL {

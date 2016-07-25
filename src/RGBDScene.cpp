@@ -167,3 +167,7 @@ CameraManager RGBDScene::getCameraManager() const {
 CameraManager& RGBDScene::cameraManager() {
     return mCameraManager;
 }
+
+Ogre::SceneManager* RGBDScene::getSceneMgr() const {
+    return mSceneMgr;
+}

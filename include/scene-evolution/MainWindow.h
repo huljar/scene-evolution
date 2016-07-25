@@ -83,6 +83,8 @@ private:
 
     RGBDScene* mRGBDScene;
     Ogre::SceneNode* mRGBDSceneNode;
+
+    SEL::Driver* mSELDriver;
 };
 
 #endif // MAINWINDOW_H

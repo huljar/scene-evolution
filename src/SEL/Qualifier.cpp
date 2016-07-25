@@ -29,3 +29,7 @@ Qualifier* Qualifier::clone() const {
 void Qualifier::print(std::ostream& os) const {
     os << "Qualifier containing " << mText.toStdString();
 }
+
+QString Qualifier::getText() const {
+    return mText;
+}

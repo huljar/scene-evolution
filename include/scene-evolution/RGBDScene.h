@@ -47,6 +47,8 @@ public:
     CameraManager getCameraManager() const;
     CameraManager& cameraManager();
 
+    Ogre::SceneManager* getSceneMgr() const;
+
 protected:
     Ogre::ManualObject* mSceneObject;
     Ogre::SceneManager* mSceneMgr;

@@ -3,6 +3,10 @@
 
 #include <SEL/BisonSymbol.h>
 #include <SEL/BooleanTest.h>
+#include <SEL/SceneObject.h>
+
+#include <scene-evolution/RGBDScene.h>
+#include <scene-evolution/Scene.h>
 
 namespace SEL {
     class BooleanFactor : public BisonSymbol
@@ -12,6 +16,8 @@ namespace SEL {
         BooleanFactor(const BooleanFactor& other);
         BooleanFactor& operator=(const BooleanFactor& other);
         virtual ~BooleanFactor();
+
+        virtual bool eval(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj) const;
 
         virtual BooleanFactor* clone() const;
 

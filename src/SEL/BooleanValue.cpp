@@ -23,7 +23,11 @@ BooleanValue::~BooleanValue() {
     std::cerr << "Deleting BooleanValue" << std::endl;
 }
 
-bool BooleanValue::eval() const {
+bool BooleanValue::eval(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj) const {
+    (void)rgbdScene;
+    (void)currentScene;
+    (void)obj;
+
     return mValue;
 }
 

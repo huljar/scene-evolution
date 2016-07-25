@@ -33,8 +33,22 @@ CompPredicate::~CompPredicate() {
     std::cerr << "Deleting CompPredicate" << std::endl;
 }
 
-bool CompPredicate::eval() const {
-    return true; // TODO: implement
+bool CompPredicate::eval(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj) const {
+    QVariant left = mLeft->calc(rgbdScene, currentScene, obj);
+    QVariant right = mRight->calc(rgbdScene, currentScene, obj);
+
+    if(left.type() == QMetaType::Int && right.type() == QMetaType::Int) {
+        return comp(left.toInt(), right.toInt());
+    }
+    else if(left.type() == QMetaType::UInt && right.type() == QMetaType::UInt) {
+        return comp(left.toUInt(), right.toUInt());
+    }
+    else if(left.type() == QMetaType::Float && right.type() == QMetaType::Float) {
+        return comp(left.toFloat(), right.toFloat());
+    }
+    else {
+        return comp(left.toDouble(), right.toDouble());
+    }
 }
 
 CompPredicate* CompPredicate::clone() const {

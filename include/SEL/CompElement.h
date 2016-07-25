@@ -2,6 +2,11 @@
 #define COMPELEMENT_H
 
 #include <SEL/BisonSymbol.h>
+#include <SEL/SceneObject.h>
+
+#include <scene-evolution/RGBDScene.h>
+#include <scene-evolution/Scene.h>
+
 #include <QVariant>
 
 namespace SEL {
@@ -11,7 +16,7 @@ namespace SEL {
         CompElement();
         virtual ~CompElement();
 
-        virtual QVariant calc() const = 0;
+        virtual QVariant calc(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj) const = 0;
     };
 }
 

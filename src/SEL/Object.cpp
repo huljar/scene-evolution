@@ -1,4 +1,5 @@
 #include <SEL/Object.h>
+#include <SEL/SearchCondition.h>
 
 using namespace SEL;
 
@@ -32,6 +33,111 @@ Object::~Object() {
 
 QString Object::getName() const {
     return mObjName;
+}
+
+QVector<SceneObject> Object::getSceneObjects(const SearchCondition& searchCond, RGBDScene* rgbdScene, const Scene& currentScene,
+                                             const LabelMap& labels, bool applyQualifiers) const {
+    // Get all objects matching the specified names
+    QVector<SceneObject> ret;
+
+    LabelMap::const_iterator label = labels.find(mObjName);
+    if(label != labels.cend()) {
+        // Get all pixels covered by this label
+        const cv::Mat& labelImg = currentScene.getLabelImg();
+        RegionMap regionMap(
+            [](const cv::Point& lhs, const cv::Point& rhs) -> bool {
+                return lhs.y == rhs.y ? lhs.x < rhs.x : lhs.y < rhs.y;
+            }
+        );
+
+        for(cv::Mat_<unsigned short>::const_iterator jt = labelImg.begin<unsigned short>(); jt != labelImg.end<unsigned short>(); ++jt) {
+            if(*jt == *label) regionMap.insert(std::make_pair(jt.pos(), -1));
+        }
+
+        // Perform region growing to separate objects of same type
+        QVector<unsigned int> regionPointCounts = doRegionGrowing(labelImg, regionMap);
+
+        // Iterate over the objects
+        for(int i = 0; i < regionPointCounts.size(); ++i) {
+            // Evaluate search condition for this object
+            SceneObject obj(mObjName, labelImg.size());
+            if(searchCond.eval(rgbdScene, currentScene, obj)) {
+                ret.push_back(obj);
+            }
+        }
+    }
+
+    // Apply qualifiers
+    if(applyQualifiers) {
+        for(std::list<Qualifier*>::const_iterator it = mQualList.cbegin(); it != mQualList.cend(); ++it) {
+            if(!applyQualifier(**it, ret))
+                std::cerr << "Unable to apply qualifier " << (*it)->getText().toStdString() << " to " << mObjName.toStdString() << std::endl;
+        }
+    }
+
+    return ret;
+}
+
+QVector<SceneObject> Object::getSceneObjects(RGBDScene* rgbdScene, const Scene& currentScene,
+                                             const LabelMap& labels, bool applyQualifiers) const {
+
+}
+
+QVector<unsigned int> Object::doRegionGrowing(const cv::Mat& labelImg, RegionMap& points) const {
+    QVector<unsigned int> regionPointCounts;
+
+    int currentId = 0;
+    std::queue<RegionMap::iterator> queue;
+
+    // Iterate over all inliers
+    for(RegionMap::iterator it = points.begin(); it != points.end(); ++it) {
+        // Check if this point was already processed
+        if(it->second != -1)
+            continue;
+
+        // Add point to the queue
+        queue.push(it);
+
+        regionPointCounts.push_back(0);
+
+        // Iterate until the whole region is marked
+        while(!queue.empty()) {
+            RegionMap::iterator current = queue.front();
+            queue.pop();
+
+            if(current->second != -1)
+                continue;
+
+            // This point is unmarked, so mark it with the current region ID
+            current->second = currentId;
+            ++regionPointCounts[currentId];
+
+            // Add all points to the queue that are direct neighbors (8-connected grid) of the current point
+            // and have the same label
+            const cv::Point& pixel = current->first;
+            for(int y = pixel.y - 1; y <= pixel.y + 1; ++y) {
+                for(int x = pixel.x - 1; x <= pixel.x + 1; ++x) {
+                    RegionMap::iterator neighbor = points.find(cv::Point(x, y));
+                    // The current point itself will not be added since it is no longer marked with -1
+                    if(neighbor != points.end() && neighbor->second == -1
+                            && labelImg.at<unsigned short>(neighbor->first) == labelImg.at<unsigned short>(pixel)) {
+                        queue.push(neighbor);
+                    }
+                }
+            }
+        }
+
+        ++currentId;
+    }
+
+    return regionPointCounts;
+}
+
+bool Object::applyQualifier(const Qualifier& qual, QVector<SceneObject>& objList) const {
+    // TODO: implement
+    (void)qual;
+    (void)objList;
+    return false;
 }
 
 Object* Object::clone() const {
