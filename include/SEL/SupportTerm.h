@@ -13,7 +13,7 @@ namespace SEL {
         SupportTerm& operator=(const SupportTerm& other);
         virtual ~SupportTerm();
 
-        virtual bool eval() const;
+        virtual bool eval(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj) const;
 
         virtual SupportTerm* clone() const;
 

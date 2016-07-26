@@ -37,6 +37,7 @@ public slots:
     void onActionSaveOBBsToFileTriggered(bool checked);
 
     void onActionLoadSELFromFileTriggered(bool checked);
+    void onActionRunSELTriggered(bool checked);
 
     void onPushButtonPrevSceneClicked(bool checked);
     void onPushButtonNextSceneClicked(bool checked);

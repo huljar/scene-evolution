@@ -36,11 +36,11 @@ QString Object::getName() const {
 }
 
 QVector<SceneObject> Object::getSceneObjects(const SearchCondition& searchCond, RGBDScene* rgbdScene, const Scene& currentScene,
-                                             const LabelMap& labels, bool applyQualifiers) const {
+                                             const DatasetManager::LabelMap& labels, bool applyQualifiers) const {
     // Get all objects matching the specified names
     QVector<SceneObject> ret;
 
-    LabelMap::const_iterator label = labels.find(mObjName);
+    DatasetManager::LabelMap::const_iterator label = labels.find(mObjName);
     if(label != labels.cend()) {
         // Get all pixels covered by this label
         const cv::Mat& labelImg = currentScene.getLabelImg();
@@ -79,7 +79,7 @@ QVector<SceneObject> Object::getSceneObjects(const SearchCondition& searchCond, 
 }
 
 QVector<SceneObject> Object::getSceneObjects(RGBDScene* rgbdScene, const Scene& currentScene,
-                                             const LabelMap& labels, bool applyQualifiers) const {
+                                             const DatasetManager::LabelMap& labels, bool applyQualifiers) const {
 
 }
 

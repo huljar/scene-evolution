@@ -28,7 +28,7 @@ namespace SEL {
 
     protected:
         template<typename T>
-        virtual bool comp(T left, T right) const {
+        bool comp(T left, T right) const {
             switch(mOp) {
                 case Operator::EQ: return left == right;
                 case Operator::NE: return left != right;

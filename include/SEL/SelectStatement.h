@@ -5,6 +5,8 @@
 #include <SEL/Object.h>
 #include <SEL/SearchCondition.h>
 
+#include <scene-evolution/DatasetManager.h>
+
 #include <QString>
 #include <list>
 
@@ -16,6 +18,8 @@ namespace SEL {
         SelectStatement(const SelectStatement& other);
         SelectStatement& operator=(const SelectStatement& other);
         virtual ~SelectStatement();
+
+        virtual QVector<SceneObject> getSceneObjects(RGBDScene* rgbdScene, const Scene& currentScene, const DatasetManager::LabelMap& labels) const;
 
         virtual SelectStatement* clone() const;
 

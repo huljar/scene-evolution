@@ -7,6 +7,7 @@
 
 #include <scene-evolution/RGBDScene.h>
 #include <scene-evolution/Scene.h>
+#include <scene-evolution/DatasetManager.h>
 
 #include <QString>
 #include <QVector>
@@ -22,7 +23,7 @@ namespace SEL {
         Query& operator=(const Query& other);
         virtual ~Query();
 
-        virtual void exec(RGBDScene* rgbdScene, const Scene& currentScene, const QVector<QString>& labelNames) const;
+        virtual void exec(RGBDScene* rgbdScene, const Scene& currentScene, const DatasetManager::LabelMap& labels) const;
 
         virtual Query* clone() const;
 

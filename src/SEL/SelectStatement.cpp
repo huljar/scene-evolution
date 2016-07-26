@@ -34,6 +34,15 @@ SelectStatement::~SelectStatement() {
     std::cerr << "Deleting SelectStatement" << std::endl;
 }
 
+QVector<SceneObject> SelectStatement::getSceneObjects(RGBDScene* rgbdScene, const Scene& currentScene, const DatasetManager::LabelMap& labels) const {
+    QVector<SceneObject> ret;
+    for(std::list<Object*>::const_iterator it = mObjectList.cbegin(); it != mObjectList.cend(); ++it) {
+        QVector<SceneObject> current = (*it)->getSceneObjects(*mSearchCond, rgbdScene, currentScene, labels);
+        ret.append(current);
+    }
+    return ret;
+}
+
 SelectStatement* SelectStatement::clone() const {
     return new SelectStatement(*this);
 }

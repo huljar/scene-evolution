@@ -34,6 +34,12 @@ void Driver::scanEnd() {
 }
 
 int Driver::parse(const QString& filePath) {
+    // Delete old parsing tree
+    for(std::list<Query*>::iterator it = mResult.begin(); it != mResult.end(); ++it)
+        delete *it;
+    mResult.clear();
+
+    // Parse new file
     mFilePath = filePath.toStdString();
     scanBegin();
     SEL::Parser parser(*this);

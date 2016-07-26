@@ -9,6 +9,7 @@
 
 #include <QDir>
 #include <QException>
+#include <QMap>
 #include <QString>
 #include <QVector>
 
@@ -21,6 +22,8 @@
 class DatasetManager
 {
 public:
+    typedef QMap<QString, unsigned short> LabelMap;
+
     class DatasetException : public std::runtime_error, public QException {
     public:
         explicit DatasetException(const std::string& what_arg);
@@ -46,6 +49,7 @@ public:
     void setDatasetDir(const QString& datasetDirPath);
 
     const QVector<QString>& getLabelNames() const;
+    const LabelMap& getLabelMap() const;
     const CameraManager& getCameraParams() const;
 
 protected:
@@ -54,6 +58,7 @@ protected:
 
     QDir mDatasetDir;
     QVector<QString> mLabelNames;
+    LabelMap mLabelMap;
     CameraManager mCameraParams;
 
     Cache<QString, std::array<cv::Mat, 3>> mSceneCache;

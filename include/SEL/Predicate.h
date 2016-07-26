@@ -4,6 +4,9 @@
 #include <SEL/BisonSymbol.h>
 #include <SEL/SceneObject.h>
 
+#include <scene-evolution/RGBDScene.h>
+#include <scene-evolution/Scene.h>
+
 namespace SEL {
     class Predicate : public BisonSymbol
     {

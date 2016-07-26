@@ -32,8 +32,12 @@ Query::~Query() {
     std::cerr << "Deleting Query" << std::endl;
 }
 
-void Query::exec(RGBDScene* rgbdScene, const Scene& currentScene, const QVector<QString>& labelNames) const {
-
+void Query::exec(RGBDScene* rgbdScene, const Scene& currentScene, const DatasetManager::LabelMap& labels) const {
+    QVector<SceneObject> objects = mSelectStmt->getSceneObjects(rgbdScene, currentScene, labels);
+    std::cout << "Objects contains " << objects.size() << " elements:" << std::endl;
+    for(QVector<SceneObject>::iterator it = objects.begin(); it != objects.end(); ++it) {
+        std::cout << "  " << it->getName().toStdString() << std::endl;
+    }
 }
 
 Query* Query::clone() const {

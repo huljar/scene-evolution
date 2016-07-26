@@ -37,6 +37,7 @@ bool CompPredicate::eval(RGBDScene* rgbdScene, const Scene& currentScene, const 
     QVariant left = mLeft->calc(rgbdScene, currentScene, obj);
     QVariant right = mRight->calc(rgbdScene, currentScene, obj);
 
+    // Using QMetaType here is correct (see the QVariant documentation at https://doc.qt.io/qt-5/qvariant.html#type )
     if(left.type() == QMetaType::Int && right.type() == QMetaType::Int) {
         return comp(left.toInt(), right.toInt());
     }

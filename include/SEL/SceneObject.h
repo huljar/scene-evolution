@@ -4,7 +4,7 @@
 #include <scene-evolution/CameraManager.h>
 
 #include <opencv2/core/core.hpp>
-
+#include <OGRE/OgreManualObject.h>
 #include <QString>
 
 namespace SEL {
@@ -19,9 +19,13 @@ namespace SEL {
         cv::Vec2f getCentroid2D() const;
         cv::Vec3f getCentroid3D(const cv::Mat& labelImg, const CameraManager& camMgr) const;
 
+        QString getName() const;
+
     protected:
         QString mObjName;
         cv::Mat_<unsigned char> mPixels;
+
+        Ogre::ManualObject* mManualObject;
     };
 }
 

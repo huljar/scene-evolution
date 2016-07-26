@@ -2,13 +2,15 @@
 
 using namespace SEL;
 
-SceneObject::SceneObject() {
-
+SceneObject::SceneObject()
+    : mManualObject(nullptr)
+{
 }
 
 SceneObject::SceneObject(const QString& objName, const cv::Size& imgSize)
     : mObjName(objName)
     , mPixels(cv::Mat_<unsigned char>::zeros(imgSize))
+    , mManualObject(nullptr)
 {
 }
 
@@ -49,4 +51,8 @@ cv::Vec3f SceneObject::getCentroid3D(const cv::Mat& labelImg, const CameraManage
         ret[i] /= static_cast<float>(count);
 
     return ret;
+}
+
+QString SceneObject::getName() const {
+    return mObjName;
 }

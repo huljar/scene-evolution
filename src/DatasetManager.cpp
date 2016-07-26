@@ -153,6 +153,10 @@ CameraManager DatasetManager::readCameraFile(const QString& filePath) {
     return CameraManager(depthPrincipalPoint, depthFocalLength, rgbPrincipalPoint, rgbFocalLength, rotation, translation, mapMode);
 }
 
+const DatasetManager::LabelMap& DatasetManager::getLabelMap() const {
+    return mLabelMap;
+}
+
 const QVector<QString>& DatasetManager::getLabelNames() const {
     return mLabelNames;
 }
@@ -164,6 +168,10 @@ const CameraManager& DatasetManager::getCameraParams() const {
 void DatasetManager::init() {
     mLabelNames = readLabelFile(mDatasetDir.filePath("labelNames.txt"));
     mCameraParams = readCameraFile(mDatasetDir.filePath("Camera-Parameter.txt"));
+
+    for(int i = 0; i < mLabelNames.size(); ++i) {
+        mLabelMap.insert(mLabelNames.at(i), static_cast<unsigned short>(i));
+    }
 }
 
 DatasetManager::DatasetException::DatasetException(const std::string& what_arg)

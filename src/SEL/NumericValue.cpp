@@ -22,7 +22,11 @@ NumericValue::~NumericValue() {
     std::cerr << "Deleting NumericValue" << std::endl;
 }
 
-QVariant NumericValue::calc() const {
+QVariant NumericValue::calc(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj) const {
+    (void)rgbdScene;
+    (void)currentScene;
+    (void)obj;
+
     return mValue;
 }
 
@@ -32,7 +36,7 @@ NumericValue* NumericValue::clone() const {
 
 void NumericValue::print(std::ostream& os) const {
     os << "NumericValue containing ";
-    switch(mValue.type()) {
+    switch(mValue.type()) { // Use of QMetaType is correct here (see the QVariant documentation at https://doc.qt.io/qt-5/qvariant.html#type )
         case QMetaType::Int: os << "integer " << mValue.toInt(); break;
         case QMetaType::UInt: os << "unsigned integer " << mValue.toUInt(); break;
         case QMetaType::Float: os << "float " << mValue.toFloat(); break;

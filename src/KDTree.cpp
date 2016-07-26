@@ -106,7 +106,7 @@ KDTree::~KDTree() {
 }
 
 void KDTree::initialize(vertex_list* vertices, int maxDepth, int minSize) {
-    DEBUG_OUT("Constructing KD tree for " << vertices->size() << " vertices with a max depth of " << maxDepth << " and a min leaf size of " << minSize);
+    //DEBUG_OUT("Constructing KD tree for " << vertices->size() << " vertices with a max depth of " << maxDepth << " and a min leaf size of " << minSize);
     delete rootNode;
 
     this->vertices = vertices;
@@ -114,7 +114,7 @@ void KDTree::initialize(vertex_list* vertices, int maxDepth, int minSize) {
     this->minSize = minSize;
     treeBounds = getBounds(vertices->begin(), vertices->end());
     rootNode = construct(vertices->begin(), vertices->end(), 0);
-    DEBUG_OUT("Finished construction of KD tree");
+    //DEBUG_OUT("Finished construction of KD tree");
 }
 
 bool KDTree::initialized() const {

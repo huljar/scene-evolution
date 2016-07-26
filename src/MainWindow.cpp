@@ -172,9 +172,29 @@ void MainWindow::onActionLoadSELFromFileTriggered(bool checked) {
         if(!mSELDriver)
             mSELDriver = new SEL::Driver;
 
-        mSELDriver->parse(path);
+        int res = mSELDriver->parse(path);
+        switch(res) {
+            case 0: std::cout << "Successfully parsed file " << path.toStdString() << std::endl; ui->actionRunSEL->setEnabled(true); break;
+            case 1: std::cerr << "Error: Syntax error in file " << path.toStdString() << std::endl; break;
+            case 2: std::cerr << "Error: Memory exhaustion while parsing file " << path.toStdString() << std::endl; break;
+            default: std::cerr << "Error: Unknown error occurred while parsing file " << path.toStdString() << std::endl; break;
+        }
+    }
+}
 
-        std::list<SEL::Query*> res = driver.getResult();
+void MainWindow::onActionRunSELTriggered(bool checked) {
+    Q_UNUSED(checked);
+
+    if(!mSELDriver) {
+        std::cerr << "Error: No SEL file was loaded yet" << std::endl;
+        return;
+    }
+
+    std::list<SEL::Query*> queries = mSELDriver->getResult();
+    std::cout << "Executing " << queries.size() << " queries" << std::endl;
+
+    for(std::list<SEL::Query*>::const_iterator it = queries.cbegin(); it != queries.cend(); ++it) {
+        (*it)->exec(mRGBDScene, mCurrentScene, mDatasetManager->getLabelMap());
     }
 }
 
@@ -324,6 +344,7 @@ void MainWindow::setUpConnections() {
     connect(ui->actionSaveOBBsToFile, SIGNAL(triggered(bool)), this, SLOT(onActionSaveOBBsToFileTriggered(bool)));
 
     connect(ui->actionLoadSELFromFile, SIGNAL(triggered(bool)), this, SLOT(onActionLoadSELFromFileTriggered(bool)));
+    connect(ui->actionRunSEL, SIGNAL(triggered(bool)), this, SLOT(onActionRunSELTriggered(bool)));
 
     connect(ui->pushButtonPrevScene, SIGNAL(clicked(bool)), this, SLOT(onPushButtonPrevSceneClicked(bool)));
     connect(ui->pushButtonNextScene, SIGNAL(clicked(bool)), this, SLOT(onPushButtonNextSceneClicked(bool)));
