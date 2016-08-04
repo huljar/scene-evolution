@@ -15,7 +15,8 @@ Driver::Driver()
 }
 
 Driver::~Driver() {
-
+    for(std::list<Query*>::iterator it = mResult.begin(); it != mResult.end(); ++it)
+        delete *it;
 }
 
 void Driver::scanBegin() {

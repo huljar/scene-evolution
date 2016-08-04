@@ -6,7 +6,7 @@
 
 #include <scene-evolution/RGBDScene.h>
 
-#include <QVector>
+#include <vector>
 
 namespace SEL {
     class Action : public BisonSymbol
@@ -15,11 +15,11 @@ namespace SEL {
         Action();
         virtual ~Action();
 
-        virtual void exec() const = 0;
+        virtual void exec(RGBDScene* rgbdScene, std::vector<SceneObject>& selectedObjects) const = 0;
 
     protected:
         virtual void cutObject(SceneObject& obj, RGBDScene* rgbdScene) const;
-        virtual void cutObjects(QVector<SceneObject>& objs, RGBDScene* rgbdScene) const;
+        virtual void cutObjects(std::vector<SceneObject>& objs, RGBDScene* rgbdScene) const;
     };
 }
 

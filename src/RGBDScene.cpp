@@ -15,7 +15,7 @@ RGBDScene::RGBDScene(Ogre::SceneManager* sceneManager, const cv::Mat& depthImage
     : mDepthImage(depthImage)
     , mRGBImage(rgbImage)
     , mCameraManager(cameraParams)
-    , mMeshUpdated(false)
+    , mCurrentMask(depthImage.rows, depthImage.cols, static_cast<unsigned char>(0)) // Without cast, constructor call is ambiguous
 {
     // Check if Depth and RGB image have the same dimensions
     if(!(mDepthImage.cols == mRGBImage.cols && mDepthImage.rows == mRGBImage.rows))
@@ -50,7 +50,7 @@ RGBDScene::RGBDScene(RGBDScene&& other)
     , mDepthImage(std::move(other.mDepthImage))
     , mRGBImage(std::move(other.mRGBImage))
     , mCameraManager(std::move(other.mCameraManager))
-    , mMeshUpdated(other.mMeshUpdated)
+    , mCurrentMask(std::move(other.mCurrentMask))
 {
     other.mSceneObject = nullptr;
     other.mSceneMgr = nullptr;
@@ -68,8 +68,7 @@ RGBDScene& RGBDScene::operator=(RGBDScene&& other) {
     mDepthImage = std::move(other.mDepthImage);
     mRGBImage = std::move(other.mRGBImage);
     mCameraManager = std::move(other.mCameraManager);
-
-    mMeshUpdated = other.mMeshUpdated;
+    mCurrentMask = std::move(other.mCurrentMask);
 
     // Make other resource-less
     other.mSceneObject = nullptr;
@@ -78,17 +77,30 @@ RGBDScene& RGBDScene::operator=(RGBDScene&& other) {
     return *this;
 }
 
-void RGBDScene::meshify() {
-    if(!mMeshUpdated) {
-        mSceneObject->clear();
+void RGBDScene::meshify(const cv::Mat_<unsigned char>& mask, bool mergeWithOldMask) {
+    if(mask.data) {
+        if(mask.rows != mCurrentMask.rows || mask.cols != mCurrentMask.cols)
+            return;
 
-        mSceneObject->begin(Strings::StandardMaterialName, Ogre::RenderOperation::OT_TRIANGLE_LIST);
-        createVertices();
-        createIndices();
-        mSceneObject->end();
-
-        mMeshUpdated = true;
+        if(mergeWithOldMask) {
+            for(cv::Mat_<unsigned char>::const_iterator it = mask.begin(); it != mask.end(); ++it) {
+                if(*it == 255) mCurrentMask(it.pos()) = 255;
+            }
+        }
+        else {
+            mCurrentMask = mask;
+        }
     }
+    else if(!mergeWithOldMask) {
+        mCurrentMask = 0;
+    }
+
+    mSceneObject->clear();
+
+    mSceneObject->begin(Strings::StandardMaterialName, Ogre::RenderOperation::OT_TRIANGLE_LIST);
+    createVertices();
+    createIndices();
+    mSceneObject->end();
 }
 
 bool RGBDScene::screenspaceCoords(const Ogre::Camera* camera, Ogre::Vector2& resultTopLeft, Ogre::Vector2& resultBottomRight) const {
@@ -136,6 +148,10 @@ void RGBDScene::createVertices() {
 void RGBDScene::createIndices() {
     for(int v = 0; v < mDepthImage.rows - 1; ++v) {
         for(int u = 0; u < mDepthImage.cols - 1; ++u) {
+            // Check mask
+            if(mCurrentMask(v, u) == 255 && mCurrentMask(v + 1, u) == 255 && mCurrentMask(v, u + 1) == 255 && mCurrentMask(v + 1, u + 1) == 255)
+                continue;
+
             // Create 2 triangles (= 1 "square") per iteration
             mSceneObject->index(pixelToIndex(u, v));
             mSceneObject->index(pixelToIndex(u, v + 1));

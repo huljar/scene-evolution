@@ -10,7 +10,6 @@
 #include <scene-evolution/DatasetManager.h>
 
 #include <QString>
-#include <QVector>
 
 #include <list>
 

@@ -2,6 +2,7 @@
 #define EVENTARGS_H
 
 #include <QString>
+#include <QVector>
 
 struct DatasetChangingEventArgs {
     DatasetChangingEventArgs(const QString& oldDatasetPath, const QString& newDatasetPath);

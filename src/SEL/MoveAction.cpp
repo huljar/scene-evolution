@@ -30,7 +30,7 @@ MoveAction::~MoveAction() {
     std::cerr << "Deleting MoveAction" << std::endl;
 }
 
-void MoveAction::exec() const {
+void MoveAction::exec(RGBDScene* rgbdScene, std::vector<SceneObject>& selectedObjects) const {
     // TODO: implement
 }
 

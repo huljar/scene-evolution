@@ -10,6 +10,7 @@
 #define RGBDSCENE_H
 
 #include <scene-evolution/CameraManager.h>
+#include <SEL/SceneObject.h>
 
 #include <OGRE/OgreCamera.h>
 #include <OGRE/OgreManualObject.h>
@@ -35,7 +36,7 @@ public:
     RGBDScene(RGBDScene&& other);
     RGBDScene& operator=(RGBDScene&& other);
 
-    void meshify();
+    void meshify(const cv::Mat_<unsigned char>& mask = cv::Mat_<unsigned char>(), bool mergeWithOldMask = true);
 
     bool screenspaceCoords(const Ogre::Camera* camera, Ogre::Vector2& resultTopLeft, Ogre::Vector2& resultBottomRight) const;
 
@@ -58,7 +59,7 @@ protected:
 
     CameraManager mCameraManager;
 
-    bool mMeshUpdated;
+    cv::Mat_<unsigned char> mCurrentMask;
 
 private:
     void createVertices();

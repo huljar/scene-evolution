@@ -19,8 +19,8 @@ RemoveAction::~RemoveAction() {
     std::cerr << "Deleting RemoveAction" << std::endl;
 }
 
-void RemoveAction::exec() const {
-    // TODO: implement
+void RemoveAction::exec(RGBDScene* rgbdScene, std::vector<SceneObject>& selectedObjects) const {
+    cutObjects(selectedObjects, rgbdScene);
 }
 
 RemoveAction* RemoveAction::clone() const {

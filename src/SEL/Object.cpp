@@ -1,6 +1,8 @@
 #include <SEL/Object.h>
 #include <SEL/SearchCondition.h>
 
+#include <algorithm>
+
 using namespace SEL;
 
 Object::Object(std::list<Qualifier*> qualList, QString objName)
@@ -35,10 +37,10 @@ QString Object::getName() const {
     return mObjName;
 }
 
-QVector<SceneObject> Object::getSceneObjects(const SearchCondition& searchCond, RGBDScene* rgbdScene, const Scene& currentScene,
-                                             const DatasetManager::LabelMap& labels, bool applyQualifiers) const {
+std::vector<SceneObject> Object::getSceneObjects(const SearchCondition& searchCond, RGBDScene* rgbdScene, const Scene& currentScene,
+                                                 const DatasetManager::LabelMap& labels, bool applyQualifiers) const {
     // Get all objects matching the specified names
-    QVector<SceneObject> ret;
+    std::vector<SceneObject> ret;
 
     DatasetManager::LabelMap::const_iterator label = labels.find(mObjName);
     if(label != labels.cend()) {
@@ -55,16 +57,13 @@ QVector<SceneObject> Object::getSceneObjects(const SearchCondition& searchCond, 
         }
 
         // Perform region growing to separate objects of same type
-        QVector<unsigned int> regionPointCounts = doRegionGrowing(labelImg, regionMap);
+        ret = doRegionGrowing(labelImg, regionMap, rgbdScene->getSceneMgr());
 
-        // Iterate over the objects
-        for(int i = 0; i < regionPointCounts.size(); ++i) {
-            // Evaluate search condition for this object
-            SceneObject obj(mObjName, labelImg.size());
-            if(searchCond.eval(rgbdScene, currentScene, obj)) {
-                ret.push_back(obj);
-            }
-        }
+        // Remove objects for which the search condition doesn't hold
+        std::vector<SceneObject>::iterator newEnd = std::remove_if(ret.begin(), ret.end(), [&](const SceneObject& obj) -> bool {
+            return !searchCond.eval(rgbdScene, currentScene, obj);
+        });
+        ret.erase(newEnd, ret.end());
     }
 
     // Apply qualifiers
@@ -78,13 +77,13 @@ QVector<SceneObject> Object::getSceneObjects(const SearchCondition& searchCond, 
     return ret;
 }
 
-QVector<SceneObject> Object::getSceneObjects(RGBDScene* rgbdScene, const Scene& currentScene,
-                                             const DatasetManager::LabelMap& labels, bool applyQualifiers) const {
+std::vector<SceneObject> Object::getSceneObjects(RGBDScene* rgbdScene, const Scene& currentScene,
+                                                 const DatasetManager::LabelMap& labels, bool applyQualifiers) const {
 
 }
 
-QVector<unsigned int> Object::doRegionGrowing(const cv::Mat& labelImg, RegionMap& points) const {
-    QVector<unsigned int> regionPointCounts;
+std::vector<SceneObject> Object::doRegionGrowing(const cv::Mat& labelImg, RegionMap& points, Ogre::SceneManager* sceneMgr) const {
+    std::vector<SceneObject> sceneObjects;
 
     int currentId = 0;
     std::queue<RegionMap::iterator> queue;
@@ -98,7 +97,8 @@ QVector<unsigned int> Object::doRegionGrowing(const cv::Mat& labelImg, RegionMap
         // Add point to the queue
         queue.push(it);
 
-        regionPointCounts.push_back(0);
+        // Using std::vector instead of QVector because QVector does not support emplace
+        sceneObjects.emplace_back(mObjName, labelImg.size(), sceneMgr);
 
         // Iterate until the whole region is marked
         while(!queue.empty()) {
@@ -110,11 +110,12 @@ QVector<unsigned int> Object::doRegionGrowing(const cv::Mat& labelImg, RegionMap
 
             // This point is unmarked, so mark it with the current region ID
             current->second = currentId;
-            ++regionPointCounts[currentId];
+
+            const cv::Point& pixel = current->first;
+            sceneObjects[currentId].addPoint(pixel);
 
             // Add all points to the queue that are direct neighbors (8-connected grid) of the current point
             // and have the same label
-            const cv::Point& pixel = current->first;
             for(int y = pixel.y - 1; y <= pixel.y + 1; ++y) {
                 for(int x = pixel.x - 1; x <= pixel.x + 1; ++x) {
                     RegionMap::iterator neighbor = points.find(cv::Point(x, y));
@@ -130,10 +131,10 @@ QVector<unsigned int> Object::doRegionGrowing(const cv::Mat& labelImg, RegionMap
         ++currentId;
     }
 
-    return regionPointCounts;
+    return sceneObjects;
 }
 
-bool Object::applyQualifier(const Qualifier& qual, QVector<SceneObject>& objList) const {
+bool Object::applyQualifier(const Qualifier& qual, std::vector<SceneObject>& objList) const {
     // TODO: implement
     (void)qual;
     (void)objList;

@@ -1,5 +1,7 @@
 #include <SEL/Query.h>
 
+#include <vector>
+
 using namespace SEL;
 
 Query::Query(SelectStatement* selStmt, std::list<Action*> actList)
@@ -33,10 +35,17 @@ Query::~Query() {
 }
 
 void Query::exec(RGBDScene* rgbdScene, const Scene& currentScene, const DatasetManager::LabelMap& labels) const {
-    QVector<SceneObject> objects = mSelectStmt->getSceneObjects(rgbdScene, currentScene, labels);
+    std::vector<SceneObject> objects = mSelectStmt->getSceneObjects(rgbdScene, currentScene, labels);
+
     std::cout << "Objects contains " << objects.size() << " elements:" << std::endl;
-    for(QVector<SceneObject>::iterator it = objects.begin(); it != objects.end(); ++it) {
+    for(std::vector<SceneObject>::iterator it = objects.begin(); it != objects.end(); ++it) {
         std::cout << "  " << it->getName().toStdString() << std::endl;
+    }
+
+    std::cout << "Executing actions" << std::endl;
+
+    for(std::list<Action*>::const_iterator it = mActionList.begin(); it != mActionList.end(); ++it) {
+        (*it)->exec(rgbdScene, objects);
     }
 }
 
