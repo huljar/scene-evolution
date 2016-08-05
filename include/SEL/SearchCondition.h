@@ -18,7 +18,7 @@ namespace SEL {
         SearchCondition& operator=(const SearchCondition& other);
         virtual ~SearchCondition();
 
-        virtual bool eval(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj) const;
+        virtual bool eval(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const;
 
         virtual SearchCondition* clone() const;
 

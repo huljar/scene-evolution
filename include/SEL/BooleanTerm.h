@@ -17,7 +17,7 @@ namespace SEL {
         BooleanTerm& operator=(const BooleanTerm& other);
         virtual ~BooleanTerm();
 
-        virtual bool eval(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj) const;
+        virtual bool eval(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const;
 
         virtual BooleanTerm* clone() const;
 

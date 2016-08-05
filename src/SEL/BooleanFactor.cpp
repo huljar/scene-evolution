@@ -28,8 +28,8 @@ BooleanFactor::~BooleanFactor() {
     std::cerr << "Deleting BooleanFactor" << std::endl;
 }
 
-bool BooleanFactor::eval(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj) const {
-    return mNegate != mChild->eval(rgbdScene, currentScene, obj);
+bool BooleanFactor::eval(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const {
+    return mNegate != mChild->eval(rgbdScene, currentScene, obj, labels);
 }
 
 BooleanFactor* BooleanFactor::clone() const {

@@ -25,7 +25,7 @@ SupportTerm::~SupportTerm() {
     std::cerr << "Deleting SupportTerm" << std::endl;
 }
 
-bool SupportTerm::eval(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj) const {
+bool SupportTerm::eval(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const {
     return true; // TODO: implement
 }
 

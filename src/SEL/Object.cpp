@@ -1,5 +1,6 @@
 #include <SEL/Object.h>
 #include <SEL/SearchCondition.h>
+#include <SEL/BooleanValue.h>
 
 #include <algorithm>
 
@@ -61,7 +62,7 @@ std::vector<SceneObject> Object::getSceneObjects(const SearchCondition& searchCo
 
         // Remove objects for which the search condition doesn't hold
         std::vector<SceneObject>::iterator newEnd = std::remove_if(ret.begin(), ret.end(), [&](const SceneObject& obj) -> bool {
-            return !searchCond.eval(rgbdScene, currentScene, obj);
+            return !searchCond.eval(rgbdScene, currentScene, obj, labels);
         });
         ret.erase(newEnd, ret.end());
     }
@@ -79,7 +80,11 @@ std::vector<SceneObject> Object::getSceneObjects(const SearchCondition& searchCo
 
 std::vector<SceneObject> Object::getSceneObjects(RGBDScene* rgbdScene, const Scene& currentScene,
                                                  const DatasetManager::LabelMap& labels, bool applyQualifiers) const {
+    // Create temporary search condition which always evaluates to true
+    SearchCondition tmpCond(nullptr, new BooleanTerm(nullptr, new BooleanFactor(new BooleanTest(new BooleanValue(true)), false)));
 
+    // Call overloaded function
+    return getSceneObjects(tmpCond, rgbdScene, currentScene, labels, applyQualifiers);
 }
 
 std::vector<SceneObject> Object::doRegionGrowing(const cv::Mat& labelImg, RegionMap& points, Ogre::SceneManager* sceneMgr) const {

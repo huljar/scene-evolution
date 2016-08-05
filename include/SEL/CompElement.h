@@ -6,6 +6,7 @@
 
 #include <scene-evolution/RGBDScene.h>
 #include <scene-evolution/Scene.h>
+#include <scene-evolution/DatasetManager.h>
 
 #include <QVariant>
 
@@ -16,7 +17,7 @@ namespace SEL {
         CompElement();
         virtual ~CompElement();
 
-        virtual QVariant calc(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj) const = 0;
+        virtual QVariant calc(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const = 0;
     };
 }
 

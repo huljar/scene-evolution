@@ -4,6 +4,8 @@
 #include <SEL/CompElement.h>
 #include <SEL/Object.h>
 
+#include <cmath>
+
 namespace SEL {
     class DistanceTerm : public CompElement
     {
@@ -13,7 +15,7 @@ namespace SEL {
         DistanceTerm& operator=(const DistanceTerm& other);
         virtual ~DistanceTerm();
 
-        virtual QVariant calc(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj) const;
+        virtual QVariant calc(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const;
 
         virtual DistanceTerm* clone() const;
 
@@ -21,6 +23,12 @@ namespace SEL {
         virtual void print(std::ostream& os) const;
 
         Object* mObj;
+
+    private:
+        inline float dist(const cv::Vec3f& a, const cv::Vec3f& b) const {
+            return std::sqrt(std::pow(a[0] - b[0], 2) + std::pow(a[1] - b[1], 2) + std::pow(a[2] - b[2], 2));
+        }
+
     };
 }
 

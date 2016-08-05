@@ -17,7 +17,7 @@ namespace SEL {
         BooleanFactor& operator=(const BooleanFactor& other);
         virtual ~BooleanFactor();
 
-        virtual bool eval(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj) const;
+        virtual bool eval(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const;
 
         virtual BooleanFactor* clone() const;
 

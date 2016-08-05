@@ -16,7 +16,7 @@ namespace SEL {
         BooleanValue& operator=(const BooleanValue& other);
         virtual ~BooleanValue();
 
-        virtual bool eval(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj) const;
+        virtual bool eval(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const;
 
         virtual BooleanValue* clone() const;
 
