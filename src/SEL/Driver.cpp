@@ -21,17 +21,33 @@ Driver::~Driver() {
 
 void Driver::scanBegin() {
     yyset_debug(mTraceScanning);
-    if(mFilePath.empty() || mFilePath == "-") {
-        yyin = stdin;
+    if(mFilePath.empty()) {
+        // Read from string input
+        mBufState = yy_scan_string(mScanString.c_str());
+        yy_switch_to_buffer(mBufState);
     }
-    else if(!(yyin = fopen(mFilePath.c_str(), "r"))) {
-        error("Cannot open file: " + mFilePath);
-        exit(EXIT_FAILURE); // TODO: change later
+    else if(mFilePath == "-") {
+        // Read from stdin
+        //yyin = stdin;
+        mBufState = yy_create_buffer(stdin, YY_BUF_SIZE);
+        yy_switch_to_buffer(mBufState);
+    }
+    else {
+        FILE* file = fopen(mFilePath.c_str(), "r");
+        if(file) {
+            mBufState = yy_create_buffer(file, YY_BUF_SIZE);
+            yy_switch_to_buffer(mBufState);
+        }
+        else {
+            error("Cannot open file: " + mFilePath);
+            exit(EXIT_FAILURE); // TODO: change later
+        }
     }
 }
 
 void Driver::scanEnd() {
-    fclose(yyin);
+    //fclose(yyin);
+    yy_delete_buffer(mBufState);
 }
 
 int Driver::parse(const QString& filePath) {
@@ -47,6 +63,25 @@ int Driver::parse(const QString& filePath) {
     parser.set_debug_level(mTraceParsing);
     int res = parser.parse();
     scanEnd();
+
+    return res;
+}
+
+int Driver::parseString(const QString& str) {
+    // Delete old parsing tree
+    for(std::list<Query*>::iterator it = mResult.begin(); it != mResult.end(); ++it)
+        delete *it;
+    mResult.clear();
+
+    // Parse string
+    mFilePath.clear();
+    mScanString = str.toStdString();
+    scanBegin();
+    SEL::Parser parser(*this);
+    parser.set_debug_level(mTraceParsing);
+    int res = parser.parse();
+    scanEnd();
+
     return res;
 }
 

@@ -2,7 +2,9 @@
 #include "ui_MainWindow.h"
 #include <scene-evolution/util.h>
 
+#include <QDir>
 #include <QFileDialog>
+#include <QFileInfo>
 #include <QSignalBlocker>
 
 #include <iostream>
@@ -17,6 +19,7 @@ MainWindow::MainWindow(QWidget *parent)
     , mRGBDScene(nullptr)
     , mRGBDSceneNode(nullptr)
     , mSELDriver(nullptr)
+    , mLastSELDir(QDir::homePath())
 {
     ui->setupUi(this);
 
@@ -167,8 +170,10 @@ void MainWindow::onActionSaveOBBsToFileTriggered(bool checked) {
 void MainWindow::onActionLoadSELFromFileTriggered(bool checked) {
     Q_UNUSED(checked);
 
-    QString path = QFileDialog::getOpenFileName(nullptr, tr("Open file"), QDir::homePath(), tr("Scene Evolution Language scripts (*.sel)"));
+    QString path = QFileDialog::getOpenFileName(nullptr, tr("Open file"), mLastSELDir, tr("Scene Evolution Language scripts (*.sel)"));
     if(!path.isEmpty()) {
+        mLastSELDir = QFileInfo(path).absolutePath();
+
         if(!mSELDriver)
             mSELDriver = new SEL::Driver;
 
@@ -263,6 +268,28 @@ void MainWindow::onPushButtonCancelBoxClicked(bool checked) {
     restoreBoxDefaultsNoSignals();
 }
 
+void MainWindow::onPushButtonExecuteManualSELClicked(bool checked) {
+    Q_UNUSED(checked);
+
+    if(!mSELDriver)
+        mSELDriver = new SEL::Driver;
+
+    int res = mSELDriver->parseString(ui->textEditManualSEL->document()->toPlainText());
+    switch(res) {
+        case 0: std::cout << "Successfully parsed string" << std::endl; ui->actionRunSEL->setEnabled(false); break;
+        case 1: std::cerr << "Error: Syntax error in string" << std::endl; return;
+        case 2: std::cerr << "Error: Memory exhaustion while parsing file" << std::endl; return;
+        default: std::cerr << "Error: Unknown error occurred while parsing file" << std::endl; return;
+    }
+
+    std::list<SEL::Query*> queries = mSELDriver->getResult();
+    std::cout << "Executing " << queries.size() << " queries" << std::endl;
+
+    for(std::list<SEL::Query*>::const_iterator it = queries.cbegin(); it != queries.cend(); ++it) {
+        (*it)->exec(mRGBDScene, mCurrentScene, mDatasetManager->getLabelMap());
+    }
+}
+
 void MainWindow::onDatasetChanging(DatasetChangingEventArgs& e) {
     Q_UNUSED(e);
 }
@@ -353,6 +380,8 @@ void MainWindow::setUpConnections() {
     connect(ui->pushButtonStartNewBox, SIGNAL(clicked(bool)), this, SLOT(onPushButtonStartNewBoxClicked(bool)));
     connect(ui->pushButtonFinalizeBox, SIGNAL(clicked(bool)), this, SLOT(onPushButtonFinalizeBoxClicked(bool)));
     connect(ui->pushButtonCancelBox, SIGNAL(clicked(bool)), this, SLOT(onPushButtonCancelBoxClicked(bool)));
+
+    connect(ui->pushButtonExecuteManualSEL, SIGNAL(clicked(bool)), this, SLOT(onPushButtonExecuteManualSELClicked(bool)));
 
     connect(this, SIGNAL(datasetChanging(DatasetChangingEventArgs&)), this, SLOT(onDatasetChanging(DatasetChangingEventArgs&)));
     connect(this, SIGNAL(datasetChanged(DatasetChangedEventArgs&)), this, SLOT(onDatasetChanged(DatasetChangedEventArgs&)));

@@ -47,6 +47,8 @@ public slots:
     void onPushButtonFinalizeBoxClicked(bool checked);
     void onPushButtonCancelBoxClicked(bool checked);
 
+    void onPushButtonExecuteManualSELClicked(bool checked);
+
     void onDatasetChanging(DatasetChangingEventArgs& e);
     void onDatasetChanged(DatasetChangedEventArgs& e);
 
@@ -86,6 +88,7 @@ private:
     Ogre::SceneNode* mRGBDSceneNode;
 
     SEL::Driver* mSELDriver;
+    QString mLastSELDir;
 };
 
 #endif // MAINWINDOW_H

@@ -1,6 +1,7 @@
 #ifndef SELDRIVER_H
 #define SELDRIVER_H
 
+#include <SEL/sel-flex.h>
 #include <SEL/sel-bison.h>
 #include <SEL/Query.h>
 
@@ -28,6 +29,7 @@ namespace SEL {
 
         // Parser handling
         int parse(const QString& filePath);
+        int parseString(const QString& str);
 
         // Error handling
         void error(const SEL::location& loc, const std::string& message);
@@ -48,6 +50,9 @@ namespace SEL {
 
     protected:
         std::string mFilePath;
+        std::string mScanString;
+
+        YY_BUFFER_STATE mBufState;
 
         bool mTraceScanning;
         bool mTraceParsing;
