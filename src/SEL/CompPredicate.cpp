@@ -38,6 +38,8 @@ bool CompPredicate::eval(RGBDScene* rgbdScene, const Scene& currentScene, const 
     QVariant right = mRight->calc(rgbdScene, currentScene, obj, labels);
 
     // Using QMetaType here is correct (see the QVariant documentation at https://doc.qt.io/qt-5/qvariant.html#type )
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wenum-compare"
     if(left.type() == QMetaType::Int && right.type() == QMetaType::Int) {
         return comp(left.toInt(), right.toInt());
     }
@@ -50,6 +52,7 @@ bool CompPredicate::eval(RGBDScene* rgbdScene, const Scene& currentScene, const 
     else {
         return comp(left.toDouble(), right.toDouble());
     }
+#pragma GCC diagnostic pop
 }
 
 CompPredicate* CompPredicate::clone() const {

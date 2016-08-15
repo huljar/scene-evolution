@@ -97,6 +97,7 @@ namespace SEL {
 %type <SEL::Object*> object
 %type <std::list<SEL::Qualifier*>> qualifier_list
 %type <SEL::Qualifier*> qualifier
+%type <QString> identifier_concat
 %type <SEL::SearchCondition*> search_condition
 %type <SEL::BooleanTerm*> boolean_term
 %type <SEL::BooleanFactor*> boolean_factor
@@ -123,7 +124,7 @@ namespace SEL {
 // Specify how to print a symbol
 %printer { yyoutput << *$$; } <*>;
 %printer { yyoutput << "List containig " << $$.size() << " elements"; } query_list object_list qualifier_list action_list
-%printer { yyoutput << $$.toStdString(); } "qualifier" "identifier"
+%printer { yyoutput << $$.toStdString(); } "qualifier" "identifier" identifier_concat
 %printer { yyoutput << $$; } "integer" "float" "boolean"
 
 /*******************************/
@@ -145,7 +146,11 @@ object_list:
   | object_list "," object { $1.push_back($3); $$ = std::move($1); };
 
 object:
-    qualifier_list "identifier" { $$ = new SEL::Object($1, $2); };
+    qualifier_list identifier_concat { $$ = new SEL::Object($1, $2); };
+
+identifier_concat:
+    "identifier" { $$ = std::move($1); }
+  | identifier_concat "identifier" { $$ = $1 + ' ' + $2; }
 
 qualifier_list:
     { $$ = std::list<SEL::Qualifier*>(); }

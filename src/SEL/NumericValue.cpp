@@ -37,6 +37,8 @@ NumericValue* NumericValue::clone() const {
 
 void NumericValue::print(std::ostream& os) const {
     os << "NumericValue containing ";
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch"
     switch(mValue.type()) { // Use of QMetaType is correct here (see the QVariant documentation at https://doc.qt.io/qt-5/qvariant.html#type )
         case QMetaType::Int: os << "integer " << mValue.toInt(); break;
         case QMetaType::UInt: os << "unsigned integer " << mValue.toUInt(); break;
@@ -44,4 +46,5 @@ void NumericValue::print(std::ostream& os) const {
         case QMetaType::Double: os << "double " << mValue.toDouble(); break;
         default: os << "unexpected value"; break;
     }
+#pragma GCC diagnostic pop
 }

@@ -5,6 +5,8 @@
 #include <SEL/SceneObject.h>
 
 #include <scene-evolution/RGBDScene.h>
+#include <scene-evolution/Scene.h>
+#include <scene-evolution/DatasetManager.h>
 
 #include <vector>
 
@@ -15,7 +17,8 @@ namespace SEL {
         Action();
         virtual ~Action();
 
-        virtual void exec(RGBDScene* rgbdScene, std::vector<SceneObject>& selectedObjects) const = 0;
+        virtual void exec(RGBDScene* rgbdScene, const Scene& currentScene, const DatasetManager::LabelMap& labels,
+                          std::vector<SceneObject>& selectedObjects) const = 0;
 
     protected:
         virtual void cutObject(SceneObject& obj, RGBDScene* rgbdScene) const;

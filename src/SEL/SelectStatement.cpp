@@ -35,6 +35,7 @@ SelectStatement::~SelectStatement() {
 }
 
 std::vector<SceneObject> SelectStatement::getSceneObjects(RGBDScene* rgbdScene, const Scene& currentScene, const DatasetManager::LabelMap& labels) const {
+    // TODO: take into account the objects already moved (from SceneObjectManager)
     std::vector<SceneObject> ret;
     for(std::list<Object*>::const_iterator it = mObjectList.cbegin(); it != mObjectList.cend(); ++it) {
         std::vector<SceneObject> current = (*it)->getSceneObjects(*mSearchCond, rgbdScene, currentScene, labels);

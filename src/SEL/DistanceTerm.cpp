@@ -28,41 +28,49 @@ DistanceTerm::~DistanceTerm() {
 
 // TODO: more efficient calculations (currently O(n*m))
 QVariant DistanceTerm::calc(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const {
+    std::cout << "Calculating shortest distance..." << std::endl
+              << "Term object: " << mObj->getName().toStdString() << std::endl
+              << "Query object: " << obj.getName().toStdString() << std::endl;
+
     // Get object(s) to which the distance will be calculated
-    std::vector<SceneObject> targets = mObj->getSceneObjects(rgbdScene, currentScene, labels);
+    std::vector<SceneObject> termObjects = mObj->getSceneObjects(rgbdScene, currentScene, labels);
+
+    std::cout << "Term object exists " << termObjects.size() << " times in the scene" << std::endl;
 
     float shortestDist = std::numeric_limits<float>::infinity();
 
     // Precalculate 3D points of evaluated object
-    std::vector<cv::Vec3f> evalPoints;
-    cv::Mat_<unsigned char> evalPixels = obj.getPixels();
+    std::vector<cv::Vec3f> queryPoints;
+    cv::Mat_<unsigned char> queryPixels = obj.getPixels();
     const CameraManager& camMgr = rgbdScene->cameraManager();
     cv::Mat depthImg = currentScene.getDepthImg();
 
-    for(cv::Mat_<unsigned char>::iterator it = evalPixels.begin(); it != evalPixels.end(); ++it) {
+    for(cv::Mat_<unsigned char>::iterator it = queryPixels.begin(); it != queryPixels.end(); ++it) {
         if(*it == 255) {
-            evalPoints.push_back(camMgr.getWorldForDepth(it.pos(), depthImg.at<unsigned short>(it.pos())));
+            queryPoints.push_back(camMgr.getWorldForDepth(it.pos(), depthImg.at<unsigned short>(it.pos())));
         }
     }
 
     // Iterate over target objects
-    for(std::vector<SceneObject>::iterator it = targets.begin(); it != targets.end(); ++it) {
+    for(std::vector<SceneObject>::iterator it = termObjects.begin(); it != termObjects.end(); ++it) {
         // Iterate over target object points
-        cv::Mat_<unsigned char> targetPixels = it->getPixels();
+        cv::Mat_<unsigned char> termObjPixels = it->getPixels();
 
-        for(cv::Mat_<unsigned char>::iterator jt = targetPixels.begin(); jt != targetPixels.end(); ++jt) {
+        for(cv::Mat_<unsigned char>::iterator jt = termObjPixels.begin(); jt != termObjPixels.end(); ++jt) {
             if(*jt == 255) {
                 // Calculate 3D point
-                cv::Vec3f targetPoint = camMgr.getWorldForDepth(jt.pos(), depthImg.at<unsigned short>(jt.pos()));
+                cv::Vec3f termObjPoint = camMgr.getWorldForDepth(jt.pos(), depthImg.at<unsigned short>(jt.pos()));
 
                 // Iterate over evaluated object points
-                for(std::vector<cv::Vec3f>::iterator kt = evalPoints.begin(); kt != evalPoints.end(); ++kt) {
-                    float currentDist = dist(*kt, targetPoint);
+                for(std::vector<cv::Vec3f>::iterator kt = queryPoints.begin(); kt != queryPoints.end(); ++kt) {
+                    float currentDist = dist(*kt, termObjPoint);
                     if(currentDist < shortestDist) shortestDist = currentDist;
                 }
             }
         }
     }
+
+    std::cout << "Shortest distance found: " << shortestDist << std::endl;
 
     return QVariant(shortestDist);
 }

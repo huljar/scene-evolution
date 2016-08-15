@@ -19,7 +19,11 @@ RemoveAction::~RemoveAction() {
     std::cerr << "Deleting RemoveAction" << std::endl;
 }
 
-void RemoveAction::exec(RGBDScene* rgbdScene, std::vector<SceneObject>& selectedObjects) const {
+void RemoveAction::exec(RGBDScene* rgbdScene, const Scene& currentScene, const DatasetManager::LabelMap& labels,
+                        std::vector<SceneObject>& selectedObjects) const {
+    (void)currentScene;
+    (void)labels;
+
     cutObjects(selectedObjects, rgbdScene);
 }
 

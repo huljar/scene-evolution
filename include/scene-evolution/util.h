@@ -25,6 +25,8 @@ namespace Constants {
 
     const Ogre::ColourValue BoundingBoxActiveColour(1.0, 1.0, 0.0);
     const Ogre::ColourValue BoundingBoxInactiveColour = Ogre::ColourValue::White;
+
+    const float MoveActionSlopeThreshold = 0.2;
 }
 
 namespace Strings {

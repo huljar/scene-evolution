@@ -12,7 +12,8 @@ namespace SEL {
         RemoveAction& operator=(const RemoveAction& other);
         virtual ~RemoveAction();
 
-        virtual void exec(RGBDScene* rgbdScene, std::vector<SceneObject>& selectedObjects) const;
+        virtual void exec(RGBDScene* rgbdScene, const Scene& currentScene, const DatasetManager::LabelMap& labels,
+                          std::vector<SceneObject>& selectedObjects) const;
 
         virtual RemoveAction* clone() const;
 

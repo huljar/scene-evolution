@@ -18,6 +18,7 @@ MainWindow::MainWindow(QWidget *parent)
     , mCurrentSceneIdx(0)
     , mRGBDScene(nullptr)
     , mRGBDSceneNode(nullptr)
+    , mSceneObjectManager(nullptr)
     , mSELDriver(nullptr)
     , mLastSELDir(QDir::homePath())
 {
@@ -56,6 +57,8 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow() {
     delete mSELDriver;
+    delete mSceneObjectManager;
+    delete mRGBDScene;
     delete mBoundingBoxManager;
     delete mDatasetManager;
     delete mOgreWindow;
@@ -109,6 +112,7 @@ bool MainWindow::changeScene(const Scene& scene, unsigned int sceneIdx) {
 
     // Clean up old scene
     delete mRGBDScene;
+    delete mSceneObjectManager;
 
     // Create and attach new scene
     if(!mRGBDSceneNode)
@@ -116,6 +120,7 @@ bool MainWindow::changeScene(const Scene& scene, unsigned int sceneIdx) {
 
     mRGBDScene = new RGBDScene(mOgreWindow->getOgreSceneManager(), scene.getDepthImg(), scene.getRgbImg(), mDatasetManager->getCameraParams());
     mRGBDSceneNode->attachObject(mRGBDScene->getManualObject());
+    mSceneObjectManager = new SceneObjectManager(mOgreWindow->getOgreSceneManager());
 
     // Emit post scene change signal
     SceneChangedEventArgs postArgs(scene.getFileName(), sceneIdx);
@@ -199,7 +204,7 @@ void MainWindow::onActionRunSELTriggered(bool checked) {
     std::cout << "Executing " << queries.size() << " queries" << std::endl;
 
     for(std::list<SEL::Query*>::const_iterator it = queries.cbegin(); it != queries.cend(); ++it) {
-        (*it)->exec(mRGBDScene, mCurrentScene, mDatasetManager->getLabelMap());
+        (*it)->exec(mRGBDScene, mSceneObjectManager, mCurrentScene, mDatasetManager->getLabelMap());
     }
 }
 
@@ -286,7 +291,7 @@ void MainWindow::onPushButtonExecuteManualSELClicked(bool checked) {
     std::cout << "Executing " << queries.size() << " queries" << std::endl;
 
     for(std::list<SEL::Query*>::const_iterator it = queries.cbegin(); it != queries.cend(); ++it) {
-        (*it)->exec(mRGBDScene, mCurrentScene, mDatasetManager->getLabelMap());
+        (*it)->exec(mRGBDScene, mSceneObjectManager, mCurrentScene, mDatasetManager->getLabelMap());
     }
 }
 

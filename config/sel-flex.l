@@ -1,8 +1,12 @@
 %{ // C++
-#include <SEL/Driver.h>
 #include <SEL/sel-bison.h>
 #include <QByteArray>
 #include <QString>
+
+// Define this here again instead of including SEL/Driver.h
+// This is because including the driver also includes sel-flex.h which
+// #undef's some macros required in sel-flex.cpp which causes compilation errors
+#define YY_DECL SEL::Parser::symbol_type yylex(SEL::Driver& driver)
 
 // The location of the current token.
 static SEL::location loc;

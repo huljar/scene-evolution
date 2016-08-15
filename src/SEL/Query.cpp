@@ -34,7 +34,7 @@ Query::~Query() {
     std::cerr << "Deleting Query" << std::endl;
 }
 
-void Query::exec(RGBDScene* rgbdScene, const Scene& currentScene, const DatasetManager::LabelMap& labels) const {
+void Query::exec(RGBDScene* rgbdScene, SceneObjectManager* sceneObjMgr, const Scene& currentScene, const DatasetManager::LabelMap& labels) const {
     std::vector<SceneObject> objects = mSelectStmt->getSceneObjects(rgbdScene, currentScene, labels);
 
     std::cout << "Objects contains " << objects.size() << " elements:" << std::endl;
@@ -45,8 +45,18 @@ void Query::exec(RGBDScene* rgbdScene, const Scene& currentScene, const DatasetM
     std::cout << "Executing actions" << std::endl;
 
     for(std::list<Action*>::const_iterator it = mActionList.begin(); it != mActionList.end(); ++it) {
-        (*it)->exec(rgbdScene, objects);
+        (*it)->exec(rgbdScene, currentScene, labels, objects);
     }
+
+    std::cout << "Selected objects contains:" << std::endl;
+    for(std::vector<SceneObject>::iterator it = objects.begin(); it != objects.end(); ++it)
+        std::cout << "    " << it->getName().toStdString() << ": Translation " << it->getCurrentTranslation() << std::endl;
+
+    for(std::vector<SceneObject>::iterator it = objects.begin(); it != objects.end(); ++it) {
+        sceneObjMgr->registerObject(std::move(*it));
+    }
+
+    sceneObjMgr->updateObjects();
 }
 
 Query* Query::clone() const {
