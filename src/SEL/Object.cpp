@@ -31,7 +31,6 @@ Object& Object::operator=(const Object& other) {
 Object::~Object() {
     for(auto it = mQualList.begin(); it != mQualList.end(); ++it)
         delete *it;
-    std::cerr << "Deleting Object" << std::endl;
 }
 
 QString Object::getName() const {

@@ -27,7 +27,6 @@ SearchCondition& SearchCondition::operator=(const SearchCondition& other) {
 SearchCondition::~SearchCondition() {
     delete mLeft;
     delete mRight;
-    std::cerr << "Deleting SearchCondition" << std::endl;
 }
 
 bool SearchCondition::eval(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const {

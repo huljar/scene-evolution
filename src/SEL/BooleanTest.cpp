@@ -34,7 +34,6 @@ BooleanTest& BooleanTest::operator=(const BooleanTest& other) {
 BooleanTest::~BooleanTest() {
     delete mPred;
     delete mSearchCond;
-    std::cerr << "Deleting BooleanTest" << std::endl;
 }
 
 bool BooleanTest::isPredicate() const {

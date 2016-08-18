@@ -139,7 +139,8 @@ query:
     select_statement ";" action_list ";" { $$ = new SEL::Query($1, $3); };
 
 select_statement:
-    "select" object_list "where" search_condition { $$ = new SEL::SelectStatement($2, $4); };
+    "select" object_list { $$ = new SEL::SelectStatement($2, nullptr); }
+  | "select" object_list "where" search_condition { $$ = new SEL::SelectStatement($2, $4); };
 
 object_list:
     object { $$ = std::list<SEL::Object*>({$1}); }
@@ -210,14 +211,15 @@ boolean_value:
 
 action_list:
     action { $$ = std::list<Action*>({$1}); }
-  | action_list action { $1.push_back($2); $$ = std::move($1); };
+  | action_list ";" action { $1.push_back($3); $$ = std::move($1); };
 
 action:
     move_action { $$ = $1; }
   | remove_action { $$ = $1; };
 
 move_action:
-    "move to" object "where" search_condition { $$ = new SEL::MoveAction($2, $4); };
+    "move to" object { $$ = new SEL::MoveAction($2, nullptr); }
+  | "move to" object "where" search_condition { $$ = new SEL::MoveAction($2, $4); };
 
 remove_action:
     "remove" { $$ = new SEL::RemoveAction(); };

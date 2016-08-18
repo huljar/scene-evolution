@@ -30,7 +30,6 @@ CompPredicate& CompPredicate::operator=(const CompPredicate& other) {
 CompPredicate::~CompPredicate() {
     delete mLeft;
     delete mRight;
-    std::cerr << "Deleting CompPredicate" << std::endl;
 }
 
 bool CompPredicate::eval(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const {

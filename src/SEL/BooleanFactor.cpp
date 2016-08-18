@@ -25,7 +25,6 @@ BooleanFactor& BooleanFactor::operator=(const BooleanFactor& other) {
 
 BooleanFactor::~BooleanFactor() {
     delete mChild;
-    std::cerr << "Deleting BooleanFactor" << std::endl;
 }
 
 bool BooleanFactor::eval(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const {

@@ -33,7 +33,6 @@ MoveAction& MoveAction::operator=(const MoveAction& other) {
 MoveAction::~MoveAction() {
     delete mObj;
     delete mSearchCond;
-    std::cerr << "Deleting MoveAction" << std::endl;
 }
 
 void MoveAction::exec(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const DatasetManager::LabelMap& labels,
@@ -41,7 +40,9 @@ void MoveAction::exec(SceneObjectManager* sceneObjMgr, const Scene& currentScene
     RGBDScene* rgbdScene = sceneObjMgr->getRGBDScene();
 
     // Find appropriate new locations
-    std::vector<std::shared_ptr<SceneObject>> targets = mObj->getSceneObjects(*mSearchCond, sceneObjMgr, currentScene, labels);
+    std::vector<std::shared_ptr<SceneObject>> targets = (mSearchCond
+                                                         ? mObj->getSceneObjects(*mSearchCond, sceneObjMgr, currentScene, labels)
+                                                         : mObj->getSceneObjects(sceneObjMgr, currentScene, labels));
 
     if(targets.size() == 0) {
         std::cerr << "No valid move targets found!" << std::endl;

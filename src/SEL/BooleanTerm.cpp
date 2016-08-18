@@ -27,7 +27,6 @@ BooleanTerm& BooleanTerm::operator=(const BooleanTerm& other) {
 BooleanTerm::~BooleanTerm() {
     delete mLeft;
     delete mRight;
-    std::cerr << "Deleting BooleanTerm" << std::endl;
 }
 
 bool BooleanTerm::eval(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const {

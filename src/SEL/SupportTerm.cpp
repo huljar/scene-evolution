@@ -22,7 +22,6 @@ SupportTerm& SupportTerm::operator=(const SupportTerm& other) {
 
 SupportTerm::~SupportTerm() {
     delete mObj;
-    std::cerr << "Deleting SupportTerm" << std::endl;
 }
 
 bool SupportTerm::eval(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const {

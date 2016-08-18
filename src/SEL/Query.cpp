@@ -31,7 +31,6 @@ Query::~Query() {
     delete mSelectStmt;
     for(auto it = mActionList.begin(); it != mActionList.end(); ++it)
         delete *it;
-    std::cerr << "Deleting Query" << std::endl;
 }
 
 void Query::exec(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const DatasetManager::LabelMap& labels) const {

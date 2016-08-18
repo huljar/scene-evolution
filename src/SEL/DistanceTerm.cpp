@@ -23,7 +23,6 @@ DistanceTerm& DistanceTerm::operator=(const DistanceTerm& other) {
 
 DistanceTerm::~DistanceTerm() {
     delete mObj;
-    std::cerr << "Deleting DistanceTerm" << std::endl;
 }
 
 // TODO: more efficient calculations (currently O(n*m))

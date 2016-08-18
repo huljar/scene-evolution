@@ -32,14 +32,15 @@ SelectStatement::~SelectStatement() {
     for(auto it = mObjectList.begin(); it != mObjectList.end(); ++it)
         delete *it;
     delete mSearchCond;
-    std::cerr << "Deleting SelectStatement" << std::endl;
 }
 
 std::vector<std::shared_ptr<SceneObject>> SelectStatement::getSceneObjects(SceneObjectManager* sceneObjMgr, const Scene& currentScene,
                                                                            const DatasetManager::LabelMap& labels) const {
     std::vector<std::shared_ptr<SceneObject>> ret;
     for(std::list<Object*>::const_iterator it = mObjectList.cbegin(); it != mObjectList.cend(); ++it) {
-        std::vector<std::shared_ptr<SceneObject>> current = (*it)->getSceneObjects(*mSearchCond, sceneObjMgr, currentScene, labels);
+        std::vector<std::shared_ptr<SceneObject>> current = (mSearchCond
+                                                             ? (*it)->getSceneObjects(*mSearchCond, sceneObjMgr, currentScene, labels)
+                                                             : (*it)->getSceneObjects(sceneObjMgr, currentScene, labels));
 
         ret.reserve(ret.size() + current.size());
         std::copy(current.begin(), current.end(), std::back_inserter(ret));

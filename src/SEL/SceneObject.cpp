@@ -22,8 +22,6 @@ SceneObject::SceneObject(const QString& objName, const cv::Size& imgSize, Ogre::
 }
 
 SceneObject::~SceneObject() {
-    std::cerr << "Deleting SceneObject: " << mObjName.toStdString() << std::endl;
-
     if(mSceneMgr && mManualObject) {
         mManualObject->detachFromParent();
         mSceneMgr->destroyManualObject(mManualObject);

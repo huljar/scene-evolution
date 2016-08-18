@@ -19,7 +19,7 @@ NumericValue& NumericValue::operator=(const NumericValue& other) {
 }
 
 NumericValue::~NumericValue() {
-    std::cerr << "Deleting NumericValue" << std::endl;
+
 }
 
 QVariant NumericValue::calc(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const {

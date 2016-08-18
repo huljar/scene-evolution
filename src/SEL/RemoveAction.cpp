@@ -16,7 +16,7 @@ RemoveAction& RemoveAction::operator=(const RemoveAction& other) {
 }
 
 RemoveAction::~RemoveAction() {
-    std::cerr << "Deleting RemoveAction" << std::endl;
+
 }
 
 void RemoveAction::exec(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const DatasetManager::LabelMap& labels,

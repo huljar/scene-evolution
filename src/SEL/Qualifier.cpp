@@ -19,7 +19,7 @@ Qualifier& Qualifier::operator=(const Qualifier& other) {
 }
 
 Qualifier::~Qualifier() {
-    std::cerr << "Deleting Qualifier" << std::endl;
+
 }
 
 Qualifier* Qualifier::clone() const {

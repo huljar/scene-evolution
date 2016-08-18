@@ -20,7 +20,7 @@ BooleanValue& BooleanValue::operator=(const BooleanValue& other) {
 }
 
 BooleanValue::~BooleanValue() {
-    std::cerr << "Deleting BooleanValue" << std::endl;
+
 }
 
 bool BooleanValue::eval(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const {
