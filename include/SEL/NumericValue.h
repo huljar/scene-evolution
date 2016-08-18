@@ -12,7 +12,7 @@ namespace SEL {
         NumericValue& operator=(const NumericValue& other);
         virtual ~NumericValue();
 
-        virtual QVariant calc(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const;
+        virtual QVariant calc(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const;
 
         virtual NumericValue* clone() const;
 

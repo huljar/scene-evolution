@@ -6,7 +6,7 @@
 #include <SEL/Object.h>
 #include <SEL/SceneObject.h>
 
-#include <scene-evolution/RGBDScene.h>
+#include <scene-evolution/SceneObjectManager.h>
 #include <scene-evolution/Scene.h>
 
 namespace SEL {
@@ -18,7 +18,7 @@ namespace SEL {
         SearchCondition& operator=(const SearchCondition& other);
         virtual ~SearchCondition();
 
-        virtual bool eval(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const;
+        virtual bool eval(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const;
 
         virtual SearchCondition* clone() const;
 

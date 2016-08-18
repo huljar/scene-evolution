@@ -4,7 +4,7 @@
 #include <SEL/BinaryPredicate.h>
 #include <SEL/SceneObject.h>
 
-#include <scene-evolution/RGBDScene.h>
+#include <scene-evolution/SceneObjectManager.h>
 #include <scene-evolution/Scene.h>
 
 namespace SEL {
@@ -16,7 +16,7 @@ namespace SEL {
         BooleanValue& operator=(const BooleanValue& other);
         virtual ~BooleanValue();
 
-        virtual bool eval(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const;
+        virtual bool eval(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const;
 
         virtual BooleanValue* clone() const;
 

@@ -36,19 +36,12 @@ MoveAction::~MoveAction() {
     std::cerr << "Deleting MoveAction" << std::endl;
 }
 
-void MoveAction::exec(RGBDScene* rgbdScene, const Scene& currentScene, const DatasetManager::LabelMap& labels,
-                      std::vector<SceneObject>& selectedObjects) const {
-    // TODO: only cut and meshify the objects for which a valid target is found?
-    // Cut the objects
-    cutObjects(selectedObjects, rgbdScene);
-
-    // Build meshes for objects
-    for(std::vector<SceneObject>::iterator it = selectedObjects.begin(); it != selectedObjects.end(); ++it)
-        if(!it->hasManualObject())
-            it->meshify(currentScene.getDepthImg(), currentScene.getRgbImg(), rgbdScene->cameraManager());
+void MoveAction::exec(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const DatasetManager::LabelMap& labels,
+                      std::vector<std::shared_ptr<SceneObject>>& selectedObjects) const {
+    RGBDScene* rgbdScene = sceneObjMgr->getRGBDScene();
 
     // Find appropriate new locations
-    std::vector<SceneObject> targets = mObj->getSceneObjects(*mSearchCond, rgbdScene, currentScene, labels);
+    std::vector<std::shared_ptr<SceneObject>> targets = mObj->getSceneObjects(*mSearchCond, sceneObjMgr, currentScene, labels);
 
     if(targets.size() == 0) {
         std::cerr << "No valid move targets found!" << std::endl;
@@ -58,13 +51,13 @@ void MoveAction::exec(RGBDScene* rgbdScene, const Scene& currentScene, const Dat
     std::vector<cv::Vec3f> validPositions;
 
     // Collect all valid target positions
-    for(std::vector<SceneObject>::iterator it = targets.begin(); it != targets.end(); ++it) {
+    for(std::vector<std::shared_ptr<SceneObject>>::iterator it = targets.begin(); it != targets.end(); ++it) {
         // Get valid positions on top of the target
         // TODO: eliminate selection of inplausible positions (e.g. too far on the edge), consider the moving object's size
-        cv::Mat_<unsigned char> pixels = it->getPixels();
-        if(!it->has3DPixels())
-            it->create3DPixels(currentScene.getDepthImg(), rgbdScene->cameraManager());
-        cv::Mat_<cv::Vec3f> pixels3D = it->get3DPixels();
+        cv::Mat_<unsigned char> pixels = (*it)->getPixels();
+        if(!(*it)->has3DPixels())
+            (*it)->create3DPixels(currentScene.getDepthImg(), rgbdScene->cameraManager());
+        cv::Mat_<cv::Vec3f> pixels3D = (*it)->get3DPixels();
 
         // Iterate over pixels
         for(int y = 1; y < pixels.rows - 1; ++y) {
@@ -103,15 +96,22 @@ void MoveAction::exec(RGBDScene* rgbdScene, const Scene& currentScene, const Dat
         return;
     }
 
+    // Cut the objects
+    sceneObjMgr->cutObjects(selectedObjects);
+
     // Execute move action for each selected object
-    for(std::vector<SceneObject>::iterator it = selectedObjects.begin(); it != selectedObjects.end(); ++it) {
+    for(std::vector<std::shared_ptr<SceneObject>>::iterator it = selectedObjects.begin(); it != selectedObjects.end(); ++it) {
+        // Build meshes for object
+        if(!(*it)->hasManualObject())
+            (*it)->meshify(currentScene.getDepthImg(), currentScene.getRgbImg(), rgbdScene->cameraManager());
+
         // Select a random valid position
         cv::Vec3f targetPosition = validPositions[std::uniform_int_distribution<size_t>(0, validPositions.size() - 1)(msRandomEngine)];
 
-        // Get 3D bounding box of current object
-        SceneObject::BoundingBox3D bb = it->getBoundingBox3D(currentScene.getDepthImg(), rgbdScene->cameraManager());
+        // Get original 3D bounding box of current object
+        SceneObject::BoundingBox3D bb = (*it)->getBoundingBox3D(currentScene.getDepthImg(), rgbdScene->cameraManager());
 
-        // Compute object center
+        // Compute original object center
         cv::Vec3f center(bb.first[0] + (bb.second[0] - bb.first[0]) / 2.f,
                          bb.first[1] + (bb.second[1] - bb.first[1]) / 2.f,
                          bb.first[2] + (bb.second[2] - bb.first[2]) / 2.f);
@@ -120,10 +120,10 @@ void MoveAction::exec(RGBDScene* rgbdScene, const Scene& currentScene, const Dat
         targetPosition[1] += center[1] - bb.first[1];
         cv::Vec3f trans = targetPosition - center;
 
-        std::cout << "Computed translation of " << trans << " for object " << it->getName().toStdString() << std::endl;
+        std::cout << "Computed translation of " << trans << " for object " << (*it)->getName().toStdString() << std::endl;
 
-        // Set this translation on the object
-        it->setCurrentTranslation(trans);
+        // Set this translation on the object (with respect to original position)
+        (*it)->setCurrentTranslation(trans);
     }
 }
 

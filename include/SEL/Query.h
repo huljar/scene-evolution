@@ -23,7 +23,7 @@ namespace SEL {
         Query& operator=(const Query& other);
         virtual ~Query();
 
-        virtual void exec(RGBDScene* rgbdScene, SceneObjectManager* sceneObjMgr, const Scene& currentScene, const DatasetManager::LabelMap& labels) const;
+        virtual void exec(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const DatasetManager::LabelMap& labels) const;
 
         virtual Query* clone() const;
 

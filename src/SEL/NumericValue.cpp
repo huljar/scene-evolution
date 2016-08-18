@@ -22,8 +22,8 @@ NumericValue::~NumericValue() {
     std::cerr << "Deleting NumericValue" << std::endl;
 }
 
-QVariant NumericValue::calc(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const {
-    (void)rgbdScene;
+QVariant NumericValue::calc(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const {
+    (void)sceneObjMgr;
     (void)currentScene;
     (void)obj;
     (void)labels;

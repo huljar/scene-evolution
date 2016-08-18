@@ -6,7 +6,8 @@
 using namespace SEL;
 
 SceneObject::SceneObject()
-    : mManualObject(nullptr)
+    : mCurrentRotation(cv::Matx33f::eye())
+    , mManualObject(nullptr)
     , mSceneMgr(nullptr)
 {
 }
@@ -14,12 +15,15 @@ SceneObject::SceneObject()
 SceneObject::SceneObject(const QString& objName, const cv::Size& imgSize, Ogre::SceneManager* sceneMgr)
     : mObjName(objName)
     , mPixels(cv::Mat_<unsigned char>::zeros(imgSize))
+    , mCurrentRotation(cv::Matx33f::eye())
     , mManualObject(nullptr)
     , mSceneMgr(sceneMgr)
 {
 }
 
 SceneObject::~SceneObject() {
+    std::cerr << "Deleting SceneObject: " << mObjName.toStdString() << std::endl;
+
     if(mSceneMgr && mManualObject) {
         mManualObject->detachFromParent();
         mSceneMgr->destroyManualObject(mManualObject);

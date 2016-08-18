@@ -16,8 +16,8 @@ namespace SEL {
         MoveAction& operator=(const MoveAction& other);
         virtual ~MoveAction();
 
-        virtual void exec(RGBDScene* rgbdScene, const Scene& currentScene, const DatasetManager::LabelMap& labels,
-                          std::vector<SceneObject>& selectedObjects) const;
+        virtual void exec(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const DatasetManager::LabelMap& labels,
+                          std::vector<std::shared_ptr<SceneObject>>& selectedObjects) const;
 
         virtual MoveAction* clone() const;
 

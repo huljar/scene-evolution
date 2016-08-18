@@ -187,3 +187,7 @@ CameraManager& RGBDScene::cameraManager() {
 Ogre::SceneManager* RGBDScene::getSceneMgr() const {
     return mSceneMgr;
 }
+
+cv::Mat_<unsigned char> RGBDScene::getCurrentMask() const {
+    return mCurrentMask;
+}

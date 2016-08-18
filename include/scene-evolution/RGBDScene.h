@@ -50,6 +50,8 @@ public:
 
     Ogre::SceneManager* getSceneMgr() const;
 
+    cv::Mat_<unsigned char> getCurrentMask() const;
+
 protected:
     Ogre::ManualObject* mSceneObject;
     Ogre::SceneManager* mSceneMgr;

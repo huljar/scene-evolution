@@ -38,10 +38,11 @@ QString Object::getName() const {
     return mObjName;
 }
 
-std::vector<SceneObject> Object::getSceneObjects(const SearchCondition& searchCond, RGBDScene* rgbdScene, const Scene& currentScene,
-                                                 const DatasetManager::LabelMap& labels, bool applyQualifiers) const {
+std::vector<std::shared_ptr<SceneObject>> Object::getSceneObjects(const SearchCondition& searchCond, SceneObjectManager* sceneObjMgr, const Scene& currentScene,
+                                                                  const DatasetManager::LabelMap& labels, bool applyQualifiers) const {
     // Get all objects matching the specified names
-    std::vector<SceneObject> ret;
+    std::vector<std::shared_ptr<SceneObject>> ret;
+    RGBDScene* rgbdScene = sceneObjMgr->getRGBDScene();
 
     DatasetManager::LabelMap::const_iterator label = labels.find(mObjName);
     if(label != labels.cend()) {
@@ -58,37 +59,52 @@ std::vector<SceneObject> Object::getSceneObjects(const SearchCondition& searchCo
         }
 
         // Perform region growing to separate objects of same type
-        ret = doRegionGrowing(labelImg, regionMap, rgbdScene->getSceneMgr());
+        std::vector<SceneObject*> objects = doRegionGrowing(labelImg, regionMap, rgbdScene->getSceneMgr());
 
-        // Remove objects for which the search condition doesn't hold
-        std::vector<SceneObject>::iterator newEnd = std::remove_if(ret.begin(), ret.end(), [&](const SceneObject& obj) -> bool {
-            return !searchCond.eval(rgbdScene, currentScene, obj, labels);
+        // Remove objects that are not in the scene any more or for which the search condition doesn't hold (and delete them)
+        std::vector<SceneObject*>::iterator objectsNewEnd = std::remove_if(objects.begin(), objects.end(), [&](SceneObject* const& obj) -> bool {
+            return !sceneObjMgr->checkObjectInScene(*obj) || !searchCond.eval(sceneObjMgr, currentScene, *obj, labels);
         });
-        ret.erase(newEnd, ret.end());
-    }
+        for(std::vector<SceneObject*>::iterator it = objectsNewEnd; it != objects.end(); ++it)
+            delete *it;
 
-    // Apply qualifiers
-    if(applyQualifiers) {
-        for(std::list<Qualifier*>::const_iterator it = mQualList.cbegin(); it != mQualList.cend(); ++it) {
-            if(!applyQualifier(**it, ret))
-                std::cerr << "Unable to apply qualifier " << (*it)->getText().toStdString() << " to " << mObjName.toStdString() << std::endl;
+        // Create shared pointers from remaining objects
+        ret.reserve(std::distance(objects.begin(), objectsNewEnd));
+        for(std::vector<SceneObject*>::iterator it = objects.begin(); it != objectsNewEnd; ++it)
+            ret.emplace_back(*it);
+
+        // Add objects which have been moved before
+        // Check name and search condition for them as well, but don't delete non-matching objects
+        std::vector<std::shared_ptr<SceneObject>> regObjects = sceneObjMgr->getRegisteredObjects();
+        std::vector<std::shared_ptr<SceneObject>>::iterator regObjectsNewEnd = std::remove_if(regObjects.begin(), regObjects.end(), [&](const std::shared_ptr<SceneObject>& obj) -> bool {
+            return obj->getName() != mObjName || !searchCond.eval(sceneObjMgr, currentScene, *obj, labels);
+        });
+        ret.reserve(ret.size() + std::distance(regObjects.begin(), regObjectsNewEnd));
+        std::copy(regObjects.begin(), regObjectsNewEnd, std::back_inserter(ret));
+
+        // Apply qualifiers
+        if(applyQualifiers) {
+            for(std::list<Qualifier*>::const_iterator it = mQualList.cbegin(); it != mQualList.cend(); ++it) {
+                if(!applyQualifier(**it, ret))
+                    std::cerr << "Unable to apply qualifier " << (*it)->getText().toStdString() << " to " << mObjName.toStdString() << std::endl;
+            }
         }
     }
 
     return ret;
 }
 
-std::vector<SceneObject> Object::getSceneObjects(RGBDScene* rgbdScene, const Scene& currentScene,
-                                                 const DatasetManager::LabelMap& labels, bool applyQualifiers) const {
+std::vector<std::shared_ptr<SceneObject>> Object::getSceneObjects(SceneObjectManager* sceneObjMgr, const Scene& currentScene,
+                                                                  const DatasetManager::LabelMap& labels, bool applyQualifiers) const {
     // Create temporary search condition which always evaluates to true
     SearchCondition tmpCond(nullptr, new BooleanTerm(nullptr, new BooleanFactor(new BooleanTest(new BooleanValue(true)), false)));
 
     // Call overloaded function
-    return getSceneObjects(tmpCond, rgbdScene, currentScene, labels, applyQualifiers);
+    return getSceneObjects(tmpCond, sceneObjMgr, currentScene, labels, applyQualifiers);
 }
 
-std::vector<SceneObject> Object::doRegionGrowing(const cv::Mat& labelImg, RegionMap& points, Ogre::SceneManager* sceneMgr) const {
-    std::vector<SceneObject> sceneObjects;
+std::vector<SceneObject*> Object::doRegionGrowing(const cv::Mat& labelImg, RegionMap& points, Ogre::SceneManager* sceneMgr) const {
+    std::vector<SceneObject*> sceneObjects;
 
     int currentId = 0;
     std::queue<RegionMap::iterator> queue;
@@ -102,8 +118,8 @@ std::vector<SceneObject> Object::doRegionGrowing(const cv::Mat& labelImg, Region
         // Add point to the queue
         queue.push(it);
 
-        // Using std::vector instead of QVector because QVector does not support emplace
-        sceneObjects.emplace_back(mObjName, labelImg.size(), sceneMgr);
+        // Create new object
+        sceneObjects.push_back(new SceneObject(mObjName, labelImg.size(), sceneMgr));
 
         // Iterate until the whole region is marked
         while(!queue.empty()) {
@@ -117,7 +133,7 @@ std::vector<SceneObject> Object::doRegionGrowing(const cv::Mat& labelImg, Region
             current->second = currentId;
 
             const cv::Point& pixel = current->first;
-            sceneObjects[currentId].addPoint(pixel);
+            sceneObjects[currentId]->addPoint(pixel);
 
             // Add all points to the queue that are direct neighbors (8-connected grid) of the current point
             // and have the same label
@@ -139,7 +155,7 @@ std::vector<SceneObject> Object::doRegionGrowing(const cv::Mat& labelImg, Region
     return sceneObjects;
 }
 
-bool Object::applyQualifier(const Qualifier& qual, std::vector<SceneObject>& objList) const {
+bool Object::applyQualifier(const Qualifier& qual, std::vector<std::shared_ptr<SceneObject>>& objList) const {
     // TODO: implement
     (void)qual;
     (void)objList;

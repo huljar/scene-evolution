@@ -5,7 +5,7 @@
 #include <SEL/BooleanTest.h>
 #include <SEL/SceneObject.h>
 
-#include <scene-evolution/RGBDScene.h>
+#include <scene-evolution/SceneObjectManager.h>
 #include <scene-evolution/Scene.h>
 
 namespace SEL {
@@ -17,7 +17,7 @@ namespace SEL {
         BooleanFactor& operator=(const BooleanFactor& other);
         virtual ~BooleanFactor();
 
-        virtual bool eval(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const;
+        virtual bool eval(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const;
 
         virtual BooleanFactor* clone() const;
 

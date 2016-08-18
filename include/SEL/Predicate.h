@@ -4,7 +4,7 @@
 #include <SEL/BisonSymbol.h>
 #include <SEL/SceneObject.h>
 
-#include <scene-evolution/RGBDScene.h>
+#include <scene-evolution/SceneObjectManager.h>
 #include <scene-evolution/Scene.h>
 #include <scene-evolution/DatasetManager.h>
 
@@ -15,7 +15,7 @@ namespace SEL {
         Predicate();
         virtual ~Predicate();
 
-        virtual bool eval(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const = 0;
+        virtual bool eval(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const = 0;
     };
 }
 

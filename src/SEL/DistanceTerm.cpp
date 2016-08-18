@@ -27,13 +27,13 @@ DistanceTerm::~DistanceTerm() {
 }
 
 // TODO: more efficient calculations (currently O(n*m))
-QVariant DistanceTerm::calc(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const {
+QVariant DistanceTerm::calc(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const {
     std::cout << "Calculating shortest distance..." << std::endl
               << "Term object: " << mObj->getName().toStdString() << std::endl
               << "Query object: " << obj.getName().toStdString() << std::endl;
 
     // Get object(s) to which the distance will be calculated
-    std::vector<SceneObject> termObjects = mObj->getSceneObjects(rgbdScene, currentScene, labels);
+    std::vector<std::shared_ptr<SceneObject>> termObjects = mObj->getSceneObjects(sceneObjMgr, currentScene, labels);
 
     std::cout << "Term object exists " << termObjects.size() << " times in the scene" << std::endl;
 
@@ -42,7 +42,7 @@ QVariant DistanceTerm::calc(RGBDScene* rgbdScene, const Scene& currentScene, con
     // Precalculate 3D points of evaluated object
     std::vector<cv::Vec3f> queryPoints;
     cv::Mat_<unsigned char> queryPixels = obj.getPixels();
-    const CameraManager& camMgr = rgbdScene->cameraManager();
+    const CameraManager& camMgr = sceneObjMgr->getRGBDScene()->cameraManager();
     cv::Mat depthImg = currentScene.getDepthImg();
 
     for(cv::Mat_<unsigned char>::iterator it = queryPixels.begin(); it != queryPixels.end(); ++it) {
@@ -52,9 +52,9 @@ QVariant DistanceTerm::calc(RGBDScene* rgbdScene, const Scene& currentScene, con
     }
 
     // Iterate over target objects
-    for(std::vector<SceneObject>::iterator it = termObjects.begin(); it != termObjects.end(); ++it) {
+    for(std::vector<std::shared_ptr<SceneObject>>::iterator it = termObjects.begin(); it != termObjects.end(); ++it) {
         // Iterate over target object points
-        cv::Mat_<unsigned char> termObjPixels = it->getPixels();
+        cv::Mat_<unsigned char> termObjPixels = (*it)->getPixels();
 
         for(cv::Mat_<unsigned char>::iterator jt = termObjPixels.begin(); jt != termObjPixels.end(); ++jt) {
             if(*jt == 255) {

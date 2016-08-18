@@ -6,6 +6,7 @@
 #include <SEL/SearchCondition.h>
 
 #include <scene-evolution/DatasetManager.h>
+#include <scene-evolution/SceneObjectManager.h>
 
 #include <QString>
 #include <list>
@@ -20,7 +21,8 @@ namespace SEL {
         SelectStatement& operator=(const SelectStatement& other);
         virtual ~SelectStatement();
 
-        virtual std::vector<SceneObject> getSceneObjects(RGBDScene* rgbdScene, const Scene& currentScene, const DatasetManager::LabelMap& labels) const;
+        virtual std::vector<std::shared_ptr<SceneObject>> getSceneObjects(SceneObjectManager* sceneObjMgr, const Scene& currentScene,
+                                                                          const DatasetManager::LabelMap& labels) const;
 
         virtual SelectStatement* clone() const;
 

@@ -19,12 +19,12 @@ RemoveAction::~RemoveAction() {
     std::cerr << "Deleting RemoveAction" << std::endl;
 }
 
-void RemoveAction::exec(RGBDScene* rgbdScene, const Scene& currentScene, const DatasetManager::LabelMap& labels,
-                        std::vector<SceneObject>& selectedObjects) const {
+void RemoveAction::exec(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const DatasetManager::LabelMap& labels,
+                        std::vector<std::shared_ptr<SceneObject>>& selectedObjects) const {
     (void)currentScene;
     (void)labels;
 
-    cutObjects(selectedObjects, rgbdScene);
+    sceneObjMgr->cutObjects(selectedObjects);
 }
 
 RemoveAction* RemoveAction::clone() const {

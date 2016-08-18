@@ -1,5 +1,6 @@
 #include <SEL/SelectStatement.h>
 
+#include <algorithm>
 #include <queue>
 
 using namespace SEL;
@@ -34,17 +35,16 @@ SelectStatement::~SelectStatement() {
     std::cerr << "Deleting SelectStatement" << std::endl;
 }
 
-std::vector<SceneObject> SelectStatement::getSceneObjects(RGBDScene* rgbdScene, const Scene& currentScene, const DatasetManager::LabelMap& labels) const {
-    // TODO: take into account the objects already moved (from SceneObjectManager)
-    std::vector<SceneObject> ret;
+std::vector<std::shared_ptr<SceneObject>> SelectStatement::getSceneObjects(SceneObjectManager* sceneObjMgr, const Scene& currentScene,
+                                                                           const DatasetManager::LabelMap& labels) const {
+    std::vector<std::shared_ptr<SceneObject>> ret;
     for(std::list<Object*>::const_iterator it = mObjectList.cbegin(); it != mObjectList.cend(); ++it) {
-        std::vector<SceneObject> current = (*it)->getSceneObjects(*mSearchCond, rgbdScene, currentScene, labels);
+        std::vector<std::shared_ptr<SceneObject>> current = (*it)->getSceneObjects(*mSearchCond, sceneObjMgr, currentScene, labels);
 
         ret.reserve(ret.size() + current.size());
-        for(std::vector<SceneObject>::iterator it = current.begin(); it != current.end(); ++it) {
-            ret.push_back(std::move(*it));
-        }
+        std::copy(current.begin(), current.end(), std::back_inserter(ret));
     }
+
     return ret;
 }
 

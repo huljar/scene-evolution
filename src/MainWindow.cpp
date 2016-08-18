@@ -28,7 +28,7 @@ MainWindow::MainWindow(QWidget *parent)
     mDatasetManager = requestNYUDir();
     if(!mDatasetManager) {
         std::cout << "Quitting ..." << std::endl;
-        exit(1); // Not using QApplication::exit() since the event loop has not started yet
+        exit(0); // Not using QApplication::exit() since the event loop has not started yet
     }
 
     // Set up signal/slot connections
@@ -120,7 +120,7 @@ bool MainWindow::changeScene(const Scene& scene, unsigned int sceneIdx) {
 
     mRGBDScene = new RGBDScene(mOgreWindow->getOgreSceneManager(), scene.getDepthImg(), scene.getRgbImg(), mDatasetManager->getCameraParams());
     mRGBDSceneNode->attachObject(mRGBDScene->getManualObject());
-    mSceneObjectManager = new SceneObjectManager(mOgreWindow->getOgreSceneManager());
+    mSceneObjectManager = new SceneObjectManager(mRGBDScene);
 
     // Emit post scene change signal
     SceneChangedEventArgs postArgs(scene.getFileName(), sceneIdx);
@@ -204,7 +204,7 @@ void MainWindow::onActionRunSELTriggered(bool checked) {
     std::cout << "Executing " << queries.size() << " queries" << std::endl;
 
     for(std::list<SEL::Query*>::const_iterator it = queries.cbegin(); it != queries.cend(); ++it) {
-        (*it)->exec(mRGBDScene, mSceneObjectManager, mCurrentScene, mDatasetManager->getLabelMap());
+        (*it)->exec(mSceneObjectManager, mCurrentScene, mDatasetManager->getLabelMap());
     }
 }
 
@@ -291,7 +291,7 @@ void MainWindow::onPushButtonExecuteManualSELClicked(bool checked) {
     std::cout << "Executing " << queries.size() << " queries" << std::endl;
 
     for(std::list<SEL::Query*>::const_iterator it = queries.cbegin(); it != queries.cend(); ++it) {
-        (*it)->exec(mRGBDScene, mSceneObjectManager, mCurrentScene, mDatasetManager->getLabelMap());
+        (*it)->exec(mSceneObjectManager, mCurrentScene, mDatasetManager->getLabelMap());
     }
 }
 

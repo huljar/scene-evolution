@@ -23,8 +23,8 @@ BooleanValue::~BooleanValue() {
     std::cerr << "Deleting BooleanValue" << std::endl;
 }
 
-bool BooleanValue::eval(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const {
-    (void)rgbdScene;
+bool BooleanValue::eval(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const {
+    (void)sceneObjMgr;
     (void)currentScene;
     (void)obj;
     (void)labels;

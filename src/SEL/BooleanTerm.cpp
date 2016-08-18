@@ -30,11 +30,11 @@ BooleanTerm::~BooleanTerm() {
     std::cerr << "Deleting BooleanTerm" << std::endl;
 }
 
-bool BooleanTerm::eval(RGBDScene* rgbdScene, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const {
+bool BooleanTerm::eval(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const {
     if(mLeft)
-        return mLeft->eval(rgbdScene, currentScene, obj, labels) && mRight->eval(rgbdScene, currentScene, obj, labels);
+        return mLeft->eval(sceneObjMgr, currentScene, obj, labels) && mRight->eval(sceneObjMgr, currentScene, obj, labels);
 
-    return mRight->eval(rgbdScene, currentScene, obj, labels);
+    return mRight->eval(sceneObjMgr, currentScene, obj, labels);
 }
 
 BooleanTerm* BooleanTerm::clone() const {
