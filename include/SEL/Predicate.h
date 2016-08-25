@@ -15,7 +15,7 @@ namespace SEL {
         Predicate();
         virtual ~Predicate();
 
-        virtual bool eval(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const = 0;
+        virtual bool eval(SceneObjectManager* sceneObjMgr, const Scene& currentScene, SceneObject& obj, const DatasetManager::LabelMap& labels) const = 0;
     };
 }
 

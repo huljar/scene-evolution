@@ -29,7 +29,7 @@ BooleanTerm::~BooleanTerm() {
     delete mRight;
 }
 
-bool BooleanTerm::eval(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const {
+bool BooleanTerm::eval(SceneObjectManager* sceneObjMgr, const Scene& currentScene, SceneObject& obj, const DatasetManager::LabelMap& labels) const {
     if(mLeft)
         return mLeft->eval(sceneObjMgr, currentScene, obj, labels) && mRight->eval(sceneObjMgr, currentScene, obj, labels);
 

@@ -32,7 +32,7 @@ CompPredicate::~CompPredicate() {
     delete mRight;
 }
 
-bool CompPredicate::eval(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const {
+bool CompPredicate::eval(SceneObjectManager* sceneObjMgr, const Scene& currentScene, SceneObject& obj, const DatasetManager::LabelMap& labels) const {
     QVariant left = mLeft->calc(sceneObjMgr, currentScene, obj, labels);
     QVariant right = mRight->calc(sceneObjMgr, currentScene, obj, labels);
 

@@ -23,7 +23,7 @@ BooleanValue::~BooleanValue() {
 
 }
 
-bool BooleanValue::eval(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const {
+bool BooleanValue::eval(SceneObjectManager* sceneObjMgr, const Scene& currentScene, SceneObject& obj, const DatasetManager::LabelMap& labels) const {
     (void)sceneObjMgr;
     (void)currentScene;
     (void)obj;

@@ -38,7 +38,7 @@ bool SceneObjectManager::registerObject(const std::shared_ptr<SEL::SceneObject>&
 
 void SceneObjectManager::cutObject(const std::shared_ptr<SEL::SceneObject>& obj) {
     // Create mask from object outline
-    addToMask(obj->getPixels());
+    addToMask(obj->getOriginalPixels());
 }
 
 void SceneObjectManager::cutObjects(const std::vector<std::shared_ptr<SEL::SceneObject>>& objs) {
@@ -62,7 +62,7 @@ void SceneObjectManager::updateObjects() {
 }
 
 bool SceneObjectManager::checkObjectInScene(const SEL::SceneObject& obj) const {
-    cv::Mat_<unsigned char> pixels = obj.getPixels();
+    cv::Mat_<unsigned char> pixels = obj.getOriginalPixels();
     if(pixels.rows != mCurrentMask.rows || pixels.cols != mCurrentMask.cols)
         return false;
 

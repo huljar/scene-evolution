@@ -29,7 +29,7 @@ SearchCondition::~SearchCondition() {
     delete mRight;
 }
 
-bool SearchCondition::eval(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const {
+bool SearchCondition::eval(SceneObjectManager* sceneObjMgr, const Scene& currentScene, SceneObject& obj, const DatasetManager::LabelMap& labels) const {
     // TODO: make sure that distance term etc. use current locations of objects and not original locations
     if(mLeft)
         return mLeft->eval(sceneObjMgr, currentScene, obj, labels) || mRight->eval(sceneObjMgr, currentScene, obj, labels);

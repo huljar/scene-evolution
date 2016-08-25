@@ -27,6 +27,11 @@ namespace Constants {
     const Ogre::ColourValue BoundingBoxInactiveColour = Ogre::ColourValue::White;
 
     const float MoveActionSlopeThreshold = 0.2;
+
+    const int SceneObjectKDTreeMaxDepth = 10;
+    const int SceneObjectKDTreeMinLeafSize = 10;
+
+    const size_t DistanceTermApproximationNumPoints = 50;
 }
 
 namespace Strings {

@@ -22,7 +22,7 @@ NumericValue::~NumericValue() {
 
 }
 
-QVariant NumericValue::calc(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const {
+QVariant NumericValue::calc(SceneObjectManager* sceneObjMgr, const Scene& currentScene, SceneObject& obj, const DatasetManager::LabelMap& labels) const {
     (void)sceneObjMgr;
     (void)currentScene;
     (void)obj;

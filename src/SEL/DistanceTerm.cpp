@@ -1,7 +1,13 @@
 #include <SEL/DistanceTerm.h>
+#include <scene-evolution/util.h>
+
+#include <algorithm>
+#include <chrono>
 #include <limits>
 
 using namespace SEL;
+
+std::default_random_engine DistanceTerm::msRandomEngine(std::chrono::system_clock::now().time_since_epoch().count());
 
 DistanceTerm::DistanceTerm(Object* obj)
     : mObj(obj)
@@ -25,8 +31,7 @@ DistanceTerm::~DistanceTerm() {
     delete mObj;
 }
 
-// TODO: more efficient calculations (currently O(n*m))
-QVariant DistanceTerm::calc(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const SceneObject& obj, const DatasetManager::LabelMap& labels) const {
+QVariant DistanceTerm::calc(SceneObjectManager* sceneObjMgr, const Scene& currentScene, SceneObject& obj, const DatasetManager::LabelMap& labels) const {
     std::cout << "Calculating shortest distance..." << std::endl
               << "Term object: " << mObj->getName().toStdString() << std::endl
               << "Query object: " << obj.getName().toStdString() << std::endl;
@@ -36,38 +41,35 @@ QVariant DistanceTerm::calc(SceneObjectManager* sceneObjMgr, const Scene& curren
 
     std::cout << "Term object exists " << termObjects.size() << " times in the scene" << std::endl;
 
-    float shortestDist = std::numeric_limits<float>::infinity();
-
-    // Precalculate 3D points of evaluated object
-    std::vector<cv::Vec3f> queryPoints;
-    cv::Mat_<unsigned char> queryPixels = obj.getPixels();
+    float shortestSqrDist = std::numeric_limits<float>::infinity();
     const CameraManager& camMgr = sceneObjMgr->getRGBDScene()->cameraManager();
     cv::Mat depthImg = currentScene.getDepthImg();
 
-    for(cv::Mat_<unsigned char>::iterator it = queryPixels.begin(); it != queryPixels.end(); ++it) {
-        if(*it == 255) {
-            queryPoints.push_back(camMgr.getWorldForDepth(it.pos(), depthImg.at<unsigned short>(it.pos())));
-        }
-    }
-
     // Iterate over target objects
     for(std::vector<std::shared_ptr<SceneObject>>::iterator it = termObjects.begin(); it != termObjects.end(); ++it) {
-        // Iterate over target object points
-        cv::Mat_<unsigned char> termObjPixels = (*it)->getPixels();
+        // Get vertices of term object
+        std::vector<Ogre::Vector3> termPoints = (*it)->getVertices(depthImg, camMgr);
 
-        for(cv::Mat_<unsigned char>::iterator jt = termObjPixels.begin(); jt != termObjPixels.end(); ++jt) {
-            if(*jt == 255) {
-                // Calculate 3D point
-                cv::Vec3f termObjPoint = camMgr.getWorldForDepth(jt.pos(), depthImg.at<unsigned short>(jt.pos()));
+        // Shuffle the vertices (for random selection)
+        std::shuffle(termPoints.begin(), termPoints.end(), msRandomEngine);
 
-                // Iterate over evaluated object points
-                for(std::vector<cv::Vec3f>::iterator kt = queryPoints.begin(); kt != queryPoints.end(); ++kt) {
-                    float currentDist = dist(*kt, termObjPoint);
-                    if(currentDist < shortestDist) shortestDist = currentDist;
-                }
+        // Iterate over target object vertices
+        std::vector<Ogre::Vector3>::const_iterator pEnd = (termPoints.size() > Constants::DistanceTermApproximationNumPoints
+                                                           ? termPoints.begin() + Constants::DistanceTermApproximationNumPoints
+                                                           : termPoints.end());
+
+        for(std::vector<Ogre::Vector3>::const_iterator it = termPoints.cbegin(); it != pEnd; ++it) {
+            // Execute nearest neighbor query from this point to the evaluated object
+            std::vector<SceneObject::Neighbor> result = obj.findKNearestNeighbors(*it, 1, depthImg, camMgr);
+
+            // Check the result
+            if(!result.empty() && result.front().second < shortestSqrDist) {
+                shortestSqrDist = result.front().second;
             }
         }
     }
+
+    float shortestDist = std::sqrt(shortestSqrDist);
 
     std::cout << "Shortest distance found: " << shortestDist << std::endl;
 

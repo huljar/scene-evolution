@@ -80,6 +80,7 @@ private:
 public:
     KDTree();
     ~KDTree();
+    // TODO: add move constructor, move assignment operator
     void initialize(vertex_list* vertices, int maxDepth, int minSize);
     bool initialized() const;
     KDNode* root() const;
