@@ -13,6 +13,7 @@ SceneObject::SceneObject()
     : mCurrentTranslation(0.f, 0.f, 0.f)
     , mCurrentRotation(cv::Matx33f::eye())
     , mCurrentScale(1.f, 1.f, 1.f)
+    , mVisible(true)
     , mManualObject(nullptr)
     , mSceneMgr(nullptr)
     , mKDTreeUpdated(false)
@@ -26,6 +27,7 @@ SceneObject::SceneObject(const QString& objName, const cv::Size& imgSize, Ogre::
     , mCurrentTranslation(0.f, 0.f, 0.)
     , mCurrentRotation(cv::Matx33f::eye())
     , mCurrentScale(1.f, 1.f, 1.f)
+    , mVisible(true)
     , mManualObject(nullptr)
     , mSceneMgr(sceneMgr)
     , mKDTreeUpdated(false)
@@ -47,6 +49,7 @@ SceneObject::SceneObject(SceneObject&& other)
     , mCurrentTranslation(std::move(other.mCurrentTranslation))
     , mCurrentRotation(std::move(other.mCurrentRotation))
     , mCurrentScale(std::move(other.mCurrentScale))
+    , mVisible(other.mVisible)
     , mManualObject(other.mManualObject)
     , mSceneMgr(other.mSceneMgr)
     , mKDTree(std::move(other.mKDTree))
@@ -70,6 +73,7 @@ SceneObject& SceneObject::operator=(SceneObject&& other) {
     mCurrentTranslation = std::move(other.mCurrentTranslation);
     mCurrentRotation = std::move(other.mCurrentRotation);
     mCurrentScale = std::move(other.mCurrentScale);
+    mVisible = other.mVisible;
     mManualObject = other.mManualObject;
     mSceneMgr = other.mSceneMgr;
     mKDTree = std::move(other.mKDTree);
@@ -167,7 +171,7 @@ std::vector<Ogre::Vector3> SceneObject::getVertices(const cv::Mat& depthImg, con
 }
 
 std::vector<SceneObject::Neighbor> SceneObject::findKNearestNeighbors(const cv::Vec3f& origin, unsigned int k, const cv::Mat& depthImg, const CameraManager& camMgr) {
-    return findKNearestNeighbors(cvToOgre(origin), k, depthIg, camMgr);
+    return findKNearestNeighbors(cvToOgre(origin), k, depthImg, camMgr);
 }
 
 std::vector<SceneObject::Neighbor> SceneObject::findKNearestNeighbors(const Ogre::Vector3& origin, unsigned int k, const cv::Mat& depthImg, const CameraManager& camMgr) {
@@ -235,6 +239,14 @@ void SceneObject::setCurrentScale(const cv::Vec3f& scale) {
 
 void SceneObject::setCurrentScale(float x, float y, float z) {
     setCurrentScale(cv::Vec3f(x, y, z));
+}
+
+bool SceneObject::getVisible() const {
+    return mVisible;
+}
+
+void SceneObject::setVisible(bool visible) {
+    mVisible = visible;
 }
 
 SceneObject::IndexMap SceneObject::createVertices(const cv::Mat& depthImg, const cv::Mat& rgbImg, const CameraManager& camMgr, cv::Vec3f* centroid) {

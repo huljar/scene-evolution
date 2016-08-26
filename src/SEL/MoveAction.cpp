@@ -1,10 +1,12 @@
 #include <SEL/MoveAction.h>
 #include <scene-evolution/util.h>
+#include <scene-evolution/interop.h>
 
 #include <chrono>
 #include <cmath>
 
 using namespace SEL;
+using namespace interop;
 
 std::default_random_engine MoveAction::msRandomEngine(std::chrono::system_clock::now().time_since_epoch().count());
 
@@ -49,46 +51,46 @@ void MoveAction::exec(SceneObjectManager* sceneObjMgr, const Scene& currentScene
         return;
     }
 
-    std::vector<cv::Vec3f> validPositions;
+    std::vector<Ogre::Vector3> validPositions;
 
     // Collect all valid target positions
     for(std::vector<std::shared_ptr<SceneObject>>::iterator it = targets.begin(); it != targets.end(); ++it) {
-        // Get valid positions on top of the target
+        // Get valid positions on the target
         // TODO: eliminate selection of inplausible positions (e.g. too far on the edge), consider the moving object's size
-        cv::Mat_<unsigned char> pixels = (*it)->getPixels();
-        if(!(*it)->has3DPixels())
-            (*it)->create3DPixels(currentScene.getDepthImg(), rgbdScene->cameraManager());
-        cv::Mat_<cv::Vec3f> pixels3D = (*it)->get3DPixels();
+        std::vector<Ogre::Vector3> vertices = (*it)->getVertices(currentScene.getDepthImg(), rgbdScene->cameraManager());
 
-        // Iterate over pixels
-        for(int y = 1; y < pixels.rows - 1; ++y) {
-            for(int x = 1; x < pixels.cols - 1; ++x) {
-                // Check if the pixels and its neighborhood all belong to the object
-                bool valid = true;
-                for(int i = y - 1; i <= y + 1; ++i) {
-                    for(int j = x - 1; j <= x + 1; ++j) {
-                        if(pixels(i, j) == 0) {
-                            valid = false;
-                            break;
-                        }
-                    }
-                    if(!valid) break;
-                }
+        // TODO: how to eliminate impossible targets?
+        std::copy(vertices.begin(), vertices.end(), std::back_inserter(validPositions));
 
-                // Continue with next pixel if this one is not good
-                if(!valid) continue;
+//        // Iterate over pixels
+//        for(int y = 1; y < pixels.rows - 1; ++y) {
+//            for(int x = 1; x < pixels.cols - 1; ++x) {
+//                // Check if the pixels and its neighborhood all belong to the object
+//                bool valid = true;
+//                for(int i = y - 1; i <= y + 1; ++i) {
+//                    for(int j = x - 1; j <= x + 1; ++j) {
+//                        if(pixels(i, j) == 0) {
+//                            valid = false;
+//                            break;
+//                        }
+//                    }
+//                    if(!valid) break;
+//                }
 
-                // Compute x and y derivations
-                float yDeriv = slope(pixels3D(y - 1, x), pixels3D(y + 1, x));
-                float xDeriv = slope(pixels3D(y, x - 1), pixels3D(y, x + 1));
+//                // Continue with next pixel if this one is not good
+//                if(!valid) continue;
 
-                // Check if the derivations are below the threshold
-                if(yDeriv <= Constants::MoveActionSlopeThreshold && xDeriv <= Constants::MoveActionSlopeThreshold) {
-                    // Add this point to the valid points
-                    validPositions.push_back(pixels3D(y, x));
-                }
-            }
-        }
+//                // Compute x and y derivations
+//                float yDeriv = slope(pixels3D(y - 1, x), pixels3D(y + 1, x));
+//                float xDeriv = slope(pixels3D(y, x - 1), pixels3D(y, x + 1));
+
+//                // Check if the derivations are below the threshold
+//                if(yDeriv <= Constants::MoveActionSlopeThreshold && xDeriv <= Constants::MoveActionSlopeThreshold) {
+//                    // Add this point to the valid points
+//                    validPositions.push_back(pixels3D(y, x));
+//                }
+//            }
+//        }
     }
 
     // Check if there is at least one valid position
@@ -97,34 +99,32 @@ void MoveAction::exec(SceneObjectManager* sceneObjMgr, const Scene& currentScene
         return;
     }
 
-    // Cut the objects
-    sceneObjMgr->cutObjects(selectedObjects);
+    // Cut and meshify the objects if necessary
+    for(auto&& obj : selectedObjects) {
+        if(!obj->hasManualObject()) {
+            sceneObjMgr->cutObject(obj);
+            obj->meshify(currentScene.getDepthImg(), currentScene.getRgbImg(), rgbdScene->cameraManager());
+        }
+    }
 
     // Execute move action for each selected object
-    for(std::vector<std::shared_ptr<SceneObject>>::iterator it = selectedObjects.begin(); it != selectedObjects.end(); ++it) {
-        // Build meshes for object
-        if(!(*it)->hasManualObject())
-            (*it)->meshify(currentScene.getDepthImg(), currentScene.getRgbImg(), rgbdScene->cameraManager());
-
+    for(auto&& obj : selectedObjects) {
         // Select a random valid position
-        cv::Vec3f targetPosition = validPositions[std::uniform_int_distribution<size_t>(0, validPositions.size() - 1)(msRandomEngine)];
+        Ogre::Vector3 targetPosition = validPositions[std::uniform_int_distribution<size_t>(0, validPositions.size() - 1)(msRandomEngine)];
 
-        // Get original 3D bounding box of current object
-        SceneObject::BoundingBox3D bb = (*it)->getBoundingBox3D(currentScene.getDepthImg(), rgbdScene->cameraManager());
+        // Get 3D bounding box
+        Ogre::AxisAlignedBox bb = obj->getBoundingBox(currentScene.getDepthImg(), rgbdScene->cameraManager());
 
-        // Compute original object center
-        cv::Vec3f center(bb.first[0] + (bb.second[0] - bb.first[0]) / 2.f,
-                         bb.first[1] + (bb.second[1] - bb.first[1]) / 2.f,
-                         bb.first[2] + (bb.second[2] - bb.first[2]) / 2.f);
+        // Retrieve object height
+        float height = bb.getHalfSize().y;
 
-        // Compute translation vector
-        targetPosition[1] += center[1] - bb.first[1];
-        cv::Vec3f trans = targetPosition - center;
+        // Compute new position
+        targetPosition.y += height;
 
-        std::cout << "Computed translation of " << trans << " for object " << (*it)->getName().toStdString() << std::endl;
+        std::cout << "Computed translation of " << targetPosition << " for object " << obj->getName().toStdString() << std::endl;
 
-        // Set this translation on the object (with respect to original position)
-        (*it)->setCurrentTranslation(trans);
+        // Set this translation on the object
+        obj->setCurrentTranslation(ogreToCv(targetPosition));
     }
 }
 

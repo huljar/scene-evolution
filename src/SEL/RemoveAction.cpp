@@ -24,7 +24,12 @@ void RemoveAction::exec(SceneObjectManager* sceneObjMgr, const Scene& currentSce
     (void)currentScene;
     (void)labels;
 
-    sceneObjMgr->cutObjects(selectedObjects);
+    for(auto&& obj : selectedObjects) {
+        if(!obj->hasManualObject())
+            sceneObjMgr->cutObject(obj);
+
+        obj->setVisible(false);
+    }
 }
 
 RemoveAction* RemoveAction::clone() const {

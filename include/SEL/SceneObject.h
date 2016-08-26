@@ -57,6 +57,9 @@ namespace SEL {
         void setCurrentScale(const cv::Vec3f& scale);
         void setCurrentScale(float x, float y, float z);
 
+        bool getVisible() const;
+        void setVisible(bool visible);
+
     protected:
         QString mObjName;
         cv::Mat_<unsigned char> mPixels;
@@ -65,6 +68,8 @@ namespace SEL {
         cv::Vec3f mCurrentTranslation;
         cv::Matx33f mCurrentRotation;
         cv::Vec3f mCurrentScale;
+
+        bool mVisible;
 
         Ogre::ManualObject* mManualObject;
         Ogre::SceneManager* mSceneMgr;
