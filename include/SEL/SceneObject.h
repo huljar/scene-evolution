@@ -52,10 +52,16 @@ namespace SEL {
         cv::Matx33f getCurrentRotation() const;
         void setCurrentRotation(const cv::Matx33f& rotation);
         void setCurrentRotation(float f00, float f01, float f02, float f10, float f11, float f12, float f20, float f21, float f22);
+        void rotate(const cv::Matx33f& rotation);
+        void rotate(const cv::Vec3f& eulerDegrees);
+        void rotate(float eulerDegreesX, float eulerDegreesY, float eulerDegreesZ);
 
         cv::Vec3f getCurrentScale() const;
         void setCurrentScale(const cv::Vec3f& scale);
         void setCurrentScale(float x, float y, float z);
+        void setCurrentScale(float scale);
+        void scale(const cv::Vec3f& factors);
+        void scale(float factor);
 
         bool getVisible() const;
         void setVisible(bool visible);

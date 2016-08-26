@@ -206,9 +206,9 @@
       <property name="currentIndex">
        <number>1</number>
       </property>
-      <widget class="QWidget" name="tabObjects">
+      <widget class="QWidget" name="tabPhysics">
        <attribute name="title">
-        <string>Objects</string>
+        <string>Physics</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_4">
         <item>
@@ -493,6 +493,20 @@
             </widget>
            </item>
           </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="Line" name="line_2">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="checkBoxSELBoundingBoxes">
+          <property name="text">
+           <string>Show object bounding boxes</string>
+          </property>
          </widget>
         </item>
         <item>

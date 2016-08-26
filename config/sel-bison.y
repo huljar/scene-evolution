@@ -33,6 +33,7 @@ namespace SEL {
 #include <SEL/Action.h>
 #include <SEL/MoveAction.h>
 #include <SEL/RemoveAction.h>
+#include <SEL/RotateAction.h>
 }
 
 %param {SEL::Driver& driver}            // Add the parsing context as parameter to yylex/yyparse
@@ -51,6 +52,7 @@ namespace SEL {
 // Code to put in the parser implementation file
 %code {
 #include <SEL/Driver.h>                 // Here we do not need to worry about mutual inclusion
+#include <OGRE/OgreVector3.h>
 #include <QString>
 #include <list>
 }
@@ -65,7 +67,9 @@ namespace SEL {
     WHERE   "where"
     DIST    "distance to"
     SUPPORT "supported by"
-    MOVE    "move to"
+    MOVETO  "move to"
+    MOVEBY  "move by"
+    ROTBY   "rotate by"
     REMOVE  "remove"
     OR      "or"
     AND     "and"
@@ -114,6 +118,8 @@ namespace SEL {
 %type <SEL::Action*> action
 %type <SEL::MoveAction*> move_action
 %type <SEL::RemoveAction*> remove_action
+%type <SEL::RotateAction*> rotate_action
+%type <Ogre::Vector3> vector
 
 // Destructors are also called on stack reduce even though the documentation says this is
 // not the case, so disable them for now (will cause memory leaks during error recovery)
@@ -125,7 +131,7 @@ namespace SEL {
 %printer { yyoutput << *$$; } <*>;
 %printer { yyoutput << "List containig " << $$.size() << " elements"; } query_list object_list qualifier_list action_list
 %printer { yyoutput << $$.toStdString(); } "qualifier" "identifier" identifier_concat
-%printer { yyoutput << $$; } "integer" "float" "boolean"
+%printer { yyoutput << $$; } "integer" "float" "boolean" vector
 
 /*******************************/
 %% // begin grammar definition //
@@ -215,14 +221,22 @@ action_list:
 
 action:
     move_action { $$ = $1; }
-  | remove_action { $$ = $1; };
+  | remove_action { $$ = $1; }
+  | rotate_action { $$ = $1; };
 
 move_action:
     "move to" object { $$ = new SEL::MoveAction($2, nullptr); }
-  | "move to" object "where" search_condition { $$ = new SEL::MoveAction($2, $4); };
+  | "move to" object "where" search_condition { $$ = new SEL::MoveAction($2, $4); }
+  | "move by" vector { $$ = new SEL::MoveAction($2); };
 
 remove_action:
     "remove" { $$ = new SEL::RemoveAction(); };
+
+rotate_action:
+    "rotate by" vector { $$ = new SEL::RotateAction($2); };
+
+vector:
+    "(" numeric_value "," numeric_value "," numeric_value ")" { $$ = Ogre::Vector3($2->getValue().toFloat(), $4->getValue().toFloat(), $6->getValue().toFloat()); };
 
 /*****************************/
 %% // end grammar definition //

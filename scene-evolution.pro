@@ -49,7 +49,8 @@ SOURCES += src/main.cpp\
         src/SEL/BooleanValue.cpp \
         src/SEL/NumericValue.cpp \
         src/SEL/SceneObject.cpp \
-        src/SceneObjectManager.cpp
+        src/SceneObjectManager.cpp \
+        src/SEL/RotateAction.cpp
 
 HEADERS  += include/scene-evolution/MainWindow.h \
         include/scene-evolution/QtOgreWindow.h \
@@ -89,7 +90,8 @@ HEADERS  += include/scene-evolution/MainWindow.h \
         include/SEL/SceneObject.h \
         include/scene-evolution/SceneObjectManager.h \
         include/OgreBites/OgreRay.h \
-        include/OgreBites/SdkQtCameraMan.h
+        include/OgreBites/SdkQtCameraMan.h \
+        include/SEL/RotateAction.h
 
 FORMS    += forms/MainWindow.ui
 

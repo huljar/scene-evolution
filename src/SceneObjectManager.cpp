@@ -2,9 +2,10 @@
 
 #include <algorithm>
 
-SceneObjectManager::SceneObjectManager(RGBDScene* rgbdScene)
+SceneObjectManager::SceneObjectManager(RGBDScene* rgbdScene, bool showBoundingBoxes)
     : mRGBDScene(rgbdScene)
     , mCurrentMask(cv::Mat_<unsigned char>::zeros(rgbdScene->getDepthImage().size()))
+    , mShowBoundingBoxes(showBoundingBoxes)
 {
 }
 
@@ -52,21 +53,28 @@ void SceneObjectManager::cutObjects(const std::vector<std::shared_ptr<SEL::Scene
 }
 
 void SceneObjectManager::updateObjects() {
+    // Iterate over registered objects and their scene nodes
     for(size_t i = 0; i < mSceneObjects.size(); ++i) {
+        // Update translation
         cv::Vec3f trans = mSceneObjects[i]->getCurrentTranslation();
         mSceneNodes[i]->setPosition(Ogre::Vector3(trans[0], trans[1], trans[2]));
 
+        // Update rotation
         cv::Matx33f rot = mSceneObjects[i]->getCurrentRotation();
         mSceneNodes[i]->setOrientation(getQuaternion(rot));
 
+        // Update visibility
         Ogre::ManualObject* obj = mSceneObjects[i]->getManualObject();
-
         if(mSceneObjects[i]->getVisible() && !obj->isAttached())
             mSceneNodes[i]->attachObject(obj);
         else if(!mSceneObjects[i]->getVisible() && obj->isAttached())
             mSceneNodes[i]->detachObject(obj);
+
+        // Update bounding box display
+        mSceneNodes[i]->showBoundingBox(mShowBoundingBoxes);
     }
 
+    // Update background scene
     mRGBDScene->meshify(mCurrentMask, false);
 }
 
@@ -94,6 +102,15 @@ RGBDScene* SceneObjectManager::getRGBDScene() const {
 
 std::vector<std::shared_ptr<SEL::SceneObject>> SceneObjectManager::getRegisteredObjects() const {
     return mSceneObjects;
+}
+
+bool SceneObjectManager::getShowBoundingBoxes() const {
+    return mShowBoundingBoxes;
+}
+
+void SceneObjectManager::setShowBoundingBoxes(bool showBoundingBoxes) {
+    mShowBoundingBoxes = showBoundingBoxes;
+    updateObjects();
 }
 
 void SceneObjectManager::addToMask(const cv::Mat_<unsigned char>& mask) {

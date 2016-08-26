@@ -5,6 +5,8 @@
 #include <SEL/Object.h>
 #include <SEL/SearchCondition.h>
 
+#include <OGRE/OgreVector3.h>
+
 #include <random>
 
 namespace SEL {
@@ -12,6 +14,7 @@ namespace SEL {
     {
     public:
         MoveAction(Object* toObj, SearchCondition* searchCond);
+        MoveAction(const Ogre::Vector3& translation);
         MoveAction(const MoveAction& other);
         MoveAction& operator=(const MoveAction& other);
         virtual ~MoveAction();
@@ -28,6 +31,8 @@ namespace SEL {
 
         Object* mObj;
         SearchCondition* mSearchCond;
+
+        Ogre::Vector3 mTranslation;
 
         static std::default_random_engine msRandomEngine;
     };

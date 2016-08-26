@@ -50,6 +50,8 @@ public slots:
 
     void onPushButtonExecuteManualSELClicked(bool checked);
 
+    void onCheckBoxSELBoundingBoxesStateChanged(int state);
+
     void onDatasetChanging(DatasetChangingEventArgs& e);
     void onDatasetChanged(DatasetChangedEventArgs& e);
 

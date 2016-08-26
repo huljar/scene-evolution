@@ -16,7 +16,7 @@
 class SceneObjectManager
 {
 public:
-    SceneObjectManager(RGBDScene* rgbdScene);
+    SceneObjectManager(RGBDScene* rgbdScene, bool showBoundingBoxes = false);
     virtual ~SceneObjectManager();
 
     bool registerObject(const std::shared_ptr<SEL::SceneObject>& obj);
@@ -32,6 +32,9 @@ public:
 
     std::vector<std::shared_ptr<SEL::SceneObject>> getRegisteredObjects() const;
 
+    bool getShowBoundingBoxes() const;
+    void setShowBoundingBoxes(bool showBoundingBoxes);
+
 protected:
     RGBDScene* mRGBDScene;
 
@@ -39,6 +42,8 @@ protected:
     std::vector<Ogre::SceneNode*> mSceneNodes;
 
     cv::Mat_<unsigned char> mCurrentMask;
+
+    bool mShowBoundingBoxes;
 
 private:
     void addToMask(const cv::Mat_<unsigned char>& mask);

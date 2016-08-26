@@ -120,7 +120,7 @@ bool MainWindow::changeScene(const Scene& scene, unsigned int sceneIdx) {
 
     mRGBDScene = new RGBDScene(mOgreWindow->getOgreSceneManager(), scene.getDepthImg(), scene.getRgbImg(), mDatasetManager->getCameraParams());
     mRGBDSceneNode->attachObject(mRGBDScene->getManualObject());
-    mSceneObjectManager = new SceneObjectManager(mRGBDScene);
+    mSceneObjectManager = new SceneObjectManager(mRGBDScene, ui->checkBoxSELBoundingBoxes->checkState() != Qt::Unchecked);
 
     // Emit post scene change signal
     SceneChangedEventArgs postArgs(scene.getFileName(), sceneIdx);
@@ -295,6 +295,11 @@ void MainWindow::onPushButtonExecuteManualSELClicked(bool checked) {
     }
 }
 
+void MainWindow::onCheckBoxSELBoundingBoxesStateChanged(int state) {
+    if(mSceneObjectManager)
+        mSceneObjectManager->setShowBoundingBoxes(state != Qt::Unchecked);
+}
+
 void MainWindow::onDatasetChanging(DatasetChangingEventArgs& e) {
     Q_UNUSED(e);
 }
@@ -387,6 +392,7 @@ void MainWindow::setUpConnections() {
     connect(ui->pushButtonCancelBox, SIGNAL(clicked(bool)), this, SLOT(onPushButtonCancelBoxClicked(bool)));
 
     connect(ui->pushButtonExecuteManualSEL, SIGNAL(clicked(bool)), this, SLOT(onPushButtonExecuteManualSELClicked(bool)));
+    connect(ui->checkBoxSELBoundingBoxes, SIGNAL(stateChanged(int)), this, SLOT(onCheckBoxSELBoundingBoxesStateChanged(int)));
 
     connect(this, SIGNAL(datasetChanging(DatasetChangingEventArgs&)), this, SLOT(onDatasetChanging(DatasetChangingEventArgs&)));
     connect(this, SIGNAL(datasetChanged(DatasetChangedEventArgs&)), this, SLOT(onDatasetChanged(DatasetChangedEventArgs&)));

@@ -16,6 +16,8 @@ namespace SEL {
 
         virtual NumericValue* clone() const;
 
+        QVariant getValue() const;
+
     protected:
         virtual void print(std::ostream& os) const;
 

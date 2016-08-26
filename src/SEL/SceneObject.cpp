@@ -3,6 +3,7 @@
 #include <scene-evolution/interop.h>
 
 #include <OgreBites/OgreRay.h>
+#include <OGRE/OgreMatrix3.h>
 
 #include <limits>
 
@@ -228,6 +229,21 @@ void SceneObject::setCurrentRotation(float f00, float f01, float f02, float f10,
     setCurrentRotation(cv::Matx33f(f00, f01, f02, f10, f11, f12, f20, f21, f22));
 }
 
+void SceneObject::rotate(const cv::Matx33f& rotation) {
+    mCurrentRotation = mCurrentRotation * rotation; // operator*=(Matx33f, Matx33f) is not defined unfortunately
+    mKDTreeVertexListUpdated = false;
+}
+
+void SceneObject::rotate(const cv::Vec3f& eulerDegrees) {
+    Ogre::Matrix3 mat;
+    mat.FromEulerAnglesXYZ(Ogre::Degree(eulerDegrees[0]), Ogre::Degree(eulerDegrees[1]), Ogre::Degree(eulerDegrees[2]));
+    rotate(ogreToCv(mat));
+}
+
+void SceneObject::rotate(float eulerDegreesX, float eulerDegreesY, float eulerDegreesZ) {
+    rotate(cv::Vec3f(eulerDegreesX, eulerDegreesY, eulerDegreesZ));
+}
+
 cv::Vec3f SceneObject::getCurrentScale() const {
     return mCurrentScale;
 }
@@ -239,6 +255,20 @@ void SceneObject::setCurrentScale(const cv::Vec3f& scale) {
 
 void SceneObject::setCurrentScale(float x, float y, float z) {
     setCurrentScale(cv::Vec3f(x, y, z));
+}
+
+void SceneObject::setCurrentScale(float scale) {
+    setCurrentScale(scale, scale, scale);
+}
+
+void SceneObject::scale(const cv::Vec3f& factors) {
+    for(int i = 0; i < 3; ++i)
+        mCurrentScale[i] *= factors[i]; // operator*=(Vec3f, Vec3f) and operator*(Vec3f, Vec3f) are not defined unfortunately
+    mKDTreeVertexListUpdated = false;
+}
+
+void SceneObject::scale(float factor) {
+    scale(cv::Vec3f(factor, factor, factor));
 }
 
 bool SceneObject::getVisible() const {

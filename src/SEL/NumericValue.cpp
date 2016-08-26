@@ -48,3 +48,7 @@ void NumericValue::print(std::ostream& os) const {
     }
 #pragma GCC diagnostic pop
 }
+
+QVariant NumericValue::getValue() const {
+    return mValue;
+}
