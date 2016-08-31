@@ -50,7 +50,8 @@ SOURCES += src/main.cpp\
         src/SEL/NumericValue.cpp \
         src/SEL/SceneObject.cpp \
         src/SceneObjectManager.cpp \
-        src/SEL/RotateAction.cpp
+        src/SEL/RotateAction.cpp \
+        src/LabelOverlayManager.cpp
 
 HEADERS  += include/scene-evolution/MainWindow.h \
         include/scene-evolution/QtOgreWindow.h \
@@ -91,12 +92,14 @@ HEADERS  += include/scene-evolution/MainWindow.h \
         include/scene-evolution/SceneObjectManager.h \
         include/OgreBites/OgreRay.h \
         include/OgreBites/SdkQtCameraMan.h \
-        include/SEL/RotateAction.h
+        include/SEL/RotateAction.h \
+        include/scene-evolution/LabelOverlayManager.h
 
 FORMS    += forms/MainWindow.ui
 
 # OGRE
-LIBS += -lOgreMain
+INCLUDEPATH += /usr/include/OGRE #necessary for Overlay system
+LIBS += -lOgreMain -lOgreOverlay
 contains(QT_ARCH, x86_64) {
     LIBS += -L/usr/lib/x86_64-linux-gnu/OGRE-1.9.0
 }

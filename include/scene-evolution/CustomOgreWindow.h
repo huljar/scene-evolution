@@ -3,6 +3,8 @@
 
 #include <scene-evolution/QtOgreWindow.h>
 
+#include <OGRE/Overlay/OgreOverlaySystem.h>
+
 class CustomOgreWindow : public QTOgreWindow
 {
     Q_OBJECT
@@ -14,8 +16,12 @@ public:
     void createScene() override;
 
 protected:
+    void preInitSetup() override;
+    void postInitSetup() override;
     void createCamera() override;
     void keyPressEvent(QKeyEvent* e) override;
+
+    Ogre::OverlaySystem* mOverlaySystem;
 };
 
 #endif // CUSTOMOGREWINDOW_H

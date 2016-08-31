@@ -3,11 +3,25 @@
 
 CustomOgreWindow::CustomOgreWindow(QWindow *parent)
     : QTOgreWindow(parent)
+    , mOverlaySystem(nullptr)
 {
 }
 
 CustomOgreWindow::~CustomOgreWindow() {
+    delete mOverlaySystem;
+}
 
+void CustomOgreWindow::createScene() {
+
+}
+
+void CustomOgreWindow::preInitSetup() {
+    // Initialize overlay system (must be done before OGRE initializes)
+    mOverlaySystem = new Ogre::OverlaySystem();
+}
+
+void CustomOgreWindow::postInitSetup() {
+    mSceneMgr->addRenderQueueListener(mOverlaySystem);
 }
 
 void CustomOgreWindow::createCamera() {
@@ -28,8 +42,4 @@ void CustomOgreWindow::keyPressEvent(QKeyEvent* e) {
     }
 
     QTOgreWindow::keyPressEvent(e);
-}
-
-void CustomOgreWindow::createScene() {
-
 }

@@ -42,6 +42,8 @@ namespace Strings {
     const std::string RGBDSceneNodeName = "rgbdScene";
     const std::string BoundingBoxMeshNameInactive = "obbMesh";
     const std::string BoundingBoxMeshNameActive = "obbMeshActive";
+
+    const std::string LabelOverlayFontName = "scene-evolution/labels";
 }
 
 #endif // UTIL_H

@@ -9,6 +9,7 @@
 #include <scene-evolution/EventArgs.h>
 #include <scene-evolution/BoundingBoxManager.h>
 #include <scene-evolution/SceneObjectManager.h>
+#include <scene-evolution/LabelOverlayManager.h>
 #include <SEL/Driver.h>
 
 #include <QMainWindow>
@@ -44,6 +45,8 @@ public slots:
     void onPushButtonNextSceneClicked(bool checked);
     void onPushButtonGoToSceneClicked(bool checked);
 
+    void onCheckBoxDisplayLabelsStateChanged(int state);
+
     void onPushButtonStartNewBoxClicked(bool checked);
     void onPushButtonFinalizeBoxClicked(bool checked);
     void onPushButtonCancelBoxClicked(bool checked);
@@ -74,6 +77,7 @@ private:
     DatasetManager* requestNYUDir();
     void setUpConnections();
     void setUpBBMConnections();
+    void setUpLOMConnections();
     QString buildWindowTitle();
     void setBoundingBoxControlStates(bool enable);
     void restoreBoxDefaultsNoSignals();
@@ -83,6 +87,7 @@ private:
     CustomOgreWindow* mOgreWindow;
     DatasetManager* mDatasetManager;
     BoundingBoxManager* mBoundingBoxManager;
+    LabelOverlayManager* mLabelOverlayManager;
 
     Scene mCurrentScene;
     unsigned int mCurrentSceneIdx;

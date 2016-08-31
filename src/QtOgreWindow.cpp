@@ -108,6 +108,9 @@ void QTOgreWindow::initialize()
         }
     }
 
+    // Call preInit setup function which may be overridden in subclasses
+    preInitSetup();
+
     /*
     Setting size and VSync on windows will solve a lot of problems
     */
@@ -148,7 +151,7 @@ void QTOgreWindow::initialize()
     Note below that we supply the creation function for the Ogre3D window the width and height
     from the current QWindow object using the "this" pointer.
     */
-    mWindow = mRoot->createRenderWindow("QT Window",
+    mWindow = mRoot->createRenderWindow("Qt Window",
         this->width(),
         this->height(),
         false,
@@ -188,6 +191,9 @@ void QTOgreWindow::initialize()
 
     mRoot->addFrameListener(this);
 
+    // Call postInit setup which may be overridden by subclasses
+    postInitSetup();
+
     emit initialized();
 }
 
@@ -196,7 +202,7 @@ void QTOgreWindow::createCamera() {
     mCamera->setPosition(Ogre::Vector3(0.0f, 300.0f, 500.0f));
     mCamera->lookAt(Ogre::Vector3(0.0f, 0.0f, 0.0f));
     mCamera->setNearClipDistance(5.0f);
-    //m_ogreCamera->setFarClipDistance(200.0f);
+    //mCamera->setFarClipDistance(200.0f);
     mCameraMan = new OgreQtBites::SdkQtCameraMan(mCamera);   // create a default camera controller
 }
 
@@ -359,6 +365,14 @@ bool QTOgreWindow::eventFilter(QObject *target, QEvent *event)
     }
 
     return false;
+}
+
+void QTOgreWindow::preInitSetup() {
+
+}
+
+void QTOgreWindow::postInitSetup() {
+
 }
 
 /*

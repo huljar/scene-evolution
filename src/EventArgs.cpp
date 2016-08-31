@@ -12,17 +12,17 @@ DatasetChangedEventArgs::DatasetChangedEventArgs(const QString& datasetPath)
 {
 }
 
-SceneChangingEventArgs::SceneChangingEventArgs(const QString& oldSceneName, unsigned int oldSceneIdx, const QString& newSceneName, unsigned int newSceneIdx)
-    : oldSceneName(oldSceneName)
+SceneChangingEventArgs::SceneChangingEventArgs(const Scene& oldScene, unsigned int oldSceneIdx, const Scene& newScene, unsigned int newSceneIdx)
+    : oldScene(oldScene)
     , oldSceneIdx(oldSceneIdx)
-    , newSceneName(newSceneName)
+    , newScene(newScene)
     , newSceneIdx(newSceneIdx)
     , abort(false)
 {
 }
 
-SceneChangedEventArgs::SceneChangedEventArgs(const QString& sceneName, unsigned int sceneIdx)
-    : sceneName(sceneName)
+SceneChangedEventArgs::SceneChangedEventArgs(const Scene& scene, unsigned int sceneIdx)
+    : scene(scene)
     , sceneIdx(sceneIdx)
 {
 }

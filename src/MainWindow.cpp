@@ -15,6 +15,7 @@ MainWindow::MainWindow(QWidget *parent)
     , mOgreWindow(new CustomOgreWindow)
     , mDatasetManager(nullptr)
     , mBoundingBoxManager(nullptr)
+    , mLabelOverlayManager(nullptr)
     , mCurrentSceneIdx(0)
     , mRGBDScene(nullptr)
     , mRGBDSceneNode(nullptr)
@@ -59,6 +60,7 @@ MainWindow::~MainWindow() {
     delete mSELDriver;
     delete mSceneObjectManager;
     delete mRGBDScene;
+    delete mLabelOverlayManager;
     delete mBoundingBoxManager;
     delete mDatasetManager;
     delete mOgreWindow;
@@ -99,7 +101,7 @@ bool MainWindow::changeDataset(DatasetManager* dataset) {
 
 bool MainWindow::changeScene(const Scene& scene, unsigned int sceneIdx) {
     // Emit pre scene change signal
-    SceneChangingEventArgs preArgs(mCurrentScene.getFileName(), mCurrentSceneIdx, scene.getFileName(), sceneIdx);
+    SceneChangingEventArgs preArgs(mCurrentScene, mCurrentSceneIdx, scene, sceneIdx);
     emit sceneChanging(preArgs);
 
     // Check if the scene change was cancelled by a slot
@@ -123,7 +125,7 @@ bool MainWindow::changeScene(const Scene& scene, unsigned int sceneIdx) {
     mSceneObjectManager = new SceneObjectManager(mRGBDScene, ui->checkBoxSELBoundingBoxes->checkState() != Qt::Unchecked);
 
     // Emit post scene change signal
-    SceneChangedEventArgs postArgs(scene.getFileName(), sceneIdx);
+    SceneChangedEventArgs postArgs(scene, sceneIdx);
     emit sceneChanged(postArgs);
 
     return true;
@@ -234,6 +236,17 @@ void MainWindow::onPushButtonGoToSceneClicked(bool checked) {
 
     if(newIdx < static_cast<unsigned int>(sceneNames.size()))
         changeScene(mDatasetManager->loadScene(sceneNames[newIdx]), newIdx);
+}
+
+void MainWindow::onCheckBoxDisplayLabelsStateChanged(int state) {
+    // Check if label overlay manager exists
+    if(!mLabelOverlayManager) {
+        mLabelOverlayManager = new LabelOverlayManager(mCurrentScene, mCurrentSceneIdx, ui->spinBoxMinLabelPx->value());
+        setUpLOMConnections();
+
+        // "Emit" state change again so the label overlay manager sees it
+        mLabelOverlayManager->onCheckBoxDisplayLabelsStateChanged(state);
+    }
 }
 
 void MainWindow::onPushButtonStartNewBoxClicked(bool checked) {
@@ -387,6 +400,8 @@ void MainWindow::setUpConnections() {
     connect(ui->pushButtonNextScene, SIGNAL(clicked(bool)), this, SLOT(onPushButtonNextSceneClicked(bool)));
     connect(ui->pushButtonGoToScene, SIGNAL(clicked(bool)), this, SLOT(onPushButtonGoToSceneClicked(bool)));
 
+    connect(ui->checkBoxDisplayLabels, SIGNAL(stateChanged(int)), this, SLOT(onCheckBoxDisplayLabelsStateChanged(int)));
+
     connect(ui->pushButtonStartNewBox, SIGNAL(clicked(bool)), this, SLOT(onPushButtonStartNewBoxClicked(bool)));
     connect(ui->pushButtonFinalizeBox, SIGNAL(clicked(bool)), this, SLOT(onPushButtonFinalizeBoxClicked(bool)));
     connect(ui->pushButtonCancelBox, SIGNAL(clicked(bool)), this, SLOT(onPushButtonCancelBoxClicked(bool)));
@@ -446,6 +461,14 @@ void MainWindow::setUpBBMConnections() {
 
     connect(ui->pushButtonFinalizeBox, SIGNAL(clicked(bool)), mBoundingBoxManager, SLOT(onPushButtonFinalizeBoxClicked(bool)));
     connect(ui->pushButtonCancelBox, SIGNAL(clicked(bool)), mBoundingBoxManager, SLOT(onPushButtonCancelBoxClicked(bool)));
+}
+
+void MainWindow::setUpLOMConnections() {
+    connect(this, SIGNAL(datasetChanged(DatasetChangedEventArgs&)), mLabelOverlayManager, SLOT(onDatasetChanged(DatasetChangedEventArgs&)));
+    connect(this, SIGNAL(sceneChanged(SceneChangedEventArgs&)), mLabelOverlayManager, SLOT(onSceneChanged(SceneChangedEventArgs&)));
+
+    connect(ui->checkBoxDisplayLabels, SIGNAL(stateChanged(int)), mLabelOverlayManager, SLOT(onCheckBoxDisplayLabelsStateChanged(int)));
+    connect(ui->spinBoxMinLabelPx, SIGNAL(valueChanged(int)), mLabelOverlayManager, SLOT(onSpinBoxMinLabelPxValueChanged(int)));
 }
 
 QString MainWindow::buildWindowTitle() {

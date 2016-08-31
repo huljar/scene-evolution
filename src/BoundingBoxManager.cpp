@@ -238,7 +238,8 @@ void BoundingBoxManager::onDatasetChanged(DatasetChangedEventArgs& e) {
 }
 
 void BoundingBoxManager::onSceneChanging(SceneChangingEventArgs& e) {
-    e.abort = checkUnfinalizedBox();
+    if(checkUnfinalizedBox())
+        e.abort = true;
 }
 
 void BoundingBoxManager::onSceneChanged(SceneChangedEventArgs& e) {

@@ -1,6 +1,8 @@
 #ifndef EVENTARGS_H
 #define EVENTARGS_H
 
+#include <scene-evolution/Scene.h>
+
 #include <QString>
 #include <QVector>
 
@@ -20,21 +22,21 @@ struct DatasetChangedEventArgs {
 };
 
 struct SceneChangingEventArgs {
-    SceneChangingEventArgs(const QString& oldSceneName, unsigned int oldSceneIdx, const QString& newSceneName, unsigned int newSceneIdx);
+    SceneChangingEventArgs(const Scene& oldScene, unsigned int oldSceneIdx, const Scene& newScene, unsigned int newSceneIdx);
 
-    QString oldSceneName;
+    Scene oldScene;
     unsigned int oldSceneIdx;
 
-    QString newSceneName;
+    Scene newScene;
     unsigned int newSceneIdx;
 
     bool abort;
 };
 
 struct SceneChangedEventArgs {
-    SceneChangedEventArgs(const QString& sceneName, unsigned int sceneIdx);
+    SceneChangedEventArgs(const Scene& scene, unsigned int sceneIdx);
 
-    QString sceneName;
+    Scene scene;
     unsigned int sceneIdx;
 };
 

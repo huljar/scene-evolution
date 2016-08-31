@@ -72,6 +72,8 @@ signals:
     void initialized();
 
 protected:
+    virtual void preInitSetup();
+    virtual void postInitSetup();
     virtual void createCamera();
 
     /*
