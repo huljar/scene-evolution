@@ -2,6 +2,7 @@
 #define EVENTARGS_H
 
 #include <scene-evolution/Scene.h>
+#include <scene-evolution/RGBDScene.h>
 
 #include <QString>
 #include <QVector>
@@ -16,9 +17,10 @@ struct DatasetChangingEventArgs {
 };
 
 struct DatasetChangedEventArgs {
-    DatasetChangedEventArgs(const QString& datasetPath);
+    DatasetChangedEventArgs(const QString& datasetPath, const QVector<QString>& labels);
 
     QString datasetPath;
+    QVector<QString> labels;
 };
 
 struct SceneChangingEventArgs {
@@ -34,10 +36,11 @@ struct SceneChangingEventArgs {
 };
 
 struct SceneChangedEventArgs {
-    SceneChangedEventArgs(const Scene& scene, unsigned int sceneIdx);
+    SceneChangedEventArgs(const Scene& scene, unsigned int sceneIdx, RGBDScene* rgbdScene);
 
     Scene scene;
     unsigned int sceneIdx;
+    RGBDScene* rgbdScene;
 };
 
 struct WindowClosingEventArgs {

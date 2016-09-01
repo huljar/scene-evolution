@@ -7,8 +7,9 @@ DatasetChangingEventArgs::DatasetChangingEventArgs(const QString& oldDatasetPath
 {
 }
 
-DatasetChangedEventArgs::DatasetChangedEventArgs(const QString& datasetPath)
+DatasetChangedEventArgs::DatasetChangedEventArgs(const QString& datasetPath, const QVector<QString>& labels)
     : datasetPath(datasetPath)
+    , labels(labels)
 {
 }
 
@@ -21,9 +22,10 @@ SceneChangingEventArgs::SceneChangingEventArgs(const Scene& oldScene, unsigned i
 {
 }
 
-SceneChangedEventArgs::SceneChangedEventArgs(const Scene& scene, unsigned int sceneIdx)
+SceneChangedEventArgs::SceneChangedEventArgs(const Scene& scene, unsigned int sceneIdx, RGBDScene* rgbdScene)
     : scene(scene)
     , sceneIdx(sceneIdx)
+    , rgbdScene(rgbdScene)
 {
 }
 

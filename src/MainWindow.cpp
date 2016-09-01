@@ -93,7 +93,7 @@ bool MainWindow::changeDataset(DatasetManager* dataset) {
     }
 
     // Emit post dataset change signal
-    DatasetChangedEventArgs postArgs(mDatasetManager->getDatasetDir().absolutePath());
+    DatasetChangedEventArgs postArgs(mDatasetManager->getDatasetDir().absolutePath(), mDatasetManager->getLabelNames());
     emit datasetChanged(postArgs);
 
     return true;
@@ -125,7 +125,7 @@ bool MainWindow::changeScene(const Scene& scene, unsigned int sceneIdx) {
     mSceneObjectManager = new SceneObjectManager(mRGBDScene, ui->checkBoxSELBoundingBoxes->checkState() != Qt::Unchecked);
 
     // Emit post scene change signal
-    SceneChangedEventArgs postArgs(scene, sceneIdx);
+    SceneChangedEventArgs postArgs(scene, sceneIdx, mRGBDScene);
     emit sceneChanged(postArgs);
 
     return true;
@@ -241,7 +241,12 @@ void MainWindow::onPushButtonGoToSceneClicked(bool checked) {
 void MainWindow::onCheckBoxDisplayLabelsStateChanged(int state) {
     // Check if label overlay manager exists
     if(!mLabelOverlayManager) {
-        mLabelOverlayManager = new LabelOverlayManager(mCurrentScene, mCurrentSceneIdx, ui->spinBoxMinLabelPx->value());
+        mLabelOverlayManager = new LabelOverlayManager(mCurrentScene,
+                                                       mCurrentSceneIdx,
+                                                       mRGBDScene,
+                                                       mDatasetManager->getLabelNames(),
+                                                       static_cast<unsigned int>(std::max(1, ui->spinBoxMinLabelPx->value())),
+                                                       static_cast<unsigned int>(std::max(1, ui->horizontalSliderLabelFontSize->value() * 5)));
         setUpLOMConnections();
 
         // "Emit" state change again so the label overlay manager sees it
@@ -469,6 +474,10 @@ void MainWindow::setUpLOMConnections() {
 
     connect(ui->checkBoxDisplayLabels, SIGNAL(stateChanged(int)), mLabelOverlayManager, SLOT(onCheckBoxDisplayLabelsStateChanged(int)));
     connect(ui->spinBoxMinLabelPx, SIGNAL(valueChanged(int)), mLabelOverlayManager, SLOT(onSpinBoxMinLabelPxValueChanged(int)));
+
+    connect(ui->horizontalSliderLabelFontSize, static_cast<void(QSlider::*)(int)>(&QSlider::valueChanged), [this](int value) {
+        mLabelOverlayManager->onHorizontalSliderLabelFontSizeValueChanged(value * 5);
+    });
 }
 
 QString MainWindow::buildWindowTitle() {

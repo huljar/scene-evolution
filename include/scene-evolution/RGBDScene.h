@@ -38,7 +38,7 @@ public:
 
     void meshify(const cv::Mat_<unsigned char>& mask = cv::Mat_<unsigned char>(), bool mergeWithOldMask = true);
 
-    bool screenspaceCoords(const Ogre::Camera* camera, Ogre::Vector2& resultTopLeft, Ogre::Vector2& resultBottomRight) const;
+    bool screenspaceCoords(Ogre::Vector2& resultTopLeft, Ogre::Vector2& resultBottomRight, const Ogre::Camera* camera = nullptr) const;
 
     Ogre::ManualObject* getManualObject() const;
 

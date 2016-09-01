@@ -25,6 +25,12 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="minimumSize">
+         <size>
+          <width>190</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="horizontalScrollBarPolicy">
          <enum>Qt::ScrollBarAlwaysOff</enum>
         </property>
@@ -36,7 +42,7 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>178</width>
+           <width>200</width>
            <height>309</height>
           </rect>
          </property>
@@ -91,7 +97,7 @@
                 <widget class="QPushButton" name="pushButtonGoToScene">
                  <property name="minimumSize">
                   <size>
-                   <width>40</width>
+                   <width>48</width>
                    <height>0</height>
                   </size>
                  </property>
@@ -164,6 +170,12 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="minimumSize">
+         <size>
+          <width>190</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="horizontalScrollBarPolicy">
          <enum>Qt::ScrollBarAlwaysOff</enum>
         </property>
@@ -175,15 +187,15 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>178</width>
+           <width>200</width>
            <height>308</height>
           </rect>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_8">
           <item>
-           <widget class="QGroupBox" name="groupBoxAppearance">
+           <widget class="QGroupBox" name="groupBoxLabels">
             <property name="title">
-             <string>Appearance</string>
+             <string>Labels</string>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_9">
              <item>
@@ -200,6 +212,9 @@
                  <property name="minimum">
                   <number>1</number>
                  </property>
+                 <property name="maximum">
+                  <number>999</number>
+                 </property>
                  <property name="value">
                   <number>10</number>
                  </property>
@@ -209,6 +224,39 @@
                 <widget class="QLabel" name="labelMinLabelPx">
                  <property name="text">
                   <string>min px</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_11">
+               <item>
+                <widget class="QSlider" name="horizontalSliderLabelFontSize">
+                 <property name="minimum">
+                  <number>3</number>
+                 </property>
+                 <property name="maximum">
+                  <number>8</number>
+                 </property>
+                 <property name="singleStep">
+                  <number>1</number>
+                 </property>
+                 <property name="pageStep">
+                  <number>2</number>
+                 </property>
+                 <property name="value">
+                  <number>4</number>
+                 </property>
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLabel" name="labelLabelFontSize">
+                 <property name="text">
+                  <string>font size</string>
                  </property>
                 </widget>
                </item>

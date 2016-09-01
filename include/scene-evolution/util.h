@@ -13,6 +13,7 @@ namespace Constants {
     const Ogre::Vector3 InitialCameraPosition(0.0, 0.0, 0.0);
     const Ogre::Vector3 InitialCameraLookAt(0.0, 0.0, -1.0);
     const float CameraNearClipDistance = 5.0f;
+    const Ogre::Degree CameraFOVy(55.0);
 
     const Ogre::Vector3 InitialOBBCenter(0.0, 0.0, -500.0);
     const Ogre::Vector3 InitialOBBExtents(100.0, 100.0, 100.0);

@@ -29,7 +29,7 @@ void CustomOgreWindow::createCamera() {
     mCamera->setPosition(Constants::InitialCameraPosition);
     mCamera->lookAt(Constants::InitialCameraLookAt);
     mCamera->setNearClipDistance(Constants::CameraNearClipDistance);
-    mCamera->setFOVy(Ogre::Degree(55));
+    mCamera->setFOVy(Constants::CameraFOVy);
 
     mCameraMan = new OgreQtBites::SdkQtCameraMan(mCamera);   // create a default camera controller
     mCameraMan->setTopSpeed(150);
