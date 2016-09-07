@@ -15,8 +15,8 @@ static SEL::location loc;
 %option noyywrap nounput batch debug noinput
 
 id      [a-zA-Z][a-zA-Z_0-9]*
-float   [0-9]+\.[0-9]*
-int     [0-9]+
+float   -?[0-9]+\.[0-9]*
+int     -?[0-9]+
 blank   [ \t]
 
 %{
