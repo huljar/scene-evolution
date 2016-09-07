@@ -22,7 +22,7 @@ public:
     typedef QMap<unsigned int, BoxSet> SceneBoxMap;
 
     BoundingBoxManager(Ogre::SceneManager* sceneMgr, unsigned int currentSceneIdx, const QString& defaultSavePath = QString());
-    ~BoundingBoxManager();
+    virtual ~BoundingBoxManager();
 
     OrientedBoundingBox* createBox(const Ogre::Vector3& center, const Ogre::Vector3& extents,
                                    const Ogre::Quaternion& orientation, const QString& objectType);
@@ -37,9 +37,8 @@ public:
 
 public slots:
     void onDatasetChanging(DatasetChangingEventArgs& e);
-    void onDatasetChanged(DatasetChangedEventArgs& e);
-
     void onSceneChanging(SceneChangingEventArgs& e);
+    void onDatasetChangingConfirmed(DatasetChangingConfirmedEventArgs& e);
     void onSceneChanged(SceneChangedEventArgs& e);
 
     void onMainWindowClosing(WindowClosingEventArgs& e);

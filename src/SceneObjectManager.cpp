@@ -1,94 +1,132 @@
 #include <scene-evolution/SceneObjectManager.h>
+#include <scene-evolution/interop.h>
 
 #include <algorithm>
 
-SceneObjectManager::SceneObjectManager(RGBDScene* rgbdScene, bool showBoundingBoxes)
-    : mRGBDScene(rgbdScene)
-    , mCurrentMask(cv::Mat_<unsigned char>::zeros(rgbdScene->getDepthImage().size()))
+using namespace interop;
+
+SceneObjectManager::SceneObjectManager(const Scene& currentScene, unsigned int currentSceneIdx, RGBDScene* currentRGBDScene, bool showBoundingBoxes)
+    : mCurrentSceneIdx(currentSceneIdx)
+    , mSceneMgr(currentRGBDScene->getSceneMgr())
     , mShowBoundingBoxes(showBoundingBoxes)
 {
+    Ogre::SceneNode* node = mSceneMgr->getRootSceneNode()->createChildSceneNode();
+    node->attachObject(currentRGBDScene->getManualObject());
+    mSceneInfoMap.emplace(currentSceneIdx, std::make_tuple(currentScene, currentRGBDScene, node, cv::Mat1b::zeros(currentScene.getLabelImg().size()), false));
 }
 
 SceneObjectManager::~SceneObjectManager() {
-    Ogre::SceneManager* sceneMgr = mRGBDScene->getSceneMgr();
-    for(std::vector<Ogre::SceneNode*>::iterator it = mSceneNodes.begin(); it != mSceneNodes.end(); ++it) {
-        (*it)->detachAllObjects();
-        sceneMgr->destroySceneNode(*it);
+    for(auto&& pair : mSceneObjectsMap) {
+        for(auto&& obj : pair.second) {
+            obj.second->detachAllObjects();
+            mSceneMgr->destroySceneNode(obj.second);
+        }
     }
+    mSceneObjectsMap.clear(); // Clearing manually to destroy shared pointers before deleting RGBDScenes
+
+    for(auto&& pair : mSceneInfoMap) {
+        delete std::get<1>(pair.second);
+        mSceneMgr->destroySceneNode(std::get<2>(pair.second));
+    }
+    mSceneInfoMap.clear();
 }
 
-bool SceneObjectManager::registerObject(const std::shared_ptr<SEL::SceneObject>& obj) {
+bool SceneObjectManager::registerObject(const SceneObjPtr& obj) {
+    return registerObject(obj, mCurrentSceneIdx);
+}
+
+bool SceneObjectManager::registerObject(const SceneObjPtr& obj, unsigned int sceneIdx) {
     std::cout << "Registering object: " << obj->getName().toStdString() << std::endl;
 
     // Check if the object has a mesh or if the object is already registered
-    if(!obj->hasManualObject() || std::find(mSceneObjects.begin(), mSceneObjects.end(), obj) != mSceneObjects.end()) {
+    ObjVec& vec = mSceneObjectsMap[sceneIdx];
+    if(!obj->hasManualObject() || findObject(obj, sceneIdx) != vec.end()) {
         std::cerr << "Object " << obj->getName().toStdString() << " has no manual object or it is already registered." << std::endl;
         return false;
     }
 
-    // Add to vector
-    mSceneObjects.push_back(obj);
+    // Add object and scene node to vector
+    Ogre::SceneNode* node = mSceneMgr->getRootSceneNode()->createChildSceneNode();
+    vec.emplace_back(obj, node);
 
-    // Add scene node for it
-    Ogre::SceneNode* node = mRGBDScene->getSceneMgr()->getRootSceneNode()->createChildSceneNode();
-    mSceneNodes.push_back(node);
-
-    // Attach object
+    // Attach object if visible
     if(obj->getVisible())
         node->attachObject(obj->getManualObject());
 
     return true;
 }
 
-void SceneObjectManager::cutObject(const std::shared_ptr<SEL::SceneObject>& obj) {
-    // Create mask from object outline
-    addToMask(obj->getOriginalPixels());
+void SceneObjectManager::cutObject(const SceneObjPtr& obj) {
+    cutObject(obj, mCurrentSceneIdx);
 }
 
-void SceneObjectManager::cutObjects(const std::vector<std::shared_ptr<SEL::SceneObject>>& objs) {
+void SceneObjectManager::cutObject(const SceneObjPtr& obj, unsigned int sceneIdx) {
+    // Create mask from object outline
+    addToMask(obj->getOriginalPixels(), sceneIdx);
+}
+
+void SceneObjectManager::cutObjects(const std::vector<SceneObjPtr>& objs) {
+    cutObjects(objs, mCurrentSceneIdx);
+}
+
+void SceneObjectManager::cutObjects(const std::vector<SceneObjPtr>& objs, unsigned int sceneIdx) {
     // Build mask from all objects
-    for(std::vector<std::shared_ptr<SEL::SceneObject>>::const_iterator it = objs.begin(); it != objs.end(); ++it) {
-        cutObject(*it);
+    for(std::vector<SceneObjPtr>::const_iterator it = objs.begin(); it != objs.end(); ++it) {
+        cutObject(*it, sceneIdx);
     }
 }
 
 void SceneObjectManager::updateObjects() {
     // Iterate over registered objects and their scene nodes
-    for(size_t i = 0; i < mSceneObjects.size(); ++i) {
+    for(auto&& pair : mSceneObjectsMap[mCurrentSceneIdx]) {
         // Update translation
-        cv::Vec3f trans = mSceneObjects[i]->getCurrentTranslation();
-        mSceneNodes[i]->setPosition(Ogre::Vector3(trans[0], trans[1], trans[2]));
+        pair.second->setPosition(cvToOgre(pair.first->getCurrentTranslation()));
 
         // Update rotation
-        cv::Matx33f rot = mSceneObjects[i]->getCurrentRotation();
-        mSceneNodes[i]->setOrientation(getQuaternion(rot));
+        pair.second->setOrientation(getQuaternion(pair.first->getCurrentRotation()));
 
         // Update visibility
-        Ogre::ManualObject* obj = mSceneObjects[i]->getManualObject();
-        if(mSceneObjects[i]->getVisible() && !obj->isAttached())
-            mSceneNodes[i]->attachObject(obj);
-        else if(!mSceneObjects[i]->getVisible() && obj->isAttached())
-            mSceneNodes[i]->detachObject(obj);
+        Ogre::ManualObject* obj = pair.first->getManualObject();
+        if(pair.first->getVisible() && !obj->isAttached())
+            pair.second->attachObject(obj);
+        else if(!pair.first->getVisible() && obj->isAttached())
+            pair.second->detachObject(obj);
 
         // Update bounding box display
-        mSceneNodes[i]->showBoundingBox(mShowBoundingBoxes);
+        pair.second->showBoundingBox(mShowBoundingBoxes);
     }
 
     // Update background scene
-    mRGBDScene->meshify(mCurrentMask, false);
+    RGBDScene* rgbdScene;
+    cv::Mat1b mask;
+    bool needsUpdate;
+
+    std::tie(std::ignore, rgbdScene, std::ignore, mask, needsUpdate) = mSceneInfoMap.at(mCurrentSceneIdx);
+
+    if(needsUpdate)
+        rgbdScene->meshify(mask, false);
 }
 
 bool SceneObjectManager::checkObjectInScene(const SEL::SceneObject& obj) const {
-    cv::Mat_<unsigned char> pixels = obj.getOriginalPixels();
-    if(pixels.rows != mCurrentMask.rows || pixels.cols != mCurrentMask.cols)
+    return checkObjectInScene(obj, mCurrentSceneIdx);
+}
+
+bool SceneObjectManager::checkObjectInScene(const SEL::SceneObject& obj, unsigned int sceneIdx) const {
+    SceneInfoMap::const_iterator sceneInfo = mSceneInfoMap.find(sceneIdx);
+    if(sceneInfo == mSceneInfoMap.cend())
+        return false;
+
+    cv::Mat1b pixels = obj.getOriginalPixels();
+    cv::Mat1b mask = std::get<3>(sceneInfo->second);
+    if(pixels.rows != mask.rows || pixels.cols != mask.cols)
         return false;
 
     unsigned int numThere = 0;
     unsigned int numCut = 0;
 
-    for(cv::Mat_<unsigned char>::iterator it = pixels.begin(); it != pixels.end(); ++it) {
+    for(cv::Mat1b::iterator it = pixels.begin(); it != pixels.end(); ++it) {
         if(*it == 255) {
-            if(mCurrentMask(it.pos()) == 255) ++numCut;
+            if(mask(it.pos()) == 255) ++numCut;
             else ++numThere;
         }
     }
@@ -97,11 +135,32 @@ bool SceneObjectManager::checkObjectInScene(const SEL::SceneObject& obj) const {
 }
 
 RGBDScene* SceneObjectManager::getRGBDScene() const {
-    return mRGBDScene;
+    return std::get<1>(mSceneInfoMap.at(mCurrentSceneIdx));
 }
 
-std::vector<std::shared_ptr<SEL::SceneObject>> SceneObjectManager::getRegisteredObjects() const {
-    return mSceneObjects;
+RGBDScene* SceneObjectManager::getRGBDScene(unsigned int sceneIdx) const {
+    SceneInfoMap::const_iterator sceneInfo = mSceneInfoMap.find(sceneIdx);
+    if(sceneInfo == mSceneInfoMap.cend())
+        return nullptr;
+    return std::get<1>(sceneInfo->second);
+}
+
+Ogre::SceneNode* SceneObjectManager::getRGBDSceneNode() const {
+    return std::get<2>(mSceneInfoMap.at(mCurrentSceneIdx));
+}
+
+Ogre::SceneNode* SceneObjectManager::getRGBDSceneNode(unsigned int sceneIdx) const {
+    SceneInfoMap::const_iterator sceneInfo = mSceneInfoMap.find(sceneIdx);
+    if(sceneInfo == mSceneInfoMap.cend())
+        return nullptr;
+    return std::get<2>(sceneInfo->second);
+}
+
+SceneObjectManager::ObjVec SceneObjectManager::getRegisteredObjects() const {
+    SceneObjectsMap::const_iterator objs = mSceneObjectsMap.find(mCurrentSceneIdx);
+    if(objs == mSceneObjectsMap.cend())
+        return ObjVec();
+    return objs->second;
 }
 
 bool SceneObjectManager::getShowBoundingBoxes() const {
@@ -113,16 +172,102 @@ void SceneObjectManager::setShowBoundingBoxes(bool showBoundingBoxes) {
     updateObjects();
 }
 
-void SceneObjectManager::addToMask(const cv::Mat_<unsigned char>& mask) {
-    if(mask.rows != mCurrentMask.rows || mask.cols != mCurrentMask.cols)
-        return;
+void SceneObjectManager::onDatasetChangingConfirmed(DatasetChangingConfirmedEventArgs& e) {
+    Q_UNUSED(e);
 
-    for(cv::Mat_<unsigned char>::const_iterator it = mask.begin(); it != mask.end(); ++it)
-        if(*it == 255) mCurrentMask(it.pos()) = 255;
+    // Clear scene objects
+    for(auto&& pair : mSceneObjectsMap) {
+        for(auto&& obj : pair.second) {
+            obj.second->detachAllObjects();
+            mSceneMgr->destroySceneNode(obj.second);
+        }
+    }
+    mSceneObjectsMap.clear();
+
+    // Clear scene info
+    for(auto&& pair : mSceneInfoMap) {
+        delete std::get<1>(pair.second);
+    }
+    mSceneInfoMap.clear();
 }
 
-Ogre::Quaternion SceneObjectManager::getQuaternion(const cv::Matx33f rotMat) const {
-    return Ogre::Quaternion(Ogre::Matrix3(rotMat(0, 0), rotMat(0, 1), rotMat(0, 2),
-                                          rotMat(1, 0), rotMat(1, 1), rotMat(1, 2),
-                                          rotMat(2, 0), rotMat(2, 1), rotMat(2, 2)));
+void SceneObjectManager::onSceneChanged(SceneChangedEventArgs& e) {
+    // Hide objects of current scene
+    // Check if they exist first (in case the dataset was changed)
+    SceneInfoMap::iterator sceneInfo = mSceneInfoMap.find(mCurrentSceneIdx);
+    if(sceneInfo != mSceneInfoMap.end()) {
+        for(auto&& pair : mSceneObjectsMap) {
+            for(auto&& obj : pair.second) {
+                obj.second->detachObject(obj.first->getManualObject());
+            }
+        }
+    }
+
+    // Hide current RGBD scene
+    std::get<1>(mSceneInfoMap.at(mCurrentSceneIdx))->getManualObject()->detachFromParent();
+
+    // Change scene
+    mCurrentSceneIdx = e.sceneIdx;
+
+    // Show new RGBD scene, insert map entry for it if necessary
+    sceneInfo = mSceneInfoMap.find(mCurrentSceneIdx);
+    if(sceneInfo == mSceneInfoMap.end()) {
+        // New entry
+        Ogre::SceneNode* node = mSceneMgr->getRootSceneNode()->createChildSceneNode();
+        node->attachObject(e.rgbdScene->getManualObject());
+        mSceneInfoMap.emplace(mCurrentSceneIdx, std::make_tuple(e.scene, e.rgbdScene, node, cv::Mat1b::zeros(e.scene.getLabelImg().size()), false));
+    }
+    else if(std::get<1>(sceneInfo->second) == nullptr) {
+        // Complete missing information (entry exists only for mask storage)
+        std::get<0>(sceneInfo->second) = e.scene;
+        std::get<1>(sceneInfo->second) = e.rgbdScene;
+
+        Ogre::SceneNode* node = mSceneMgr->getRootSceneNode()->createChildSceneNode();
+        node->attachObject(e.rgbdScene->getManualObject());
+        std::get<2>(sceneInfo->second) = node;
+    }
+    else {
+        // Just display
+        std::get<2>(sceneInfo->second)->attachObject(std::get<1>(sceneInfo->second)->getManualObject());
+    }
+
+    // Show objects of new scene
+    updateObjects();
+}
+
+void SceneObjectManager::addToMask(const cv::Mat1b& mask) {
+    addToMask(mask, mCurrentSceneIdx);
+}
+
+void SceneObjectManager::addToMask(const cv::Mat1b& mask, unsigned int sceneIdx) {
+    SceneInfoMap::iterator sceneInfo = mSceneInfoMap.find(sceneIdx);
+
+    // Check if a scene with this index already exists, if not create a stub for it
+    if(sceneInfo == mSceneInfoMap.end())
+        sceneInfo = mSceneInfoMap.emplace(sceneIdx, std::make_tuple(Scene(), nullptr, nullptr,
+                                                                    cv::Mat1b::zeros(std::get<0>(mSceneInfoMap.at(mCurrentSceneIdx)).getLabelImg().size()), true
+                                                                    )).first;
+
+    cv::Mat1b& currentMask = std::get<3>(sceneInfo->second);
+    if(mask.rows != currentMask.rows || mask.cols != currentMask.cols)
+        return;
+
+    // Apply mask addition
+    for(cv::Mat1b::const_iterator it = mask.begin(); it != mask.end(); ++it)
+        if(*it == 255) currentMask(it.pos()) = 255;
+
+    // Mark this scene to require an update
+    std::get<4>(sceneInfo->second) = true;
+}
+
+SceneObjectManager::ObjVec::iterator SceneObjectManager::findObject(const SceneObjPtr& obj) {
+    return findObject(obj, mCurrentSceneIdx);
+}
+
+SceneObjectManager::ObjVec::iterator SceneObjectManager::findObject(const SceneObjPtr& obj, unsigned int sceneIdx) {
+    ObjVec& vec = mSceneObjectsMap[sceneIdx];
+    for(ObjVec::iterator it = vec.begin(); it != vec.end(); ++it) {
+        if(obj == it->first) return it;
+    }
+    return vec.end();
 }

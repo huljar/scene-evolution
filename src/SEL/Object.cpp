@@ -68,12 +68,17 @@ std::vector<std::shared_ptr<SceneObject>> Object::getSceneObjects(const SearchCo
 
         // Add objects which have been moved before
         // Check name and search condition for them as well
-        std::vector<std::shared_ptr<SceneObject>> regObjects = sceneObjMgr->getRegisteredObjects();
-        std::vector<std::shared_ptr<SceneObject>>::iterator regObjectsNewEnd = std::remove_if(regObjects.begin(), regObjects.end(), [&](const std::shared_ptr<SceneObject>& obj) -> bool {
-            return obj->getName() != mObjName || !searchCond.eval(sceneObjMgr, currentScene, *obj, labels);
-        });
+        SceneObjectManager::ObjVec regObjects = sceneObjMgr->getRegisteredObjects();
+        SceneObjectManager::ObjVec::iterator regObjectsNewEnd = std::remove_if(regObjects.begin(), regObjects.end(),
+            [&](const std::pair<SceneObjectManager::SceneObjPtr, Ogre::SceneNode*>& obj) -> bool {
+                return obj.first->getName() != mObjName || !searchCond.eval(sceneObjMgr, currentScene, *obj.first, labels);
+            }
+        );
+
         ret.reserve(ret.size() + std::distance(regObjects.begin(), regObjectsNewEnd));
-        std::copy(regObjects.begin(), regObjectsNewEnd, std::back_inserter(ret));
+        for(SceneObjectManager::ObjVec::iterator it = regObjects.begin(); it != regObjectsNewEnd; ++it) {
+            ret.push_back(it->first);
+        }
 
         // Apply qualifiers
         if(applyQualifiers) {

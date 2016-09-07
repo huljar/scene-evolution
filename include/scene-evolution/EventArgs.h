@@ -16,6 +16,13 @@ struct DatasetChangingEventArgs {
     bool abort;
 };
 
+struct DatasetChangingConfirmedEventArgs {
+    DatasetChangingConfirmedEventArgs(const QString& datasetPath, const QVector<QString>& labels);
+
+    QString datasetPath;
+    QVector<QString> labels;
+};
+
 struct DatasetChangedEventArgs {
     DatasetChangedEventArgs(const QString& datasetPath, const QVector<QString>& labels);
 

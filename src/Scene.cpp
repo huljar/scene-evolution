@@ -1,11 +1,6 @@
 #include <scene-evolution/Scene.h>
 
-Scene::Scene()
-    : mDepthImg(cv::Mat())
-    , mRgbImg(cv::Mat())
-    , mLabelImg(cv::Mat())
-    , mFileName("")
-{
+Scene::Scene() {
 
 }
 

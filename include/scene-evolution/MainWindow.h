@@ -27,7 +27,7 @@ public:
     ~MainWindow();
 
     bool changeDataset(DatasetManager* dataset);
-    bool changeScene(const Scene& scene, unsigned int sceneIdx);
+    bool changeScene(const Scene& scene, unsigned int sceneIdx, const DatasetManager* datasetMgr = nullptr);
 
 public slots:
     void onOgreInitialized();
@@ -55,14 +55,12 @@ public slots:
 
     void onCheckBoxSELBoundingBoxesStateChanged(int state);
 
-    void onDatasetChanging(DatasetChangingEventArgs& e);
-    void onDatasetChanged(DatasetChangedEventArgs& e);
-
-    void onSceneChanging(SceneChangingEventArgs& e);
     void onSceneChanged(SceneChangedEventArgs& e);
+    void onDatasetChanged(DatasetChangedEventArgs& e);
 
 signals:
     void datasetChanging(DatasetChangingEventArgs& e);
+    void datasetChangingConfirmed(DatasetChangingConfirmedEventArgs& e);
     void datasetChanged(DatasetChangedEventArgs& e);
 
     void sceneChanging(SceneChangingEventArgs& e);
@@ -76,6 +74,7 @@ protected:
 private:
     DatasetManager* requestNYUDir();
     void setUpConnections();
+    void setUpSOMConnections();
     void setUpBBMConnections();
     void setUpLOMConnections();
     QString buildWindowTitle();
@@ -91,9 +90,6 @@ private:
 
     Scene mCurrentScene;
     unsigned int mCurrentSceneIdx;
-
-    RGBDScene* mRGBDScene;
-    Ogre::SceneNode* mRGBDSceneNode;
 
     SceneObjectManager* mSceneObjectManager;
 

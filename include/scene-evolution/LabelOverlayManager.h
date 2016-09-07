@@ -31,9 +31,10 @@ public:
 
     LabelOverlayManager(const Scene& currentScene, unsigned int currentSceneIdx, RGBDScene* currentRGBDScene,
                         const QVector<QString>& labels, unsigned int minLabelPx, unsigned int fontSize);
+    virtual ~LabelOverlayManager();
 
 public slots:
-    void onDatasetChanged(DatasetChangedEventArgs& e);
+    void onDatasetChangingConfirmed(DatasetChangingConfirmedEventArgs& e);
     void onSceneChanged(SceneChangedEventArgs& e);
 
     void onCheckBoxDisplayLabelsStateChanged(int state);

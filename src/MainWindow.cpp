@@ -17,8 +17,6 @@ MainWindow::MainWindow(QWidget *parent)
     , mBoundingBoxManager(nullptr)
     , mLabelOverlayManager(nullptr)
     , mCurrentSceneIdx(0)
-    , mRGBDScene(nullptr)
-    , mRGBDSceneNode(nullptr)
     , mSceneObjectManager(nullptr)
     , mSELDriver(nullptr)
     , mLastSELDir(QDir::homePath())
@@ -59,7 +57,6 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow() {
     delete mSELDriver;
     delete mSceneObjectManager;
-    delete mRGBDScene;
     delete mLabelOverlayManager;
     delete mBoundingBoxManager;
     delete mDatasetManager;
@@ -82,7 +79,7 @@ bool MainWindow::changeDataset(DatasetManager* dataset) {
     }
 
     // Load first scene in dataset
-    bool result = changeScene(dataset->loadScene(dataset->getAllSceneNames().front()), 0);
+    bool result = changeScene(dataset->loadScene(dataset->getAllSceneNames().front()), 0, dataset);
     if(!result)
         return false;
 
@@ -99,7 +96,7 @@ bool MainWindow::changeDataset(DatasetManager* dataset) {
     return true;
 }
 
-bool MainWindow::changeScene(const Scene& scene, unsigned int sceneIdx) {
+bool MainWindow::changeScene(const Scene& scene, unsigned int sceneIdx, const DatasetManager* datasetMgr) {
     // Emit pre scene change signal
     SceneChangingEventArgs preArgs(mCurrentScene, mCurrentSceneIdx, scene, sceneIdx);
     emit sceneChanging(preArgs);
@@ -108,24 +105,36 @@ bool MainWindow::changeScene(const Scene& scene, unsigned int sceneIdx) {
     if(preArgs.abort)
         return false;
 
+    // Emit dataset change confirmed if this is a dataset change
+    if(datasetMgr) {
+        DatasetChangingConfirmedEventArgs confArgs(datasetMgr->getDatasetDir().absolutePath(), datasetMgr->getLabelNames());
+        emit datasetChangingConfirmed(confArgs);
+    }
+
     // Perform the scene change
     mCurrentScene = scene;
     mCurrentSceneIdx = sceneIdx;
 
-    // Clean up old scene
-    delete mRGBDScene;
-    delete mSceneObjectManager;
+    // Check if the scene object manager already exists and owns an RGBDScene object for the new scene
+    RGBDScene* newRGBDScene;
+    if(!mSceneObjectManager) {
+        // Create the scene
+        newRGBDScene = new RGBDScene(mOgreWindow->getOgreSceneManager(), scene.getDepthImg(), scene.getRgbImg(), (datasetMgr ? datasetMgr : mDatasetManager)->getCameraParams());
 
-    // Create and attach new scene
-    if(!mRGBDSceneNode)
-        mRGBDSceneNode = mOgreWindow->getOgreSceneManager()->getRootSceneNode()->createChildSceneNode(Strings::RGBDSceneNodeName);
-
-    mRGBDScene = new RGBDScene(mOgreWindow->getOgreSceneManager(), scene.getDepthImg(), scene.getRgbImg(), mDatasetManager->getCameraParams());
-    mRGBDSceneNode->attachObject(mRGBDScene->getManualObject());
-    mSceneObjectManager = new SceneObjectManager(mRGBDScene, ui->checkBoxSELBoundingBoxes->checkState() != Qt::Unchecked);
+        // Create the scene object manager
+        mSceneObjectManager = new SceneObjectManager(scene, sceneIdx, newRGBDScene, ui->checkBoxSELBoundingBoxes->checkState() != Qt::Unchecked);
+        setUpSOMConnections();
+    }
+    else {
+        newRGBDScene = mSceneObjectManager->getRGBDScene(mCurrentSceneIdx);
+        if(!newRGBDScene) {
+            // Create the scene
+            newRGBDScene = new RGBDScene(mOgreWindow->getOgreSceneManager(), scene.getDepthImg(), scene.getRgbImg(), (datasetMgr ? datasetMgr : mDatasetManager)->getCameraParams());
+        }
+    }
 
     // Emit post scene change signal
-    SceneChangedEventArgs postArgs(scene, sceneIdx, mRGBDScene);
+    SceneChangedEventArgs postArgs(scene, sceneIdx, newRGBDScene);
     emit sceneChanged(postArgs);
 
     return true;
@@ -243,7 +252,7 @@ void MainWindow::onCheckBoxDisplayLabelsStateChanged(int state) {
     if(!mLabelOverlayManager) {
         mLabelOverlayManager = new LabelOverlayManager(mCurrentScene,
                                                        mCurrentSceneIdx,
-                                                       mRGBDScene,
+                                                       mSceneObjectManager->getRGBDScene(),
                                                        mDatasetManager->getLabelNames(),
                                                        static_cast<unsigned int>(std::max(1, ui->spinBoxMinLabelPx->value())),
                                                        static_cast<unsigned int>(std::max(1, ui->horizontalSliderLabelFontSize->value() * 5)));
@@ -318,26 +327,6 @@ void MainWindow::onCheckBoxSELBoundingBoxesStateChanged(int state) {
         mSceneObjectManager->setShowBoundingBoxes(state != Qt::Unchecked);
 }
 
-void MainWindow::onDatasetChanging(DatasetChangingEventArgs& e) {
-    Q_UNUSED(e);
-}
-
-void MainWindow::onDatasetChanged(DatasetChangedEventArgs& e) {
-    Q_UNUSED(e);
-
-    unsigned int sceneCount = mDatasetManager->getSceneCount();
-
-    // Set max value of scene selection spin box
-    ui->spinBoxGoToScene->setMaximum(sceneCount - 1);
-
-    // Set total scenes label text
-    ui->labelTotalScenes->setText(QString::number(sceneCount) + Strings::TotalScenesLabelBase);
-}
-
-void MainWindow::onSceneChanging(SceneChangingEventArgs& e) {
-    Q_UNUSED(e);
-}
-
 void MainWindow::onSceneChanged(SceneChangedEventArgs& e) {
     Q_UNUSED(e);
 
@@ -355,6 +344,21 @@ void MainWindow::onSceneChanged(SceneChangedEventArgs& e) {
     // Restore bounding box UI controls in case they are still active
     setBoundingBoxControlStates(false);
     restoreBoxDefaultsNoSignals();
+}
+
+void MainWindow::onDatasetChanged(DatasetChangedEventArgs& e) {
+    Q_UNUSED(e);
+
+    unsigned int sceneCount = mDatasetManager->getSceneCount();
+
+    // Set max value of scene selection spin box
+    ui->spinBoxGoToScene->setMaximum(sceneCount - 1);
+
+    // Set total scenes label text
+    ui->labelTotalScenes->setText(QString::number(sceneCount) + Strings::TotalScenesLabelBase);
+
+    // Adjust window title
+    setWindowTitle(buildWindowTitle());
 }
 
 void MainWindow::closeEvent(QCloseEvent* e) {
@@ -414,16 +418,20 @@ void MainWindow::setUpConnections() {
     connect(ui->pushButtonExecuteManualSEL, SIGNAL(clicked(bool)), this, SLOT(onPushButtonExecuteManualSELClicked(bool)));
     connect(ui->checkBoxSELBoundingBoxes, SIGNAL(stateChanged(int)), this, SLOT(onCheckBoxSELBoundingBoxesStateChanged(int)));
 
-    connect(this, SIGNAL(datasetChanging(DatasetChangingEventArgs&)), this, SLOT(onDatasetChanging(DatasetChangingEventArgs&)));
     connect(this, SIGNAL(datasetChanged(DatasetChangedEventArgs&)), this, SLOT(onDatasetChanged(DatasetChangedEventArgs&)));
 
-    connect(this, SIGNAL(sceneChanging(SceneChangingEventArgs&)), this, SLOT(onSceneChanging(SceneChangingEventArgs&)));
     connect(this, SIGNAL(sceneChanged(SceneChangedEventArgs&)), this, SLOT(onSceneChanged(SceneChangedEventArgs&)));
+}
+
+void MainWindow::setUpSOMConnections() {
+    connect(this, SIGNAL(datasetChangingConfirmed(DatasetChangingConfirmedEventArgs&)), mSceneObjectManager, SLOT(onDatasetChangingConfirmed(DatasetChangingConfirmedEventArgs&)));
+
+    connect(this, SIGNAL(sceneChanged(SceneChangedEventArgs&)), mSceneObjectManager, SLOT(onSceneChanged(SceneChangedEventArgs&)));
 }
 
 void MainWindow::setUpBBMConnections() {
     connect(this, SIGNAL(datasetChanging(DatasetChangingEventArgs&)), mBoundingBoxManager, SLOT(onDatasetChanging(DatasetChangingEventArgs&)));
-    connect(this, SIGNAL(datasetChanged(DatasetChangedEventArgs&)), mBoundingBoxManager, SLOT(onDatasetChanged(DatasetChangedEventArgs&)));
+    connect(this, SIGNAL(datasetChangingConfirmed(DatasetChangingConfirmedEventArgs&)), mBoundingBoxManager, SLOT(onDatasetChangingConfirmed(DatasetChangingConfirmedEventArgs&)));
 
     connect(this, SIGNAL(sceneChanging(SceneChangingEventArgs&)), mBoundingBoxManager, SLOT(onSceneChanging(SceneChangingEventArgs&)));
     connect(this, SIGNAL(sceneChanged(SceneChangedEventArgs&)), mBoundingBoxManager, SLOT(onSceneChanged(SceneChangedEventArgs&)));
@@ -469,7 +477,7 @@ void MainWindow::setUpBBMConnections() {
 }
 
 void MainWindow::setUpLOMConnections() {
-    connect(this, SIGNAL(datasetChanged(DatasetChangedEventArgs&)), mLabelOverlayManager, SLOT(onDatasetChanged(DatasetChangedEventArgs&)));
+    connect(this, SIGNAL(datasetChangingConfirmed(DatasetChangingConfirmedEventArgs&)), mLabelOverlayManager, SLOT(onDatasetChangingConfirmed(DatasetChangingConfirmedEventArgs&)));
     connect(this, SIGNAL(sceneChanged(SceneChangedEventArgs&)), mLabelOverlayManager, SLOT(onSceneChanged(SceneChangedEventArgs&)));
 
     connect(ui->checkBoxDisplayLabels, SIGNAL(stateChanged(int)), mLabelOverlayManager, SLOT(onCheckBoxDisplayLabelsStateChanged(int)));

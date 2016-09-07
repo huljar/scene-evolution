@@ -19,7 +19,11 @@ LabelOverlayManager::LabelOverlayManager(const Scene& currentScene, unsigned int
 {
 }
 
-void LabelOverlayManager::onDatasetChanged(DatasetChangedEventArgs& e) {
+LabelOverlayManager::~LabelOverlayManager() {
+
+}
+
+void LabelOverlayManager::onDatasetChangingConfirmed(DatasetChangingConfirmedEventArgs& e) {
     Q_UNUSED(e);
 
     // Clear overlay map

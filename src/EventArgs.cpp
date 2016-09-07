@@ -7,6 +7,12 @@ DatasetChangingEventArgs::DatasetChangingEventArgs(const QString& oldDatasetPath
 {
 }
 
+DatasetChangingConfirmedEventArgs::DatasetChangingConfirmedEventArgs(const QString& datasetPath, const QVector<QString>& labels)
+    : datasetPath(datasetPath)
+    , labels(labels)
+{
+}
+
 DatasetChangedEventArgs::DatasetChangedEventArgs(const QString& datasetPath, const QVector<QString>& labels)
     : datasetPath(datasetPath)
     , labels(labels)

@@ -225,7 +225,12 @@ void BoundingBoxManager::onDatasetChanging(DatasetChangingEventArgs& e) {
         e.abort = true;
 }
 
-void BoundingBoxManager::onDatasetChanged(DatasetChangedEventArgs& e) {
+void BoundingBoxManager::onSceneChanging(SceneChangingEventArgs& e) {
+    if(checkUnfinalizedBox())
+        e.abort = true;
+}
+
+void BoundingBoxManager::onDatasetChangingConfirmed(DatasetChangingConfirmedEventArgs& e) {
     Q_UNUSED(e);
 
     // Clear box map
@@ -235,11 +240,6 @@ void BoundingBoxManager::onDatasetChanged(DatasetChangedEventArgs& e) {
         }
     }
     mSceneBoxMap.clear();
-}
-
-void BoundingBoxManager::onSceneChanging(SceneChangingEventArgs& e) {
-    if(checkUnfinalizedBox())
-        e.abort = true;
 }
 
 void BoundingBoxManager::onSceneChanged(SceneChangedEventArgs& e) {

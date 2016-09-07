@@ -40,7 +40,6 @@ namespace Strings {
     const QString TotalScenesLabelBase = " scenes total";
 
     const std::string StandardMaterialName = "BaseWhiteNoLighting";
-    const std::string RGBDSceneNodeName = "rgbdScene";
     const std::string BoundingBoxMeshNameInactive = "obbMesh";
     const std::string BoundingBoxMeshNameActive = "obbMeshActive";
 
