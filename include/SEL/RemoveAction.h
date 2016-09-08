@@ -12,7 +12,7 @@ namespace SEL {
         RemoveAction& operator=(const RemoveAction& other);
         virtual ~RemoveAction();
 
-        virtual void exec(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const DatasetManager::LabelMap& labels,
+        virtual void exec(SceneObjectManager* sceneObjMgr, const DatasetManager::LabelMap& labels,
                           std::vector<std::shared_ptr<SceneObject>>& selectedObjects) const;
 
         virtual RemoveAction* clone() const;

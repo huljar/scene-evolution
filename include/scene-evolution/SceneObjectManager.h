@@ -27,6 +27,7 @@ class SceneObjectManager : public QObject
 public:
     typedef std::shared_ptr<SEL::SceneObject> SceneObjPtr;
     typedef std::vector<std::pair<SceneObjPtr, Ogre::SceneNode*>> ObjVec;
+    // Scene, RGBDScene, SceneNode to which RGBDScene is attached, Scene Mask, Flag if RGBDScene needs to be updated (should be set to true when the mask changes)
     typedef std::tuple<Scene, RGBDScene*, Ogre::SceneNode*, cv::Mat1b, bool> SceneInfo;
 
     typedef std::map<unsigned int, ObjVec> SceneObjectsMap;
@@ -34,6 +35,8 @@ public:
 
     SceneObjectManager(const Scene& currentScene, unsigned int currentSceneIdx, RGBDScene* currentRGBDScene, bool showBoundingBoxes = false);
     virtual ~SceneObjectManager();
+
+    bool preregisterScene(const SceneChangedEventArgs& sceneInfo);
 
     bool registerObject(const SceneObjPtr& obj);
     bool registerObject(const SceneObjPtr& obj, unsigned int sceneIdx);
@@ -48,12 +51,15 @@ public:
     bool checkObjectInScene(const SEL::SceneObject& obj) const;
     bool checkObjectInScene(const SEL::SceneObject& obj, unsigned int sceneIdx) const;
 
+    Scene getScene() const;
+    Scene getScene(unsigned int sceneIdx) const;
     RGBDScene* getRGBDScene() const;
     RGBDScene* getRGBDScene(unsigned int sceneIdx) const;
     Ogre::SceneNode* getRGBDSceneNode() const;
     Ogre::SceneNode* getRGBDSceneNode(unsigned int sceneIdx) const;
 
     ObjVec getRegisteredObjects() const;
+    ObjVec getRegisteredObjects(unsigned int sceneIdx) const;
 
     bool getShowBoundingBoxes() const;
     void setShowBoundingBoxes(bool showBoundingBoxes);

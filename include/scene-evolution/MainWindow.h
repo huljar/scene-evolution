@@ -29,6 +29,8 @@ public:
     bool changeDataset(DatasetManager* dataset);
     bool changeScene(const Scene& scene, unsigned int sceneIdx, const DatasetManager* datasetMgr = nullptr);
 
+    void runSELQueries(const std::list<SEL::Query*>& queryList);
+
 public slots:
     void onOgreInitialized();
 

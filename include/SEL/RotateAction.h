@@ -14,7 +14,7 @@ namespace SEL {
         RotateAction& operator=(const RotateAction& other);
         virtual ~RotateAction();
 
-        virtual void exec(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const DatasetManager::LabelMap& labels,
+        virtual void exec(SceneObjectManager* sceneObjMgr, const DatasetManager::LabelMap& labels,
                           std::vector<std::shared_ptr<SceneObject>>& selectedObjects) const;
 
         virtual RotateAction* clone() const;

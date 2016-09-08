@@ -63,7 +63,7 @@ namespace SEL {
 %token
     END 0   "end of file"
     SELECT  "select"
-    FROM    "from"
+    FROM    "from scene"
     WHERE   "where"
     DIST    "distance to"
     SUPPORT "supported by"
@@ -97,6 +97,8 @@ namespace SEL {
 %type <std::list<SEL::Query*>> query_list
 %type <SEL::Query*> query
 %type <SEL::SelectStatement*> select_statement
+%type <int> optional_from_statement
+%type <SEL::SearchCondition*> optional_where_statement
 %type <std::list<SEL::Object*>> object_list
 %type <SEL::Object*> object
 %type <std::list<SEL::Qualifier*>> qualifier_list
@@ -131,7 +133,7 @@ namespace SEL {
 %printer { yyoutput << *$$; } <*>;
 %printer { yyoutput << "List containig " << $$.size() << " elements"; } query_list object_list qualifier_list action_list
 %printer { yyoutput << $$.toStdString(); } "qualifier" "identifier" identifier_concat
-%printer { yyoutput << $$; } "integer" "float" "boolean" vector
+%printer { yyoutput << $$; } "integer" "float" "boolean" optional_from_statement vector
 
 /*******************************/
 %% // begin grammar definition //
@@ -145,8 +147,15 @@ query:
     select_statement ";" action_list ";" { $$ = new SEL::Query($1, $3); };
 
 select_statement:
-    "select" object_list { $$ = new SEL::SelectStatement($2, nullptr); }
-  | "select" object_list "where" search_condition { $$ = new SEL::SelectStatement($2, $4); };
+    "select" object_list optional_from_statement optional_where_statement { $$ = new SEL::SelectStatement($2, $3, $4); }
+
+optional_from_statement:
+    { $$ = -1; }
+  | "from scene" "integer" { $$ = $2; };
+
+optional_where_statement:
+    { $$ = nullptr; }
+  | "where" search_condition { $$ = $2; };
 
 object_list:
     object { $$ = std::list<SEL::Object*>({$1}); }

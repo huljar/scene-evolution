@@ -17,7 +17,7 @@ namespace SEL {
         CompElement();
         virtual ~CompElement();
 
-        virtual QVariant calc(SceneObjectManager* sceneObjMgr, const Scene& currentScene, SceneObject& obj, const DatasetManager::LabelMap& labels) const = 0;
+        virtual QVariant calc(SceneObjectManager* sceneObjMgr, int sceneIdx, SceneObject& obj, const DatasetManager::LabelMap& labels) const = 0;
     };
 }
 

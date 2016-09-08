@@ -27,8 +27,8 @@ BooleanFactor::~BooleanFactor() {
     delete mChild;
 }
 
-bool BooleanFactor::eval(SceneObjectManager* sceneObjMgr, const Scene& currentScene, SceneObject& obj, const DatasetManager::LabelMap& labels) const {
-    return mNegate != mChild->eval(sceneObjMgr, currentScene, obj, labels);
+bool BooleanFactor::eval(SceneObjectManager* sceneObjMgr, int sceneIdx, SceneObject& obj, const DatasetManager::LabelMap& labels) const {
+    return mNegate != mChild->eval(sceneObjMgr, sceneIdx, obj, labels);
 }
 
 BooleanFactor* BooleanFactor::clone() const {

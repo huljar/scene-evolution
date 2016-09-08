@@ -29,9 +29,9 @@ namespace SEL {
 
         QString getName() const;
 
-        virtual std::vector<std::shared_ptr<SceneObject>> getSceneObjects(const SearchCondition& searchCond, SceneObjectManager* sceneObjMgr, const Scene& currentScene,
+        virtual std::vector<std::shared_ptr<SceneObject>> getSceneObjects(const SearchCondition& searchCond, SceneObjectManager* sceneObjMgr, int sceneIdx,
                                                                           const DatasetManager::LabelMap& labels, bool applyQualifiers = true) const;
-        virtual std::vector<std::shared_ptr<SceneObject>> getSceneObjects(SceneObjectManager* sceneObjMgr, const Scene& currentScene,
+        virtual std::vector<std::shared_ptr<SceneObject>> getSceneObjects(SceneObjectManager* sceneObjMgr, int sceneIdx,
                                                                           const DatasetManager::LabelMap& labels, bool applyQualifiers = true) const;
 
     protected:

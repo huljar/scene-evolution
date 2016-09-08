@@ -40,8 +40,8 @@ bool BooleanTest::isPredicate() const {
     return mPred != nullptr;
 }
 
-bool BooleanTest::eval(SceneObjectManager* sceneObjMgr, const Scene& currentScene, SceneObject& obj, const DatasetManager::LabelMap& labels) const {
-    return isPredicate() ? mPred->eval(sceneObjMgr, currentScene, obj, labels) : mSearchCond->eval(sceneObjMgr, currentScene, obj, labels);
+bool BooleanTest::eval(SceneObjectManager* sceneObjMgr, int sceneIdx, SceneObject& obj, const DatasetManager::LabelMap& labels) const {
+    return isPredicate() ? mPred->eval(sceneObjMgr, sceneIdx, obj, labels) : mSearchCond->eval(sceneObjMgr, sceneIdx, obj, labels);
 }
 
 BooleanTest* BooleanTest::clone() const {

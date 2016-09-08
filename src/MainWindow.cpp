@@ -140,6 +140,36 @@ bool MainWindow::changeScene(const Scene& scene, unsigned int sceneIdx, const Da
     return true;
 }
 
+void MainWindow::runSELQueries(const std::list<SEL::Query*>& queryList) {
+    for(auto&& queryPtr : queryList) {
+        // Check if any scenes need to be preregistered with the scene object manager
+        // Check if the fromScene index is valid
+        int fromScene = queryPtr->getSelectStmt()->getFromSceneIdx();
+        if(fromScene >= 0) { // index of -1 indicates that the current scene shall be used
+            // Check if a scene with this index exists
+            unsigned int fromSceneIdx = static_cast<unsigned int>(fromScene);
+            if(fromSceneIdx >= mDatasetManager->getSceneCount()) {
+                std::cerr << "Error: fromScene index " << fromSceneIdx << " is out of bounds! Skipping SEL query..." << std::endl;
+                continue;
+            }
+
+            // Check if scene exists in the scene object manager
+            if(!mSceneObjectManager->getRGBDScene(fromSceneIdx)) {
+                // Create scene
+                Scene newScene = mDatasetManager->loadScene(mDatasetManager->getAllSceneNames().at(fromScene)); // Using the non-cast idx because Qt expects an int
+                RGBDScene* newRGBDScene = new RGBDScene(mOgreWindow->getOgreSceneManager(), newScene.getDepthImg(), newScene.getRgbImg(), mDatasetManager->getCameraParams());
+
+                // Register scene
+                if(!mSceneObjectManager->preregisterScene(SceneChangedEventArgs(newScene, fromSceneIdx, newRGBDScene)))
+                    delete newRGBDScene;
+            }
+        }
+
+        // Execute
+        queryPtr->exec(mSceneObjectManager, mDatasetManager->getLabelMap());
+    }
+}
+
 void MainWindow::onOgreInitialized() {
     // Emit dataset "change" for the initially loaded dataset to trigger necessary setup code
     changeDataset(mDatasetManager);
@@ -214,9 +244,7 @@ void MainWindow::onActionRunSELTriggered(bool checked) {
     std::list<SEL::Query*> queries = mSELDriver->getResult();
     std::cout << "Executing " << queries.size() << " queries" << std::endl;
 
-    for(std::list<SEL::Query*>::const_iterator it = queries.cbegin(); it != queries.cend(); ++it) {
-        (*it)->exec(mSceneObjectManager, mCurrentScene, mDatasetManager->getLabelMap());
-    }
+    runSELQueries(queries);
 }
 
 void MainWindow::onPushButtonPrevSceneClicked(bool checked) {
@@ -317,9 +345,7 @@ void MainWindow::onPushButtonExecuteManualSELClicked(bool checked) {
     std::list<SEL::Query*> queries = mSELDriver->getResult();
     std::cout << "Executing " << queries.size() << " queries" << std::endl;
 
-    for(std::list<SEL::Query*>::const_iterator it = queries.cbegin(); it != queries.cend(); ++it) {
-        (*it)->exec(mSceneObjectManager, mCurrentScene, mDatasetManager->getLabelMap());
-    }
+    runSELQueries(queries);
 }
 
 void MainWindow::onCheckBoxSELBoundingBoxesStateChanged(int state) {

@@ -24,7 +24,12 @@ SupportTerm::~SupportTerm() {
     delete mObj;
 }
 
-bool SupportTerm::eval(SceneObjectManager* sceneObjMgr, const Scene& currentScene, SceneObject& obj, const DatasetManager::LabelMap& labels) const {
+bool SupportTerm::eval(SceneObjectManager* sceneObjMgr, int sceneIdx, SceneObject& obj, const DatasetManager::LabelMap& labels) const {
+    (void)sceneObjMgr;
+    (void)sceneIdx;
+    (void)obj;
+    (void)labels;
+
     return true; // TODO: implement
 }
 

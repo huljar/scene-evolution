@@ -22,7 +22,7 @@ namespace SEL {
         CompPredicate& operator=(const CompPredicate& other);
         virtual ~CompPredicate();
 
-        virtual bool eval(SceneObjectManager* sceneObjMgr, const Scene& currentScene, SceneObject& obj, const DatasetManager::LabelMap& labels) const;
+        virtual bool eval(SceneObjectManager* sceneObjMgr, int sceneIdx, SceneObject& obj, const DatasetManager::LabelMap& labels) const;
 
         virtual CompPredicate* clone() const;
 

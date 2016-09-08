@@ -29,11 +29,11 @@ BooleanTerm::~BooleanTerm() {
     delete mRight;
 }
 
-bool BooleanTerm::eval(SceneObjectManager* sceneObjMgr, const Scene& currentScene, SceneObject& obj, const DatasetManager::LabelMap& labels) const {
+bool BooleanTerm::eval(SceneObjectManager* sceneObjMgr, int sceneIdx, SceneObject& obj, const DatasetManager::LabelMap& labels) const {
     if(mLeft)
-        return mLeft->eval(sceneObjMgr, currentScene, obj, labels) && mRight->eval(sceneObjMgr, currentScene, obj, labels);
+        return mLeft->eval(sceneObjMgr, sceneIdx, obj, labels) && mRight->eval(sceneObjMgr, sceneIdx, obj, labels);
 
-    return mRight->eval(sceneObjMgr, currentScene, obj, labels);
+    return mRight->eval(sceneObjMgr, sceneIdx, obj, labels);
 }
 
 BooleanTerm* BooleanTerm::clone() const {

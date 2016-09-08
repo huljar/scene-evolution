@@ -35,7 +35,7 @@ loc.step();
 [\n]+               loc.lines(yyleng); loc.step();
 
 (?i:select)         return SEL::Parser::make_SELECT(loc);
-(?i:from)           return SEL::Parser::make_FROM(loc);
+(?i:from\ scene)    return SEL::Parser::make_FROM(loc);
 (?i:where)          return SEL::Parser::make_WHERE(loc);
 (?i:distance\ to)   return SEL::Parser::make_DIST(loc);
 (?i:supported\ by)  return SEL::Parser::make_SUPPORT(loc);

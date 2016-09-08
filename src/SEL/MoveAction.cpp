@@ -47,16 +47,18 @@ MoveAction::~MoveAction() {
     delete mSearchCond;
 }
 
-void MoveAction::exec(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const DatasetManager::LabelMap& labels,
+void MoveAction::exec(SceneObjectManager* sceneObjMgr, const DatasetManager::LabelMap& labels,
                       std::vector<std::shared_ptr<SceneObject>>& selectedObjects) const {
+    // TODO: when moving across scenes, tell the scene object manager
+    Scene currentScene = sceneObjMgr->getScene();
     RGBDScene* rgbdScene = sceneObjMgr->getRGBDScene();
 
     // Check if this is a semantic move operation or a simple translation
     if(mObj) {
         // Find appropriate new locations
         std::vector<std::shared_ptr<SceneObject>> targets = (mSearchCond
-                                                             ? mObj->getSceneObjects(*mSearchCond, sceneObjMgr, currentScene, labels)
-                                                             : mObj->getSceneObjects(sceneObjMgr, currentScene, labels));
+                                                             ? mObj->getSceneObjects(*mSearchCond, sceneObjMgr, -1, labels)
+                                                             : mObj->getSceneObjects(sceneObjMgr, -1, labels));
 
         if(targets.size() == 0) {
             std::cerr << "No valid move targets found!" << std::endl;

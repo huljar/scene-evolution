@@ -19,7 +19,7 @@ namespace SEL {
         Action();
         virtual ~Action();
 
-        virtual void exec(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const DatasetManager::LabelMap& labels,
+        virtual void exec(SceneObjectManager* sceneObjMgr, const DatasetManager::LabelMap& labels,
                           std::vector<std::shared_ptr<SceneObject>>& selectedObjects) const = 0;
     };
 }

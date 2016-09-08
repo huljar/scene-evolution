@@ -5,14 +5,16 @@
 
 using namespace SEL;
 
-SelectStatement::SelectStatement(std::list<Object*> objList, SearchCondition* searchCond)
+SelectStatement::SelectStatement(std::list<Object*> objList, int sceneIdx, SearchCondition* searchCond)
     : mObjectList(std::move(objList))
+    , mSceneIdx(sceneIdx)
     , mSearchCond(searchCond)
 {
 }
 
 SelectStatement::SelectStatement(const SelectStatement& other)
     : mObjectList(other.mObjectList)
+    , mSceneIdx(other.mSceneIdx)
     , mSearchCond(other.mSearchCond)
 {
 }
@@ -23,6 +25,7 @@ SelectStatement& SelectStatement::operator=(const SelectStatement& other) {
     delete mSearchCond;
 
     mObjectList = other.mObjectList;
+    mSceneIdx = other.mSceneIdx;
     mSearchCond = other.mSearchCond;
 
     return *this;
@@ -34,13 +37,12 @@ SelectStatement::~SelectStatement() {
     delete mSearchCond;
 }
 
-std::vector<std::shared_ptr<SceneObject>> SelectStatement::getSceneObjects(SceneObjectManager* sceneObjMgr, const Scene& currentScene,
-                                                                           const DatasetManager::LabelMap& labels) const {
+std::vector<std::shared_ptr<SceneObject>> SelectStatement::getSceneObjects(SceneObjectManager* sceneObjMgr, const DatasetManager::LabelMap& labels) const {
     std::vector<std::shared_ptr<SceneObject>> ret;
-    for(std::list<Object*>::const_iterator it = mObjectList.cbegin(); it != mObjectList.cend(); ++it) {
+    for(auto&& objPtr : mObjectList) {
         std::vector<std::shared_ptr<SceneObject>> current = (mSearchCond
-                                                             ? (*it)->getSceneObjects(*mSearchCond, sceneObjMgr, currentScene, labels)
-                                                             : (*it)->getSceneObjects(sceneObjMgr, currentScene, labels));
+                                                             ? objPtr->getSceneObjects(*mSearchCond, sceneObjMgr, mSceneIdx, labels)
+                                                             : objPtr->getSceneObjects(sceneObjMgr, mSceneIdx, labels));
 
         ret.reserve(ret.size() + current.size());
         std::copy(current.begin(), current.end(), std::back_inserter(ret));
@@ -55,4 +57,16 @@ SelectStatement* SelectStatement::clone() const {
 
 void SelectStatement::print(std::ostream& os) const {
     os << "SelectStatement with " << mObjectList.size() << " objects";
+}
+
+std::list<Object*> SelectStatement::getObjectList() const {
+    return mObjectList;
+}
+
+int SelectStatement::getFromSceneIdx() const {
+    return mSceneIdx;
+}
+
+SearchCondition* SelectStatement::getSearchCond() const {
+    return mSearchCond;
 }

@@ -19,9 +19,8 @@ RemoveAction::~RemoveAction() {
 
 }
 
-void RemoveAction::exec(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const DatasetManager::LabelMap& labels,
+void RemoveAction::exec(SceneObjectManager* sceneObjMgr, const DatasetManager::LabelMap& labels,
                         std::vector<std::shared_ptr<SceneObject>>& selectedObjects) const {
-    (void)currentScene;
     (void)labels;
 
     for(auto&& obj : selectedObjects) {

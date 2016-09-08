@@ -24,10 +24,11 @@ RotateAction::~RotateAction() {
 
 }
 
-void RotateAction::exec(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const DatasetManager::LabelMap& labels,
+void RotateAction::exec(SceneObjectManager* sceneObjMgr, const DatasetManager::LabelMap& labels,
                         std::vector<std::shared_ptr<SceneObject>>& selectedObjects) const {
     (void)labels;
 
+    Scene currentScene = sceneObjMgr->getScene();
     RGBDScene* rgbdScene = sceneObjMgr->getRGBDScene();
 
     for(auto&& obj : selectedObjects) {

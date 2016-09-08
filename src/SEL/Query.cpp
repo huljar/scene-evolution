@@ -33,8 +33,8 @@ Query::~Query() {
         delete *it;
 }
 
-void Query::exec(SceneObjectManager* sceneObjMgr, const Scene& currentScene, const DatasetManager::LabelMap& labels) const {
-    std::vector<std::shared_ptr<SceneObject>> objects = mSelectStmt->getSceneObjects(sceneObjMgr, currentScene, labels);
+void Query::exec(SceneObjectManager* sceneObjMgr, const DatasetManager::LabelMap& labels) const {
+    std::vector<std::shared_ptr<SceneObject>> objects = mSelectStmt->getSceneObjects(sceneObjMgr, labels);
 
     std::cout << "Objects contains " << objects.size() << " elements:" << std::endl;
     for(std::vector<std::shared_ptr<SceneObject>>::iterator it = objects.begin(); it != objects.end(); ++it) {
@@ -44,7 +44,7 @@ void Query::exec(SceneObjectManager* sceneObjMgr, const Scene& currentScene, con
     std::cout << "Executing actions" << std::endl;
 
     for(std::list<Action*>::const_iterator it = mActionList.begin(); it != mActionList.end(); ++it) {
-        (*it)->exec(sceneObjMgr, currentScene, labels, objects);
+        (*it)->exec(sceneObjMgr, labels, objects);
     }
 
     std::cout << "Selected objects contains:" << std::endl;
@@ -53,7 +53,7 @@ void Query::exec(SceneObjectManager* sceneObjMgr, const Scene& currentScene, con
 
     // Register selected objects with manager (only non-attached, meshified objects will be registered)
     for(std::vector<std::shared_ptr<SceneObject>>::iterator it = objects.begin(); it != objects.end(); ++it)
-        sceneObjMgr->registerObject(*it);
+        sceneObjMgr->registerObject(*it); // TODO: let actions attach the appropriate objects themselves?
 
     sceneObjMgr->updateObjects();
 }

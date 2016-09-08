@@ -32,9 +32,9 @@ CompPredicate::~CompPredicate() {
     delete mRight;
 }
 
-bool CompPredicate::eval(SceneObjectManager* sceneObjMgr, const Scene& currentScene, SceneObject& obj, const DatasetManager::LabelMap& labels) const {
-    QVariant left = mLeft->calc(sceneObjMgr, currentScene, obj, labels);
-    QVariant right = mRight->calc(sceneObjMgr, currentScene, obj, labels);
+bool CompPredicate::eval(SceneObjectManager* sceneObjMgr, int sceneIdx, SceneObject& obj, const DatasetManager::LabelMap& labels) const {
+    QVariant left = mLeft->calc(sceneObjMgr, sceneIdx, obj, labels);
+    QVariant right = mRight->calc(sceneObjMgr, sceneIdx, obj, labels);
 
     // Using QMetaType here is correct (see the QVariant documentation at https://doc.qt.io/qt-5/qvariant.html#type )
 #pragma GCC diagnostic push

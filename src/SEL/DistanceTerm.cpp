@@ -31,24 +31,24 @@ DistanceTerm::~DistanceTerm() {
     delete mObj;
 }
 
-QVariant DistanceTerm::calc(SceneObjectManager* sceneObjMgr, const Scene& currentScene, SceneObject& obj, const DatasetManager::LabelMap& labels) const {
+QVariant DistanceTerm::calc(SceneObjectManager* sceneObjMgr, int sceneIdx, SceneObject& obj, const DatasetManager::LabelMap& labels) const {
     std::cout << "Calculating shortest distance..." << std::endl
               << "Term object: " << mObj->getName().toStdString() << std::endl
               << "Query object: " << obj.getName().toStdString() << std::endl;
 
     // Get object(s) to which the distance will be calculated
-    std::vector<std::shared_ptr<SceneObject>> termObjects = mObj->getSceneObjects(sceneObjMgr, currentScene, labels);
+    std::vector<std::shared_ptr<SceneObject>> termObjects = mObj->getSceneObjects(sceneObjMgr, sceneIdx, labels);
 
     std::cout << "Term object exists " << termObjects.size() << " times in the scene" << std::endl;
 
     float shortestSqrDist = std::numeric_limits<float>::infinity();
-    const CameraManager& camMgr = sceneObjMgr->getRGBDScene()->cameraManager();
-    cv::Mat depthImg = currentScene.getDepthImg();
+    const CameraManager& camMgr = (sceneIdx >= 0 ? sceneObjMgr->getRGBDScene(static_cast<unsigned int>(sceneIdx)) : sceneObjMgr->getRGBDScene())->cameraManager();
+    cv::Mat depthImg = (sceneIdx >= 0 ? sceneObjMgr->getScene(static_cast<unsigned int>(sceneIdx)) : sceneObjMgr->getScene()).getDepthImg();
 
     // Iterate over target objects
-    for(std::vector<std::shared_ptr<SceneObject>>::iterator it = termObjects.begin(); it != termObjects.end(); ++it) {
+    for(auto&& objPtr : termObjects) {
         // Get vertices of term object
-        std::vector<Ogre::Vector3> termPoints = (*it)->getVertices(depthImg, camMgr);
+        std::vector<Ogre::Vector3> termPoints = objPtr->getVertices(depthImg, camMgr);
 
         // Shuffle the vertices (for random selection)
         std::shuffle(termPoints.begin(), termPoints.end(), msRandomEngine);

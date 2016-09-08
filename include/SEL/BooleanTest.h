@@ -22,7 +22,7 @@ namespace SEL {
 
         bool isPredicate() const;
 
-        virtual bool eval(SceneObjectManager* rgbdScene, const Scene& currentScene, SceneObject& obj, const DatasetManager::LabelMap& labels) const;
+        virtual bool eval(SceneObjectManager* rgbdScene, int sceneIdx, SceneObject& obj, const DatasetManager::LabelMap& labels) const;
 
         virtual BooleanTest* clone() const;
 

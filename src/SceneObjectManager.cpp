@@ -31,6 +31,21 @@ SceneObjectManager::~SceneObjectManager() {
     mSceneInfoMap.clear();
 }
 
+bool SceneObjectManager::preregisterScene(const SceneChangedEventArgs& sceneInfo) {
+    // Check if the specified scene already exists
+    if(mSceneInfoMap.count(sceneInfo.sceneIdx))
+        return false;
+
+    // Register scene without changing the current scene
+    mSceneInfoMap.emplace(sceneInfo.sceneIdx, std::make_tuple(sceneInfo.scene,
+                                                              sceneInfo.rgbdScene,
+                                                              mSceneMgr->getRootSceneNode()->createChildSceneNode(),
+                                                              cv::Mat1b::zeros(sceneInfo.scene.getLabelImg().size()),
+                                                              false));
+
+    return true;
+}
+
 bool SceneObjectManager::registerObject(const SceneObjPtr& obj) {
     return registerObject(obj, mCurrentSceneIdx);
 }
@@ -134,6 +149,17 @@ bool SceneObjectManager::checkObjectInScene(const SEL::SceneObject& obj, unsigne
     return numThere > numCut;
 }
 
+Scene SceneObjectManager::getScene() const {
+    return std::get<0>(mSceneInfoMap.at(mCurrentSceneIdx));
+}
+
+Scene SceneObjectManager::getScene(unsigned int sceneIdx) const {
+    SceneInfoMap::const_iterator sceneInfo = mSceneInfoMap.find(sceneIdx);
+    if(sceneInfo == mSceneInfoMap.cend())
+        return Scene();
+    return std::get<0>(sceneInfo->second);
+}
+
 RGBDScene* SceneObjectManager::getRGBDScene() const {
     return std::get<1>(mSceneInfoMap.at(mCurrentSceneIdx));
 }
@@ -157,7 +183,11 @@ Ogre::SceneNode* SceneObjectManager::getRGBDSceneNode(unsigned int sceneIdx) con
 }
 
 SceneObjectManager::ObjVec SceneObjectManager::getRegisteredObjects() const {
-    SceneObjectsMap::const_iterator objs = mSceneObjectsMap.find(mCurrentSceneIdx);
+    return getRegisteredObjects(mCurrentSceneIdx);
+}
+
+SceneObjectManager::ObjVec SceneObjectManager::getRegisteredObjects(unsigned int sceneIdx) const {
+    SceneObjectsMap::const_iterator objs = mSceneObjectsMap.find(sceneIdx);
     if(objs == mSceneObjectsMap.cend())
         return ObjVec();
     return objs->second;

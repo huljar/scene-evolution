@@ -37,16 +37,16 @@ QString Object::getName() const {
     return mObjName;
 }
 
-std::vector<std::shared_ptr<SceneObject>> Object::getSceneObjects(const SearchCondition& searchCond, SceneObjectManager* sceneObjMgr, const Scene& currentScene,
+std::vector<std::shared_ptr<SceneObject>> Object::getSceneObjects(const SearchCondition& searchCond, SceneObjectManager* sceneObjMgr, int sceneIdx,
                                                                   const DatasetManager::LabelMap& labels, bool applyQualifiers) const {
     // Get all objects matching the specified names
     std::vector<std::shared_ptr<SceneObject>> ret;
-    RGBDScene* rgbdScene = sceneObjMgr->getRGBDScene();
+    RGBDScene* rgbdScene = (sceneIdx >= 0 ? sceneObjMgr->getRGBDScene(static_cast<unsigned int>(sceneIdx)) : sceneObjMgr->getRGBDScene());
 
     DatasetManager::LabelMap::const_iterator label = labels.find(mObjName);
     if(label != labels.cend()) {
         // Get all pixels covered by this label
-        const cv::Mat& labelImg = currentScene.getLabelImg();
+        cv::Mat labelImg = (sceneIdx >= 0 ? sceneObjMgr->getScene(static_cast<unsigned int>(sceneIdx)) : sceneObjMgr->getScene()).getLabelImg();
         RegionMap regionMap(
             [](const cv::Point& lhs, const cv::Point& rhs) -> bool {
                 return lhs.y == rhs.y ? lhs.x < rhs.x : lhs.y < rhs.y;
@@ -62,7 +62,8 @@ std::vector<std::shared_ptr<SceneObject>> Object::getSceneObjects(const SearchCo
 
         // Remove objects that are not in the scene any more or for which the search condition doesn't hold
         std::vector<std::shared_ptr<SceneObject>>::iterator retNewEnd = std::remove_if(ret.begin(), ret.end(), [&](const std::shared_ptr<SceneObject>& obj) -> bool {
-            return !sceneObjMgr->checkObjectInScene(*obj) || !searchCond.eval(sceneObjMgr, currentScene, *obj, labels);
+            return !(sceneIdx >= 0 ? sceneObjMgr->checkObjectInScene(*obj, static_cast<unsigned int>(sceneIdx)) : sceneObjMgr->checkObjectInScene(*obj)) ||
+                   !searchCond.eval(sceneObjMgr, sceneIdx, *obj, labels);
         });
         ret.erase(retNewEnd, ret.end());
 
@@ -71,7 +72,7 @@ std::vector<std::shared_ptr<SceneObject>> Object::getSceneObjects(const SearchCo
         SceneObjectManager::ObjVec regObjects = sceneObjMgr->getRegisteredObjects();
         SceneObjectManager::ObjVec::iterator regObjectsNewEnd = std::remove_if(regObjects.begin(), regObjects.end(),
             [&](const std::pair<SceneObjectManager::SceneObjPtr, Ogre::SceneNode*>& obj) -> bool {
-                return obj.first->getName() != mObjName || !searchCond.eval(sceneObjMgr, currentScene, *obj.first, labels);
+                return obj.first->getName() != mObjName || !searchCond.eval(sceneObjMgr, sceneIdx, *obj.first, labels);
             }
         );
 
@@ -82,9 +83,9 @@ std::vector<std::shared_ptr<SceneObject>> Object::getSceneObjects(const SearchCo
 
         // Apply qualifiers
         if(applyQualifiers) {
-            for(std::list<Qualifier*>::const_iterator it = mQualList.cbegin(); it != mQualList.cend(); ++it) {
-                if(!applyQualifier(**it, ret))
-                    std::cerr << "Unable to apply qualifier " << (*it)->getText().toStdString() << " to " << mObjName.toStdString() << std::endl;
+            for(auto&& qualPtr : mQualList) {
+                if(!applyQualifier(*qualPtr, ret))
+                    std::cerr << "Unable to apply qualifier " << qualPtr->getText().toStdString() << " to " << mObjName.toStdString() << std::endl;
             }
         }
     }
@@ -92,13 +93,13 @@ std::vector<std::shared_ptr<SceneObject>> Object::getSceneObjects(const SearchCo
     return ret;
 }
 
-std::vector<std::shared_ptr<SceneObject>> Object::getSceneObjects(SceneObjectManager* sceneObjMgr, const Scene& currentScene,
+std::vector<std::shared_ptr<SceneObject>> Object::getSceneObjects(SceneObjectManager* sceneObjMgr, int sceneIdx,
                                                                   const DatasetManager::LabelMap& labels, bool applyQualifiers) const {
     // Create temporary search condition which always evaluates to true
     SearchCondition tmpCond(nullptr, new BooleanTerm(nullptr, new BooleanFactor(new BooleanTest(new BooleanValue(true)), false)));
 
     // Call overloaded function
-    return getSceneObjects(tmpCond, sceneObjMgr, currentScene, labels, applyQualifiers);
+    return getSceneObjects(tmpCond, sceneObjMgr, sceneIdx, labels, applyQualifiers);
 }
 
 std::vector<std::shared_ptr<SceneObject>> Object::doRegionGrowing(const cv::Mat& labelImg, RegionMap& points, Ogre::SceneManager* sceneMgr) const {
