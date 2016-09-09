@@ -1,6 +1,7 @@
 #include <SEL/SceneObject.h>
 #include <scene-evolution/util.h>
 #include <scene-evolution/interop.h>
+#include <scene-evolution/NameProvider.h>
 
 #include <OgreBites/OgreRay.h>
 #include <OGRE/OgreMatrix3.h>
@@ -16,7 +17,7 @@ SceneObject::SceneObject()
     , mCurrentScale(1.f, 1.f, 1.f)
     , mVisible(true)
     , mSceneIdx(0)
-    , mManualObject(nullptr)
+    , mEntity(nullptr)
     , mSceneMgr(nullptr)
     , mKDTreeUpdated(false)
     , mKDTreeVertexListUpdated(false)
@@ -31,7 +32,7 @@ SceneObject::SceneObject(const QString& objName, unsigned int sceneIdx, const cv
     , mCurrentScale(1.f, 1.f, 1.f)
     , mVisible(true)
     , mSceneIdx(sceneIdx)
-    , mManualObject(nullptr)
+    , mEntity(nullptr)
     , mSceneMgr(sceneMgr)
     , mKDTreeUpdated(false)
     , mKDTreeVertexListUpdated(false)
@@ -39,9 +40,9 @@ SceneObject::SceneObject(const QString& objName, unsigned int sceneIdx, const cv
 }
 
 SceneObject::~SceneObject() {
-    if(mSceneMgr && mManualObject) {
-        mManualObject->detachFromParent();
-        mSceneMgr->destroyManualObject(mManualObject);
+    if(mSceneMgr && mEntity) {
+        mEntity->detachFromParent();
+        mSceneMgr->destroyEntity(mEntity);
     }
 }
 
@@ -53,21 +54,22 @@ SceneObject::SceneObject(SceneObject&& other)
     , mCurrentRotation(std::move(other.mCurrentRotation))
     , mCurrentScale(std::move(other.mCurrentScale))
     , mVisible(other.mVisible)
-    , mManualObject(other.mManualObject)
+    , mEntity(other.mEntity)
+    , mMesh(std::move(other.mMesh))
     , mSceneMgr(other.mSceneMgr)
     , mKDTree(std::move(other.mKDTree))
     , mKDTreeUpdated(other.mKDTreeUpdated)
     , mKDTreeVertexList(std::move(other.mKDTreeVertexList))
     , mKDTreeVertexListUpdated(other.mKDTreeVertexListUpdated)
 {
-    other.mManualObject = nullptr;
+    other.mEntity = nullptr;
     other.mSceneMgr = nullptr;
 }
 
 SceneObject& SceneObject::operator=(SceneObject&& other) {
-    if(mSceneMgr && mManualObject) {
-        mManualObject->detachFromParent();
-        mSceneMgr->destroyManualObject(mManualObject);
+    if(mSceneMgr && mEntity) {
+        mEntity->detachFromParent();
+        mSceneMgr->destroyEntity(mEntity);
     }
 
     mObjName = std::move(other.mObjName);
@@ -77,14 +79,15 @@ SceneObject& SceneObject::operator=(SceneObject&& other) {
     mCurrentRotation = std::move(other.mCurrentRotation);
     mCurrentScale = std::move(other.mCurrentScale);
     mVisible = other.mVisible;
-    mManualObject = other.mManualObject;
+    mEntity = other.mEntity;
+    mMesh = std::move(other.mMesh);
     mSceneMgr = other.mSceneMgr;
     mKDTree = std::move(other.mKDTree);
     mKDTreeUpdated = other.mKDTreeUpdated;
     mKDTreeVertexList = std::move(other.mKDTreeVertexList);
     mKDTreeVertexListUpdated = other.mKDTreeVertexListUpdated;
 
-    other.mManualObject = nullptr;
+    other.mEntity = nullptr;
     other.mSceneMgr = nullptr;
 
     return *this;
@@ -99,21 +102,21 @@ void SceneObject::removePoint(const cv::Point& point) {
 }
 
 bool SceneObject::meshify(const cv::Mat& depthImg, const cv::Mat& rgbImg, const CameraManager& camMgr) {
-    if(!mSceneMgr || mPixels.rows != depthImg.rows || mPixels.cols != depthImg.cols || mPixels.rows != rgbImg.rows || mPixels.cols != rgbImg.cols) {
-        std::cout << "Error: invalid dimensions, cannot meshify object" << std::endl;
+    if(!mSceneMgr || mEntity || mPixels.rows != depthImg.rows || mPixels.cols != depthImg.cols || mPixels.rows != rgbImg.rows || mPixels.cols != rgbImg.cols) {
+        std::cout << "Error: invalid dimensions or already exists, cannot meshify object" << std::endl;
         return false;
     }
 
-    if(!mManualObject)
-        mManualObject = mSceneMgr->createManualObject();
-    else
-        mManualObject->clear();
+    Ogre::ManualObject* manObj = mSceneMgr->createManualObject();
 
-    mManualObject->begin(Strings::StandardMaterialName, Ogre::RenderOperation::OT_TRIANGLE_LIST);
+    manObj->begin(Strings::StandardMaterialName, Ogre::RenderOperation::OT_TRIANGLE_LIST);
     cv::Vec3f centroid;
-    IndexMap idxMap = createVertices(depthImg, rgbImg, camMgr, &centroid);
-    createIndices(idxMap);
-    mManualObject->end();
+    IndexMap idxMap = createVertices(manObj, depthImg, rgbImg, camMgr, &centroid);
+    createIndices(manObj, idxMap);
+    manObj->end();
+
+    mMesh = manObj->convertToMesh(mObjName.toStdString() + std::to_string(NameProvider::nextID(mObjName)));
+    mEntity = mSceneMgr->createEntity(mMesh);
 
     setCurrentTranslation(centroid);
 
@@ -121,9 +124,9 @@ bool SceneObject::meshify(const cv::Mat& depthImg, const cv::Mat& rgbImg, const 
 }
 
 Ogre::AxisAlignedBox SceneObject::getBoundingBox(const cv::Mat& depthImg, const CameraManager& camMgr) {
-    if(hasManualObject()) {
+    if(hasEntity()) {
         // Use existing object to determine bounds
-        return mManualObject->getWorldBoundingBox();
+        return mEntity->getWorldBoundingBox();
     }
 
     // Calculate bounds from pixel information
@@ -149,12 +152,12 @@ QString SceneObject::getName() const {
     return mObjName;
 }
 
-bool SceneObject::hasManualObject() const {
-    return mManualObject != nullptr;
+bool SceneObject::hasEntity() const {
+    return mEntity != nullptr;
 }
 
-Ogre::ManualObject* SceneObject::getManualObject() const {
-    return mManualObject;
+Ogre::Entity* SceneObject::getEntity() const {
+    return mEntity;
 }
 
 cv::Mat_<unsigned char> SceneObject::getOriginalPixels() const {
@@ -289,7 +292,7 @@ void SceneObject::setSceneIdx(unsigned int sceneIdx) {
     mSceneIdx = sceneIdx;
 }
 
-SceneObject::IndexMap SceneObject::createVertices(const cv::Mat& depthImg, const cv::Mat& rgbImg, const CameraManager& camMgr, cv::Vec3f* centroid) {
+SceneObject::IndexMap SceneObject::createVertices(Ogre::ManualObject* manObj, const cv::Mat& depthImg, const cv::Mat& rgbImg, const CameraManager& camMgr, cv::Vec3f* centroid) {
     if(!has3DPixels()) create3DPixels(depthImg, camMgr);
 
     // Calculate centroid of object
@@ -320,16 +323,16 @@ SceneObject::IndexMap SceneObject::createVertices(const cv::Mat& depthImg, const
         if(*it == 255) {
             // Get 3D coordinates shifted by the centroid
             cv::Vec3f worldPos = m3DPixels(it.pos()) - centroidTmp;
-            mManualObject->position(cvToOgre(worldPos));
+            manObj->position(cvToOgre(worldPos));
 
             // Retrieve corresponding RGB pixel
             cv::Point rgbPx = camMgr.getRGBForDepth(it.pos(), depthImg.at<unsigned short>(it.pos()));
             cv::Vec3b rgbColor = rgbImg.at<cv::Vec3b>(rgbPx);
 
             // Ogre uses RGB and OpenCV uses BGR, hence the reversed indexing
-            mManualObject->colour(static_cast<float>(rgbColor[2]) / 255.0f,
-                                  static_cast<float>(rgbColor[1]) / 255.0f,
-                                  static_cast<float>(rgbColor[0]) / 255.0f);
+            manObj->colour(static_cast<float>(rgbColor[2]) / 255.0f,
+                           static_cast<float>(rgbColor[1]) / 255.0f,
+                           static_cast<float>(rgbColor[0]) / 255.0f);
 
             // Insert into map
             idxMap.insert(std::make_pair(it.pos(), idx));
@@ -340,7 +343,7 @@ SceneObject::IndexMap SceneObject::createVertices(const cv::Mat& depthImg, const
     return idxMap;
 }
 
-void SceneObject::createIndices(const IndexMap& idxMap) {
+void SceneObject::createIndices(Ogre::ManualObject* manObj, const IndexMap& idxMap) {
     for(cv::Mat_<unsigned char>::iterator it = mPixels.begin(); it != mPixels.end(); ++it) {
         cv::Point right = cv::Point(it.pos().x + 1, it.pos().y);
         cv::Point bot = cv::Point(it.pos().x, it.pos().y + 1);
@@ -349,13 +352,13 @@ void SceneObject::createIndices(const IndexMap& idxMap) {
         // Check mask
         if(*it == 255 && mPixels(right) == 255 && mPixels(bot) == 255 && mPixels(rightbot) == 255) {
             // Create 2 triangles (= 1 "square") per iteration
-            mManualObject->index(idxMap.find(it.pos())->second);
-            mManualObject->index(idxMap.find(bot)->second);
-            mManualObject->index(idxMap.find(right)->second);
+            manObj->index(idxMap.find(it.pos())->second);
+            manObj->index(idxMap.find(bot)->second);
+            manObj->index(idxMap.find(right)->second);
 
-            mManualObject->index(idxMap.find(right)->second);
-            mManualObject->index(idxMap.find(bot)->second);
-            mManualObject->index(idxMap.find(rightbot)->second);
+            manObj->index(idxMap.find(right)->second);
+            manObj->index(idxMap.find(bot)->second);
+            manObj->index(idxMap.find(rightbot)->second);
         }
     }
 }
@@ -376,23 +379,23 @@ void SceneObject::create3DPixels(const cv::Mat& depthImg, const CameraManager& c
 }
 
 void SceneObject::updateKDTreeVertexList(const cv::Mat& depthImg, const CameraManager& camMgr) {
-    if(hasManualObject()) {
+    if(hasEntity()) {
         // Use the manual object to retrieve the vertices in their current transformation
         Ogre::Vector3* vertices;
         size_t vertexCount;
         unsigned long* indices;
         size_t indexCount;
 
-        if(mManualObject->isAttached()) {
+        if(mEntity->isAttached()) {
             // If the object is attached to a scene node, use its transformation
-            OgreBites::OgreRay::GetMeshInformation(mManualObject, vertexCount, vertices, indexCount, indices,
-                                                   mManualObject->getParentNode()->_getDerivedPosition(),
-                                                   mManualObject->getParentNode()->_getDerivedOrientation(),
-                                                   mManualObject->getParentNode()->_getDerivedScale());
+            OgreBites::OgreRay::GetMeshInformation(mEntity, vertexCount, vertices, indexCount, indices,
+                                                   mEntity->getParentNode()->_getDerivedPosition(),
+                                                   mEntity->getParentNode()->_getDerivedOrientation(),
+                                                   mEntity->getParentNode()->_getDerivedScale());
         }
         else {
             // If the object is not attached, use the stored transformation parameters
-            OgreBites::OgreRay::GetMeshInformation(mManualObject, vertexCount, vertices, indexCount, indices,
+            OgreBites::OgreRay::GetMeshInformation(mEntity, vertexCount, vertices, indexCount, indices,
                                                    cvToOgre(mCurrentTranslation),
                                                    cvToOgre(mCurrentRotation),
                                                    cvToOgre(mCurrentScale));

@@ -43,7 +43,7 @@ void Query::exec(SceneObjectManager* sceneObjMgr, const DatasetManager::LabelMap
 
     // Cut, meshify and register selected objects with manager
     for(auto&& obj : objects) {
-        if(!obj->hasManualObject()) {
+        if(!obj->hasEntity()) {
             Scene scene = sceneObjMgr->getScene(obj->getSceneIdx());
             sceneObjMgr->cutObject(obj);
             obj->meshify(scene.getDepthImg(), scene.getRgbImg(), sceneObjMgr->getRGBDScene(obj->getSceneIdx())->getCameraManager());

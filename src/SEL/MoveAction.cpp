@@ -140,11 +140,6 @@ void MoveAction::exec(SceneObjectManager* sceneObjMgr, const DatasetManager::Lab
     else {
         // Do the simple translation
         for(auto&& obj : selectedObjects) {
-            if(!obj->hasManualObject()) {
-                sceneObjMgr->cutObject(obj);
-                obj->meshify(currentScene.getDepthImg(), currentScene.getRgbImg(), rgbdScene->cameraManager());
-            }
-
             obj->translate(ogreToCv(mTranslation));
         }
     }

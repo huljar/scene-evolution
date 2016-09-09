@@ -28,15 +28,7 @@ void RotateAction::exec(SceneObjectManager* sceneObjMgr, const DatasetManager::L
                         std::vector<std::shared_ptr<SceneObject>>& selectedObjects) const {
     (void)labels;
 
-    Scene currentScene = sceneObjMgr->getScene();
-    RGBDScene* rgbdScene = sceneObjMgr->getRGBDScene();
-
     for(auto&& obj : selectedObjects) {
-        if(!obj->hasManualObject()) {
-            sceneObjMgr->cutObject(obj);
-            obj->meshify(currentScene.getDepthImg(), currentScene.getRgbImg(), rgbdScene->cameraManager());
-        }
-
         obj->rotate(ogreToCv(mAngles));
     }
 }

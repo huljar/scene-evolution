@@ -43,6 +43,7 @@ loc.step();
 (?i:move\ by)       return SEL::Parser::make_MOVEBY(loc);
 (?i:rotate\ by)     return SEL::Parser::make_ROTBY(loc);
 (?i:remove)         return SEL::Parser::make_REMOVE(loc);
+(?i:copy\ at)       return SEL::Parser::make_COPYAT(loc);
 (?i:or)             return SEL::Parser::make_OR(loc);
 (?i:and)            return SEL::Parser::make_AND(loc);
 (?i:not)            return SEL::Parser::make_NOT(loc);

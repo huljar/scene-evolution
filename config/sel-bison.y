@@ -34,6 +34,7 @@ namespace SEL {
 #include <SEL/MoveAction.h>
 #include <SEL/RemoveAction.h>
 #include <SEL/RotateAction.h>
+#include <SEL/CopyAction.h>
 }
 
 %param {SEL::Driver& driver}            // Add the parsing context as parameter to yylex/yyparse
@@ -70,6 +71,7 @@ namespace SEL {
     MOVETO  "move to"
     MOVEBY  "move by"
     ROTBY   "rotate by"
+    COPYAT  "copy at"
     REMOVE  "remove"
     OR      "or"
     AND     "and"
@@ -121,6 +123,7 @@ namespace SEL {
 %type <SEL::MoveAction*> move_action
 %type <SEL::RemoveAction*> remove_action
 %type <SEL::RotateAction*> rotate_action
+%type <SEL::CopyAction*> copy_action
 %type <Ogre::Vector3> vector
 
 // Destructors are also called on stack reduce even though the documentation says this is
@@ -231,7 +234,8 @@ action_list:
 action:
     move_action { $$ = $1; }
   | remove_action { $$ = $1; }
-  | rotate_action { $$ = $1; };
+  | rotate_action { $$ = $1; }
+  | copy_action { $$ = $1; };
 
 move_action:
     "move to" object { $$ = new SEL::MoveAction($2, nullptr); }
@@ -243,6 +247,10 @@ remove_action:
 
 rotate_action:
     "rotate by" vector { $$ = new SEL::RotateAction($2); };
+
+copy_action:
+    "copy at" object { $$ = new SEL::CopyAction($2, nullptr); }
+  | "copy at" object "where" search_condition { $$ = new SEL::CopyAction($2, $4); };
 
 vector:
     "(" numeric_value "," numeric_value "," numeric_value ")" { $$ = Ogre::Vector3($2->getValue().toFloat(), $4->getValue().toFloat(), $6->getValue().toFloat()); };

@@ -6,6 +6,7 @@
 
 #include <opencv2/core/core.hpp>
 #include <OGRE/OgreAxisAlignedBox.h>
+#include <OGRE/OgreEntity.h>
 #include <OGRE/OgreManualObject.h>
 #include <OGRE/OgreSceneManager.h>
 #include <QString>
@@ -32,8 +33,8 @@ namespace SEL {
 
         QString getName() const;
 
-        bool hasManualObject() const;
-        Ogre::ManualObject* getManualObject() const;
+        bool hasEntity() const;
+        Ogre::Entity* getEntity() const;
 
         cv::Mat_<unsigned char> getOriginalPixels() const;
         cv::Mat_<cv::Vec3f> getOriginalPixels3D(const cv::Mat& depthImg, const CameraManager& camMgr);
@@ -81,7 +82,8 @@ namespace SEL {
         bool mVisible;
         unsigned int mSceneIdx;
 
-        Ogre::ManualObject* mManualObject;
+        Ogre::Entity* mEntity;
+        Ogre::MeshPtr mMesh;
         Ogre::SceneManager* mSceneMgr;
 
         KDTree mKDTree;
@@ -92,8 +94,8 @@ namespace SEL {
     private:
         typedef std::map<cv::Point, Ogre::uint32, bool(*)(const cv::Point&, const cv::Point&)> IndexMap;
 
-        IndexMap createVertices(const cv::Mat& depthImg, const cv::Mat& rgbImg, const CameraManager& camMgr, cv::Vec3f* centroid = nullptr);
-        void createIndices(const IndexMap& idxMap);
+        IndexMap createVertices(Ogre::ManualObject* manObj, const cv::Mat& depthImg, const cv::Mat& rgbImg, const CameraManager& camMgr, cv::Vec3f* centroid = nullptr);
+        void createIndices(Ogre::ManualObject* manObj, const IndexMap& idxMap);
 
         bool has3DPixels() const;
         void create3DPixels(const cv::Mat& depthImg, const CameraManager& camMgr);

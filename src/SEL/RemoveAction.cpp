@@ -21,12 +21,10 @@ RemoveAction::~RemoveAction() {
 
 void RemoveAction::exec(SceneObjectManager* sceneObjMgr, const DatasetManager::LabelMap& labels,
                         std::vector<std::shared_ptr<SceneObject>>& selectedObjects) const {
+    (void)sceneObjMgr;
     (void)labels;
 
     for(auto&& obj : selectedObjects) {
-        if(!obj->hasManualObject())
-            sceneObjMgr->cutObject(obj);
-
         obj->setVisible(false);
     }
 }

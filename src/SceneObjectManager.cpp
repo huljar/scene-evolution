@@ -62,7 +62,7 @@ bool SceneObjectManager::registerObject(const SceneObjPtr& obj) {
 
     // Attach object if visible
     if(obj->getVisible())
-        node->attachObject(obj->getManualObject());
+        node->attachObject(obj->getEntity());
 
     return true;
 }
@@ -115,7 +115,7 @@ void SceneObjectManager::updateObjects() {
         pair.second->setOrientation(getQuaternion(pair.first->getCurrentRotation()));
 
         // Update visibility
-        Ogre::ManualObject* obj = pair.first->getManualObject();
+        Ogre::Entity* obj = pair.first->getEntity();
         if(pair.first->getVisible() && !obj->isAttached())
             pair.second->attachObject(obj);
         else if(!pair.first->getVisible() && obj->isAttached())
@@ -238,7 +238,7 @@ void SceneObjectManager::onSceneChanged(SceneChangedEventArgs& e) {
     if(sceneInfo != mSceneInfoMap.end()) {
         for(auto&& pair : mSceneObjectsMap) {
             for(auto&& obj : pair.second) {
-                obj.second->detachObject(obj.first->getManualObject());
+                obj.second->detachObject(obj.first->getEntity());
             }
         }
     }
