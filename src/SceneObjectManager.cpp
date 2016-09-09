@@ -47,16 +47,12 @@ bool SceneObjectManager::preregisterScene(const SceneChangedEventArgs& sceneInfo
 }
 
 bool SceneObjectManager::registerObject(const SceneObjPtr& obj) {
-    return registerObject(obj, mCurrentSceneIdx);
-}
+    std::cout << "Registering object: " << obj->getName().toStdString() << " (idx: " << obj->getSceneIdx() << ')' << std::endl;
 
-bool SceneObjectManager::registerObject(const SceneObjPtr& obj, unsigned int sceneIdx) {
-    std::cout << "Registering object: " << obj->getName().toStdString() << std::endl;
-
-    // Check if the object has a mesh or if the object is already registered
-    ObjVec& vec = mSceneObjectsMap[sceneIdx];
-    if(!obj->hasManualObject() || findObject(obj, sceneIdx) != vec.end()) {
-        std::cerr << "Object " << obj->getName().toStdString() << " has no manual object or it is already registered." << std::endl;
+    // Check if the object is already registered
+    ObjVec& vec = mSceneObjectsMap[obj->getSceneIdx()];
+    if(findObject(obj, vec) != vec.end()) {
+        std::cerr << "Object " << obj->getName().toStdString() << " is already registered" << std::endl;
         return false;
     }
 
@@ -71,23 +67,41 @@ bool SceneObjectManager::registerObject(const SceneObjPtr& obj, unsigned int sce
     return true;
 }
 
-void SceneObjectManager::cutObject(const SceneObjPtr& obj) {
-    cutObject(obj, mCurrentSceneIdx);
+bool SceneObjectManager::updateObjectScene(const SceneObjPtr& obj, unsigned int oldSceneIdx) {
+    std::cout << "Updating object: " << obj->getName().toStdString() << " (old idx: " << oldSceneIdx << ", new idx: " << obj->getSceneIdx() << ')' << std::endl;
+
+    ObjVec& oldVec = mSceneObjectsMap[oldSceneIdx];
+    ObjVec::const_iterator objPos = findObject(obj, oldVec);
+    if(objPos == oldVec.cend()) {
+        std::cerr << "Object " << obj->getName().toStdString() << " does not exist in scene " << oldSceneIdx << std::endl;
+        return false;
+    }
+
+    if(oldSceneIdx == obj->getSceneIdx())
+        return true;
+
+    ObjVec& newVec = mSceneObjectsMap[obj->getSceneIdx()];
+    if(findObject(obj, newVec) != newVec.cend()) {
+        std::cerr << "Object " << obj->getName().toStdString() << " already exists in the target scene (" << obj->getSceneIdx() << "), this should never happen" << std::endl;
+        return false;
+    }
+
+    // Move object and scene node to new vector
+    newVec.push_back(*objPos);
+    oldVec.erase(objPos);
+
+    return true;
 }
 
-void SceneObjectManager::cutObject(const SceneObjPtr& obj, unsigned int sceneIdx) {
+void SceneObjectManager::cutObject(const SceneObjPtr& obj) {
     // Create mask from object outline
-    addToMask(obj->getOriginalPixels(), sceneIdx);
+    addToMask(obj->getOriginalPixels(), obj->getSceneIdx());
 }
 
 void SceneObjectManager::cutObjects(const std::vector<SceneObjPtr>& objs) {
-    cutObjects(objs, mCurrentSceneIdx);
-}
-
-void SceneObjectManager::cutObjects(const std::vector<SceneObjPtr>& objs, unsigned int sceneIdx) {
     // Build mask from all objects
     for(std::vector<SceneObjPtr>::const_iterator it = objs.begin(); it != objs.end(); ++it) {
-        cutObject(*it, sceneIdx);
+        cutObject(*it);
     }
 }
 
@@ -123,11 +137,7 @@ void SceneObjectManager::updateObjects() {
 }
 
 bool SceneObjectManager::checkObjectInScene(const SEL::SceneObject& obj) const {
-    return checkObjectInScene(obj, mCurrentSceneIdx);
-}
-
-bool SceneObjectManager::checkObjectInScene(const SEL::SceneObject& obj, unsigned int sceneIdx) const {
-    SceneInfoMap::const_iterator sceneInfo = mSceneInfoMap.find(sceneIdx);
+    SceneInfoMap::const_iterator sceneInfo = mSceneInfoMap.find(obj.getSceneIdx());
     if(sceneInfo == mSceneInfoMap.cend())
         return false;
 
@@ -265,6 +275,10 @@ void SceneObjectManager::onSceneChanged(SceneChangedEventArgs& e) {
     updateObjects();
 }
 
+unsigned int SceneObjectManager::getCurrentSceneIdx() const {
+    return mCurrentSceneIdx;
+}
+
 void SceneObjectManager::addToMask(const cv::Mat1b& mask) {
     addToMask(mask, mCurrentSceneIdx);
 }
@@ -290,13 +304,8 @@ void SceneObjectManager::addToMask(const cv::Mat1b& mask, unsigned int sceneIdx)
     std::get<4>(sceneInfo->second) = true;
 }
 
-SceneObjectManager::ObjVec::iterator SceneObjectManager::findObject(const SceneObjPtr& obj) {
-    return findObject(obj, mCurrentSceneIdx);
-}
-
-SceneObjectManager::ObjVec::iterator SceneObjectManager::findObject(const SceneObjPtr& obj, unsigned int sceneIdx) {
-    ObjVec& vec = mSceneObjectsMap[sceneIdx];
-    for(ObjVec::iterator it = vec.begin(); it != vec.end(); ++it) {
+SceneObjectManager::ObjVec::const_iterator SceneObjectManager::findObject(const SceneObjPtr& obj, const ObjVec& vec) {
+    for(ObjVec::const_iterator it = vec.begin(); it != vec.end(); ++it) {
         if(obj == it->first) return it;
     }
     return vec.end();

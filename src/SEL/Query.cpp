@@ -37,23 +37,28 @@ void Query::exec(SceneObjectManager* sceneObjMgr, const DatasetManager::LabelMap
     std::vector<std::shared_ptr<SceneObject>> objects = mSelectStmt->getSceneObjects(sceneObjMgr, labels);
 
     std::cout << "Objects contains " << objects.size() << " elements:" << std::endl;
-    for(std::vector<std::shared_ptr<SceneObject>>::iterator it = objects.begin(); it != objects.end(); ++it) {
-        std::cout << "  " << (*it)->getName().toStdString() << std::endl;
+    for(auto&& obj : objects) {
+        std::cout << "  " << obj->getName().toStdString() << std::endl;
+    }
+
+    // Cut, meshify and register selected objects with manager
+    for(auto&& obj : objects) {
+        if(!obj->hasManualObject()) {
+            Scene scene = sceneObjMgr->getScene(obj->getSceneIdx());
+            sceneObjMgr->cutObject(obj);
+            obj->meshify(scene.getDepthImg(), scene.getRgbImg(), sceneObjMgr->getRGBDScene(obj->getSceneIdx())->getCameraManager());
+            sceneObjMgr->registerObject(obj);
+        }
     }
 
     std::cout << "Executing actions" << std::endl;
 
-    for(std::list<Action*>::const_iterator it = mActionList.begin(); it != mActionList.end(); ++it) {
-        (*it)->exec(sceneObjMgr, labels, objects);
-    }
+    for(auto&& action : mActionList)
+        action->exec(sceneObjMgr, labels, objects);
 
-    std::cout << "Selected objects contains:" << std::endl;
-    for(std::vector<std::shared_ptr<SceneObject>>::iterator it = objects.begin(); it != objects.end(); ++it)
-        std::cout << "    " << (*it)->getName().toStdString() << ": Translation " << (*it)->getCurrentTranslation() << std::endl;
-
-    // Register selected objects with manager (only non-attached, meshified objects will be registered)
-    for(std::vector<std::shared_ptr<SceneObject>>::iterator it = objects.begin(); it != objects.end(); ++it)
-        sceneObjMgr->registerObject(*it); // TODO: let actions attach the appropriate objects themselves?
+    std::cout << "Selected objects contains: (" << objects.size() << " element" << (objects.size() == 1 ? "" : "s") << ')' << std::endl;
+    for(auto&& obj : objects)
+        std::cout << "    " << obj->getName().toStdString() << ": Translation " << obj->getCurrentTranslation() << std::endl;
 
     sceneObjMgr->updateObjects();
 }

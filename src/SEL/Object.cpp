@@ -41,12 +41,13 @@ std::vector<std::shared_ptr<SceneObject>> Object::getSceneObjects(const SearchCo
                                                                   const DatasetManager::LabelMap& labels, bool applyQualifiers) const {
     // Get all objects matching the specified names
     std::vector<std::shared_ptr<SceneObject>> ret;
-    RGBDScene* rgbdScene = (sceneIdx >= 0 ? sceneObjMgr->getRGBDScene(static_cast<unsigned int>(sceneIdx)) : sceneObjMgr->getRGBDScene());
+    unsigned int actualSceneIdx = (sceneIdx >= 0 ? static_cast<unsigned int>(sceneIdx) : sceneObjMgr->getCurrentSceneIdx());
+    RGBDScene* rgbdScene = sceneObjMgr->getRGBDScene(actualSceneIdx);
 
     DatasetManager::LabelMap::const_iterator label = labels.find(mObjName);
     if(label != labels.cend()) {
         // Get all pixels covered by this label
-        cv::Mat labelImg = (sceneIdx >= 0 ? sceneObjMgr->getScene(static_cast<unsigned int>(sceneIdx)) : sceneObjMgr->getScene()).getLabelImg();
+        cv::Mat labelImg = sceneObjMgr->getScene(actualSceneIdx).getLabelImg();
         RegionMap regionMap(
             [](const cv::Point& lhs, const cv::Point& rhs) -> bool {
                 return lhs.y == rhs.y ? lhs.x < rhs.x : lhs.y < rhs.y;
@@ -58,18 +59,17 @@ std::vector<std::shared_ptr<SceneObject>> Object::getSceneObjects(const SearchCo
         }
 
         // Perform region growing to separate objects of same type
-        ret = doRegionGrowing(labelImg, regionMap, rgbdScene->getSceneMgr());
+        ret = doRegionGrowing(labelImg, regionMap, rgbdScene->getSceneMgr(), actualSceneIdx);
 
         // Remove objects that are not in the scene any more or for which the search condition doesn't hold
         std::vector<std::shared_ptr<SceneObject>>::iterator retNewEnd = std::remove_if(ret.begin(), ret.end(), [&](const std::shared_ptr<SceneObject>& obj) -> bool {
-            return !(sceneIdx >= 0 ? sceneObjMgr->checkObjectInScene(*obj, static_cast<unsigned int>(sceneIdx)) : sceneObjMgr->checkObjectInScene(*obj)) ||
-                   !searchCond.eval(sceneObjMgr, sceneIdx, *obj, labels);
+            return !sceneObjMgr->checkObjectInScene(*obj) || !searchCond.eval(sceneObjMgr, sceneIdx, *obj, labels);
         });
         ret.erase(retNewEnd, ret.end());
 
         // Add objects which have been moved before
         // Check name and search condition for them as well
-        SceneObjectManager::ObjVec regObjects = sceneObjMgr->getRegisteredObjects();
+        SceneObjectManager::ObjVec regObjects = sceneObjMgr->getRegisteredObjects(actualSceneIdx);
         SceneObjectManager::ObjVec::iterator regObjectsNewEnd = std::remove_if(regObjects.begin(), regObjects.end(),
             [&](const std::pair<SceneObjectManager::SceneObjPtr, Ogre::SceneNode*>& obj) -> bool {
                 return obj.first->getName() != mObjName || !searchCond.eval(sceneObjMgr, sceneIdx, *obj.first, labels);
@@ -102,7 +102,7 @@ std::vector<std::shared_ptr<SceneObject>> Object::getSceneObjects(SceneObjectMan
     return getSceneObjects(tmpCond, sceneObjMgr, sceneIdx, labels, applyQualifiers);
 }
 
-std::vector<std::shared_ptr<SceneObject>> Object::doRegionGrowing(const cv::Mat& labelImg, RegionMap& points, Ogre::SceneManager* sceneMgr) const {
+std::vector<std::shared_ptr<SceneObject>> Object::doRegionGrowing(const cv::Mat& labelImg, RegionMap& points, Ogre::SceneManager* sceneMgr, unsigned int sceneIdx) const {
     std::vector<std::shared_ptr<SceneObject>> ret;
 
     int currentId = 0;
@@ -118,7 +118,7 @@ std::vector<std::shared_ptr<SceneObject>> Object::doRegionGrowing(const cv::Mat&
         queue.push(it);
 
         // Create new object
-        ret.emplace_back(new SceneObject(mObjName, labelImg.size(), sceneMgr));
+        ret.push_back(std::make_shared<SceneObject>(mObjName, sceneIdx, labelImg.size(), sceneMgr));
 
         // Iterate until the whole region is marked
         while(!queue.empty()) {

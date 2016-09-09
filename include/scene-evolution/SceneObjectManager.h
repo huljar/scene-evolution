@@ -39,17 +39,14 @@ public:
     bool preregisterScene(const SceneChangedEventArgs& sceneInfo);
 
     bool registerObject(const SceneObjPtr& obj);
-    bool registerObject(const SceneObjPtr& obj, unsigned int sceneIdx);
+    bool updateObjectScene(const SceneObjPtr& obj, unsigned int oldSceneIdx);
 
     void cutObject(const SceneObjPtr& obj);
-    void cutObject(const SceneObjPtr& obj, unsigned int sceneIdx);
     void cutObjects(const std::vector<SceneObjPtr>& objs);
-    void cutObjects(const std::vector<SceneObjPtr>& objs, unsigned int sceneIdx);
 
     void updateObjects();
 
     bool checkObjectInScene(const SEL::SceneObject& obj) const;
-    bool checkObjectInScene(const SEL::SceneObject& obj, unsigned int sceneIdx) const;
 
     Scene getScene() const;
     Scene getScene(unsigned int sceneIdx) const;
@@ -63,6 +60,8 @@ public:
 
     bool getShowBoundingBoxes() const;
     void setShowBoundingBoxes(bool showBoundingBoxes);
+
+    unsigned int getCurrentSceneIdx() const;
 
 public slots:
     void onDatasetChangingConfirmed(DatasetChangingConfirmedEventArgs& e);
@@ -82,8 +81,7 @@ private:
     void addToMask(const cv::Mat1b& mask);
     void addToMask(const cv::Mat1b& mask, unsigned int sceneIdx);
 
-    ObjVec::iterator findObject(const SceneObjPtr& obj);
-    ObjVec::iterator findObject(const SceneObjPtr& obj, unsigned int sceneIdx);
+    SceneObjectManager::ObjVec::const_iterator findObject(const SceneObjPtr& obj, const ObjVec& vec);
 
     inline Ogre::Quaternion getQuaternion(const cv::Matx33f rotMat) const {
         return Ogre::Quaternion(interop::cvToOgre(rotMat));

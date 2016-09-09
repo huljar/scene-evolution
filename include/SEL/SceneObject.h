@@ -17,7 +17,7 @@ namespace SEL {
         typedef std::pair<Ogre::Vector3, float> Neighbor;
 
         SceneObject();
-        SceneObject(const QString& objName, const cv::Size& imgSize, Ogre::SceneManager* sceneMgr);
+        SceneObject(const QString& objName, unsigned int sceneIdx, const cv::Size& imgSize, Ogre::SceneManager* sceneMgr);
         virtual ~SceneObject();
 
         SceneObject(SceneObject&& other);
@@ -66,6 +66,9 @@ namespace SEL {
         bool getVisible() const;
         void setVisible(bool visible);
 
+        unsigned int getSceneIdx() const;
+        void setSceneIdx(unsigned int sceneIdx);
+
     protected:
         QString mObjName;
         cv::Mat_<unsigned char> mPixels;
@@ -76,6 +79,7 @@ namespace SEL {
         cv::Vec3f mCurrentScale;
 
         bool mVisible;
+        unsigned int mSceneIdx;
 
         Ogre::ManualObject* mManualObject;
         Ogre::SceneManager* mSceneMgr;

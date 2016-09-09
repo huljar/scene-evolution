@@ -49,7 +49,6 @@ MoveAction::~MoveAction() {
 
 void MoveAction::exec(SceneObjectManager* sceneObjMgr, const DatasetManager::LabelMap& labels,
                       std::vector<std::shared_ptr<SceneObject>>& selectedObjects) const {
-    // TODO: when moving across scenes, tell the scene object manager
     Scene currentScene = sceneObjMgr->getScene();
     RGBDScene* rgbdScene = sceneObjMgr->getRGBDScene();
 
@@ -113,14 +112,6 @@ void MoveAction::exec(SceneObjectManager* sceneObjMgr, const DatasetManager::Lab
             return;
         }
 
-        // Cut and meshify the objects if necessary
-        for(auto&& obj : selectedObjects) {
-            if(!obj->hasManualObject()) {
-                sceneObjMgr->cutObject(obj);
-                obj->meshify(currentScene.getDepthImg(), currentScene.getRgbImg(), rgbdScene->cameraManager());
-            }
-        }
-
         // Execute move action for each selected object
         for(auto&& obj : selectedObjects) {
             // Select a random valid position
@@ -139,6 +130,11 @@ void MoveAction::exec(SceneObjectManager* sceneObjMgr, const DatasetManager::Lab
 
             // Set this translation on the object
             obj->setCurrentTranslation(ogreToCv(targetPosition));
+
+            // Update scene index of object and inform scene object manager
+            unsigned int oldIdx = obj->getSceneIdx();
+            obj->setSceneIdx(sceneObjMgr->getCurrentSceneIdx());
+            sceneObjMgr->updateObjectScene(obj, oldIdx);
         }
     }
     else {

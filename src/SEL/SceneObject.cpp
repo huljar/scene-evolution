@@ -15,6 +15,7 @@ SceneObject::SceneObject()
     , mCurrentRotation(cv::Matx33f::eye())
     , mCurrentScale(1.f, 1.f, 1.f)
     , mVisible(true)
+    , mSceneIdx(0)
     , mManualObject(nullptr)
     , mSceneMgr(nullptr)
     , mKDTreeUpdated(false)
@@ -22,13 +23,14 @@ SceneObject::SceneObject()
 {
 }
 
-SceneObject::SceneObject(const QString& objName, const cv::Size& imgSize, Ogre::SceneManager* sceneMgr)
+SceneObject::SceneObject(const QString& objName, unsigned int sceneIdx, const cv::Size& imgSize, Ogre::SceneManager* sceneMgr)
     : mObjName(objName)
     , mPixels(cv::Mat_<unsigned char>::zeros(imgSize))
     , mCurrentTranslation(0.f, 0.f, 0.)
     , mCurrentRotation(cv::Matx33f::eye())
     , mCurrentScale(1.f, 1.f, 1.f)
     , mVisible(true)
+    , mSceneIdx(sceneIdx)
     , mManualObject(nullptr)
     , mSceneMgr(sceneMgr)
     , mKDTreeUpdated(false)
@@ -277,6 +279,14 @@ bool SceneObject::getVisible() const {
 
 void SceneObject::setVisible(bool visible) {
     mVisible = visible;
+}
+
+unsigned int SceneObject::getSceneIdx() const {
+    return mSceneIdx;
+}
+
+void SceneObject::setSceneIdx(unsigned int sceneIdx) {
+    mSceneIdx = sceneIdx;
 }
 
 SceneObject::IndexMap SceneObject::createVertices(const cv::Mat& depthImg, const cv::Mat& rgbImg, const CameraManager& camMgr, cv::Vec3f* centroid) {

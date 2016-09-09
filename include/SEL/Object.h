@@ -37,7 +37,7 @@ namespace SEL {
     protected:
         typedef std::map<cv::Point, int, bool(*)(const cv::Point&, const cv::Point&)> RegionMap; // need std::map to define comparison
 
-        std::vector<std::shared_ptr<SceneObject>> doRegionGrowing(const cv::Mat& labelImg, RegionMap& points, Ogre::SceneManager* sceneMgr) const;
+        std::vector<std::shared_ptr<SceneObject>> doRegionGrowing(const cv::Mat& labelImg, RegionMap& points, Ogre::SceneManager* sceneMgr, unsigned int sceneIdx) const;
 
         virtual bool applyQualifier(const Qualifier& qual, std::vector<std::shared_ptr<SceneObject>>& objList) const;
 
