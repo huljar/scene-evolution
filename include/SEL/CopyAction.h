@@ -5,6 +5,8 @@
 #include <SEL/Object.h>
 #include <SEL/SearchCondition.h>
 
+#include <random>
+
 namespace SEL {
     class CopyAction : public Action
     {
@@ -24,6 +26,8 @@ namespace SEL {
 
         Object* mObj;
         SearchCondition* mSearchCond;
+
+        static std::default_random_engine msRandomEngine;
     };
 }
 

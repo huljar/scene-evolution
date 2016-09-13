@@ -133,8 +133,10 @@ void MoveAction::exec(SceneObjectManager* sceneObjMgr, const DatasetManager::Lab
 
             // Update scene index of object and inform scene object manager
             unsigned int oldIdx = obj->getSceneIdx();
-            obj->setSceneIdx(sceneObjMgr->getCurrentSceneIdx());
-            sceneObjMgr->updateObjectScene(obj, oldIdx);
+            if(oldIdx != sceneObjMgr->getCurrentSceneIdx()) {
+                obj->setSceneIdx(sceneObjMgr->getCurrentSceneIdx());
+                sceneObjMgr->updateObjectScene(obj, oldIdx);
+            }
         }
     }
     else {

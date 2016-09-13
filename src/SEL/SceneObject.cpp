@@ -46,6 +46,46 @@ SceneObject::~SceneObject() {
     }
 }
 
+SceneObject::SceneObject(const SceneObject& other)
+    : mObjName(other.mObjName)
+    , mPixels(other.mPixels.clone())
+    , m3DPixels(other.m3DPixels.clone())
+    , mCurrentTranslation(other.mCurrentTranslation)
+    , mCurrentRotation(other.mCurrentRotation)
+    , mCurrentScale(other.mCurrentScale)
+    , mVisible(other.mVisible)
+    , mSceneIdx(other.mSceneIdx)
+    , mEntity(other.mEntity->clone(mObjName.toStdString() + std::to_string(NameProvider::nextID(mObjName))))
+    , mMesh(other.mMesh)
+    , mSceneMgr(other.mSceneMgr)
+    , mKDTreeUpdated(false)
+    , mKDTreeVertexListUpdated(false)
+{
+}
+
+SceneObject& SceneObject::operator=(const SceneObject& other) {
+    if(mSceneMgr && mEntity) {
+        mEntity->detachFromParent();
+        mSceneMgr->destroyEntity(mEntity);
+    }
+
+    mObjName = other.mObjName;
+    mPixels = other.mPixels.clone();
+    m3DPixels = other.m3DPixels.clone();
+    mCurrentTranslation = other.mCurrentTranslation;
+    mCurrentRotation = other.mCurrentRotation;
+    mCurrentScale = other.mCurrentScale;
+    mVisible = other.mVisible;
+    mSceneIdx = other.mSceneIdx;
+    mEntity = other.mEntity->clone(mObjName.toStdString() + std::to_string(NameProvider::nextID(mObjName)));
+    mMesh = other.mMesh;
+    mSceneMgr = other.mSceneMgr;
+    mKDTreeUpdated = false;
+    mKDTreeVertexListUpdated = false;
+
+    return *this;
+}
+
 SceneObject::SceneObject(SceneObject&& other)
     : mObjName(std::move(other.mObjName))
     , mPixels(std::move(other.mPixels))
@@ -54,13 +94,12 @@ SceneObject::SceneObject(SceneObject&& other)
     , mCurrentRotation(std::move(other.mCurrentRotation))
     , mCurrentScale(std::move(other.mCurrentScale))
     , mVisible(other.mVisible)
+    , mSceneIdx(other.mSceneIdx)
     , mEntity(other.mEntity)
     , mMesh(std::move(other.mMesh))
     , mSceneMgr(other.mSceneMgr)
-    , mKDTree(std::move(other.mKDTree))
-    , mKDTreeUpdated(other.mKDTreeUpdated)
-    , mKDTreeVertexList(std::move(other.mKDTreeVertexList))
-    , mKDTreeVertexListUpdated(other.mKDTreeVertexListUpdated)
+    , mKDTreeUpdated(false)
+    , mKDTreeVertexListUpdated(false)
 {
     other.mEntity = nullptr;
     other.mSceneMgr = nullptr;
@@ -79,18 +118,21 @@ SceneObject& SceneObject::operator=(SceneObject&& other) {
     mCurrentRotation = std::move(other.mCurrentRotation);
     mCurrentScale = std::move(other.mCurrentScale);
     mVisible = other.mVisible;
+    mSceneIdx = other.mSceneIdx;
     mEntity = other.mEntity;
     mMesh = std::move(other.mMesh);
     mSceneMgr = other.mSceneMgr;
-    mKDTree = std::move(other.mKDTree);
-    mKDTreeUpdated = other.mKDTreeUpdated;
-    mKDTreeVertexList = std::move(other.mKDTreeVertexList);
-    mKDTreeVertexListUpdated = other.mKDTreeVertexListUpdated;
+    mKDTreeUpdated = false;
+    mKDTreeVertexListUpdated = false;
 
     other.mEntity = nullptr;
     other.mSceneMgr = nullptr;
 
     return *this;
+}
+
+SceneObject* SceneObject::clone() {
+    return new SceneObject(*this);
 }
 
 void SceneObject::addPoint(const cv::Point& point) {

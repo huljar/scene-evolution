@@ -21,8 +21,13 @@ namespace SEL {
         SceneObject(const QString& objName, unsigned int sceneIdx, const cv::Size& imgSize, Ogre::SceneManager* sceneMgr);
         virtual ~SceneObject();
 
+        SceneObject(const SceneObject& other);
+        SceneObject& operator=(const SceneObject& other);
+
         SceneObject(SceneObject&& other);
         SceneObject& operator=(SceneObject&& other);
+
+        SceneObject* clone();
 
         void addPoint(const cv::Point& point);
         void removePoint(const cv::Point& point);
