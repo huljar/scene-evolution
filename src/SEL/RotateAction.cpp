@@ -26,6 +26,7 @@ RotateAction::~RotateAction() {
 
 void RotateAction::exec(SceneObjectManager* sceneObjMgr, const DatasetManager::LabelMap& labels,
                         std::vector<std::shared_ptr<SceneObject>>& selectedObjects) const {
+    (void)sceneObjMgr;
     (void)labels;
 
     for(auto&& obj : selectedObjects) {

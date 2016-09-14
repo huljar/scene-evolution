@@ -103,31 +103,19 @@ void RGBDScene::meshify(const cv::Mat_<unsigned char>& mask, bool mergeWithOldMa
     mSceneObject->end();
 }
 
-bool RGBDScene::screenspaceCoords(Ogre::Vector2& resultTopLeft, Ogre::Vector2& resultBottomRight, const Ogre::Camera* camera) const {
+bool RGBDScene::screenspaceCoords(const Ogre::Camera* camera, Ogre::Vector2& resultTopLeft, Ogre::Vector2& resultBottomRight) const {
    if(!mSceneObject->isInScene())
       return false;
-
-   Ogre::Camera* tmpCam = nullptr;
 
    Ogre::Vector3 topLeft = cvToOgre(mCameraManager.getWorldForDepth(0, 0, Constants::WorkPlaneDepth));
    Ogre::Vector3 bottomRight = cvToOgre(mCameraManager.getWorldForDepth(mDepthImage.cols - 1, mDepthImage.rows - 1, Constants::WorkPlaneDepth));
 
-   if(!camera) {
-       tmpCam = mSceneMgr->createCamera("TemporaryCam");
-       tmpCam->setPosition(Constants::InitialCameraPosition);
-       tmpCam->lookAt(Constants::InitialCameraLookAt);
-       tmpCam->setNearClipDistance(Constants::CameraNearClipDistance);
-       tmpCam->setFOVy(Constants::CameraFOVy);
-   }
+   Ogre::Plane cameraPlane = Ogre::Plane(camera->getDerivedOrientation().zAxis(), camera->getDerivedPosition());
+   if(cameraPlane.getSide(topLeft) != Ogre::Plane::NEGATIVE_SIDE || cameraPlane.getSide(bottomRight) != Ogre::Plane::NEGATIVE_SIDE)
+      return false;
 
-   Ogre::Plane cameraPlane = Ogre::Plane((camera ? camera : tmpCam)->getDerivedOrientation().zAxis(), (camera ? camera : tmpCam)->getDerivedPosition());
-   if(cameraPlane.getSide(topLeft) != Ogre::Plane::NEGATIVE_SIDE || cameraPlane.getSide(bottomRight) != Ogre::Plane::NEGATIVE_SIDE) {
-       if(tmpCam) mSceneMgr->destroyCamera(tmpCam);
-       return false;
-   }
-
-   topLeft = (camera ? camera : tmpCam)->getProjectionMatrix() * (camera ? camera : tmpCam)->getViewMatrix() * topLeft;
-   bottomRight = (camera ? camera : tmpCam)->getProjectionMatrix() * (camera ? camera : tmpCam)->getViewMatrix() * bottomRight;
+   topLeft = camera->getProjectionMatrix() * camera->getViewMatrix() * topLeft;
+   bottomRight = camera->getProjectionMatrix() * camera->getViewMatrix() * bottomRight;
 
    // Transform from coordinate space [-1, 1] to screen space [0, 1]
    resultTopLeft.x = topLeft.x / 2.0 + 0.5;
@@ -135,7 +123,6 @@ bool RGBDScene::screenspaceCoords(Ogre::Vector2& resultTopLeft, Ogre::Vector2& r
    resultBottomRight.x = bottomRight.x / 2.0 + 0.5;
    resultBottomRight.y = 1 - (bottomRight.y / 2.0 + 0.5);
 
-   if(tmpCam) mSceneMgr->destroyCamera(tmpCam);
    return true;
 }
 

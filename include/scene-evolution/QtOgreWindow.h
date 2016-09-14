@@ -50,6 +50,7 @@ public:
     Ogre::Root* getOgreRoot() const;
     Ogre::SceneManager* getOgreSceneManager() const;
     Ogre::RenderWindow* getOgreRenderWindow() const;
+    Ogre::Camera* getOgreCamera() const;
 
 public slots:
 

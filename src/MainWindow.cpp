@@ -2,6 +2,8 @@
 #include "ui_MainWindow.h"
 #include <scene-evolution/util.h>
 
+#include <OGRE/OgreWindowEventUtilities.h>
+
 #include <QDir>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -283,7 +285,10 @@ void MainWindow::onCheckBoxDisplayLabelsStateChanged(int state) {
                                                        mSceneObjectManager->getRGBDScene(),
                                                        mDatasetManager->getLabelNames(),
                                                        static_cast<unsigned int>(std::max(1, ui->spinBoxMinLabelPx->value())),
-                                                       static_cast<unsigned int>(std::max(1, ui->horizontalSliderLabelFontSize->value() * 5)));
+                                                       static_cast<unsigned int>(std::max(1, ui->horizontalSliderLabelFontSize->value() * 5)),
+                                                       mOgreWindow->getOgreCamera(),
+                                                       mOgreWindow->getOgreRenderWindow()->getWidth(),
+                                                       mOgreWindow->getOgreRenderWindow()->getHeight());
         setUpLOMConnections();
 
         // "Emit" state change again so the label overlay manager sees it
@@ -299,7 +304,10 @@ void MainWindow::onCheckBoxDisplayLabelBordersStateChanged(int state) {
                                                        mSceneObjectManager->getRGBDScene(),
                                                        mDatasetManager->getLabelNames(),
                                                        static_cast<unsigned int>(std::max(1, ui->spinBoxMinLabelPx->value())),
-                                                       static_cast<unsigned int>(std::max(1, ui->horizontalSliderLabelFontSize->value() * 5)));
+                                                       static_cast<unsigned int>(std::max(1, ui->horizontalSliderLabelFontSize->value() * 5)),
+                                                       mOgreWindow->getOgreCamera(),
+                                                       mOgreWindow->getOgreRenderWindow()->getWidth(),
+                                                       mOgreWindow->getOgreRenderWindow()->getHeight());
         setUpLOMConnections();
 
         // "Emit" state change again so the label overlay manager sees it
@@ -531,6 +539,8 @@ void MainWindow::setUpLOMConnections() {
     });
 
     connect(ui->checkBoxDisplayLabelBorders, SIGNAL(stateChanged(int)), mLabelOverlayManager, SLOT(onCheckBoxDisplayLabelBordersStateChanged(int)));
+
+    Ogre::WindowEventUtilities::addWindowEventListener(mOgreWindow->getOgreRenderWindow(), mLabelOverlayManager);
 }
 
 QString MainWindow::buildWindowTitle() {

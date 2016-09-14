@@ -464,6 +464,10 @@ Ogre::RenderWindow* QTOgreWindow::getOgreRenderWindow() const {
     return mWindow;
 }
 
+Ogre::Camera* QTOgreWindow::getOgreCamera() const {
+    return mCamera;
+}
+
 bool QTOgreWindow::frameRenderingQueued(const Ogre::FrameEvent& evt)
 {
     mCameraMan->frameRenderingQueued(evt);

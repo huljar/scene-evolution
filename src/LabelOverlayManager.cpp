@@ -14,20 +14,35 @@
 #include <QPainter>
 
 LabelOverlayManager::LabelOverlayManager(const Scene& currentScene, unsigned int currentSceneIdx, RGBDScene* currentRGBDScene,
-                                         const QVector<QString>& labels, unsigned int minLabelPx, unsigned int fontSize)
+                                         const QVector<QString>& labels, unsigned int minLabelPx, unsigned int fontSize,
+                                         Ogre::Camera* ogreCamera, unsigned int windowWidth, unsigned int windowHeight)
     : mCurrentSceneIdx(currentSceneIdx)
     , mCurrentScene(currentScene)
     , mCurrentRGBDScene(currentRGBDScene)
+    , mCamera(ogreCamera)
     , mLabels(labels)
     , mLabelsEnabled(false)
     , mMinPx(minLabelPx)
     , mFontSize(fontSize)
     , mLabelBordersEnabled(false)
+    , mWindowWidth(windowWidth)
+    , mWindowHeight(windowHeight)
 {
 }
 
 LabelOverlayManager::~LabelOverlayManager() {
     // TODO: destroy everything in the maps
+}
+
+void LabelOverlayManager::windowResized(Ogre::RenderWindow* rw) {
+    mWindowWidth = rw->getWidth();
+    mWindowHeight = rw->getHeight();
+
+    if(mLabelsEnabled)
+        updateLabels(true);
+
+    if(mLabelBordersEnabled)
+        updateLabelBorders(true);
 }
 
 void LabelOverlayManager::onDatasetChangingConfirmed(DatasetChangingConfirmedEventArgs& e) {
@@ -110,7 +125,6 @@ void LabelOverlayManager::onHorizontalSliderLabelFontSizeValueChanged(int value)
 }
 
 void LabelOverlayManager::onCheckBoxDisplayLabelBordersStateChanged(int state) {
-    std::cout << "check box clicked" << std::endl;
     mLabelBordersEnabled = (state != Qt::Unchecked);
     if(mLabelBordersEnabled)
         updateLabelBorders();
@@ -124,7 +138,9 @@ void LabelOverlayManager::updateLabels(bool forceRecreate) {
     // Check if labels have to be created
     if(forceRecreate || !mSceneOverlayMap.contains(mCurrentSceneIdx)
                      || std::get<1>(mSceneOverlayMap[mCurrentSceneIdx]) != mMinPx
-                     || std::get<2>(mSceneOverlayMap[mCurrentSceneIdx]) != mFontSize) {
+                     || std::get<2>(mSceneOverlayMap[mCurrentSceneIdx]) != mFontSize
+                     || std::get<3>(mSceneOverlayMap[mCurrentSceneIdx]) != mWindowWidth
+                     || std::get<4>(mSceneOverlayMap[mCurrentSceneIdx]) != mWindowHeight) {
         // Destroy labels if outdated ones are already present
         if(mSceneOverlayMap.contains(mCurrentSceneIdx)) {
             Ogre::Overlay::Overlay2DElementsIterator overlayIt = std::get<0>(mSceneOverlayMap[mCurrentSceneIdx])->get2DElementsIterator();
@@ -140,8 +156,11 @@ void LabelOverlayManager::updateLabels(bool forceRecreate) {
 
         // Retrieve screen coordinates of the background scene
         Ogre::Vector2 sceneTopLeft, sceneBottomRight;
-        if(!mCurrentRGBDScene->screenspaceCoords(sceneTopLeft, sceneBottomRight))
-            return;
+        {
+            CameraLocker lock(mCamera);
+            if(!mCurrentRGBDScene->screenspaceCoords(mCamera, sceneTopLeft, sceneBottomRight))
+                return;
+        }
 
         // Create new labels
         std::string sceneName = mCurrentScene.getFileName().toStdString();
@@ -149,7 +168,8 @@ void LabelOverlayManager::updateLabels(bool forceRecreate) {
 
         Ogre::Overlay* overlay = overlayMgr.create(sceneName + "Overlay");
         overlay->setZOrder(Constants::OverlayLabelsZOrder);
-        mSceneOverlayMap.insert(mCurrentSceneIdx, std::make_tuple(overlay, mMinPx, mFontSize)); // If there is a destroyed overlay pointer left over, insert replaces it
+        // If there is a destroyed overlay pointer left over, insert replaces it
+        mSceneOverlayMap.insert(mCurrentSceneIdx, std::make_tuple(overlay, mMinPx, mFontSize, mWindowWidth, mWindowHeight));
 
         // Retrieve all regions to be labeled by performing region growing on the label image
         // Check if the maps have already been created, if not create them
@@ -231,11 +251,12 @@ void LabelOverlayManager::updateLabels(bool forceRecreate) {
 }
 
 void LabelOverlayManager::updateLabelBorders(bool forceRecreate) {
-    std::cout << "Updating label borders" << std::endl;
     Ogre::OverlayManager& overlayMgr = Ogre::OverlayManager::getSingleton();
 
     // Check if label borders have to be created
-    if(forceRecreate || !mSceneBorderMap.contains(mCurrentSceneIdx)) {
+    if(forceRecreate || !mSceneBorderMap.contains(mCurrentSceneIdx)
+                     || std::get<3>(mSceneBorderMap[mCurrentSceneIdx]) != mWindowWidth
+                     || std::get<4>(mSceneBorderMap[mCurrentSceneIdx]) != mWindowHeight) {
         // Destroy label borders if outdated ones are already present
         if(mSceneBorderMap.contains(mCurrentSceneIdx)) {
             Ogre::Overlay::Overlay2DElementsIterator overlayIt = std::get<0>(mSceneBorderMap[mCurrentSceneIdx])->get2DElementsIterator();
@@ -252,8 +273,11 @@ void LabelOverlayManager::updateLabelBorders(bool forceRecreate) {
 
         // Retrieve screen coordinates of the background scene
         Ogre::Vector2 sceneTopLeft, sceneBottomRight;
-        if(!mCurrentRGBDScene->screenspaceCoords(sceneTopLeft, sceneBottomRight))
-            return;
+        {
+            CameraLocker lock(mCamera);
+            if(!mCurrentRGBDScene->screenspaceCoords(mCamera, sceneTopLeft, sceneBottomRight))
+                return;
+        }
 
         // Create new label borders
         std::string sceneName = mCurrentScene.getFileName().toStdString();
@@ -279,7 +303,8 @@ void LabelOverlayManager::updateLabelBorders(bool forceRecreate) {
         pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
 
         // Insert into map
-        mSceneBorderMap.insert(mCurrentSceneIdx, std::make_tuple(overlay, material, texture)); // If there is a destroyed overlay pointer left over, insert replaces it
+        // If there is a destroyed overlay pointer left over, insert replaces it
+        mSceneBorderMap.insert(mCurrentSceneIdx, std::make_tuple(overlay, material, texture, mWindowWidth, mWindowHeight));
 
         // Create overlay panel, then attach it to the current scene's overlay
         Ogre::PanelOverlayElement* panel = static_cast<Ogre::PanelOverlayElement*>(overlayMgr.createOverlayElement(
@@ -416,4 +441,18 @@ LabelOverlayManager::ClusterMap LabelOverlayManager::doRegionGrowing(RegionMap& 
     }
 
     return ret;
+}
+
+LabelOverlayManager::CameraLocker::CameraLocker(Ogre::Camera* camera)
+    : mCamera(camera)
+    , mOrigPos(camera->getPosition())
+    , mOrigOrient(camera->getOrientation())
+{
+    mCamera->setPosition(Constants::InitialCameraPosition);
+    mCamera->lookAt(Constants::InitialCameraLookAt);
+}
+
+LabelOverlayManager::CameraLocker::~CameraLocker() {
+    mCamera->setPosition(mOrigPos);
+    mCamera->setOrientation(mOrigOrient);
 }
