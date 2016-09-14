@@ -291,6 +291,22 @@ void MainWindow::onCheckBoxDisplayLabelsStateChanged(int state) {
     }
 }
 
+void MainWindow::onCheckBoxDisplayLabelBordersStateChanged(int state) {
+    // Check if label overlay manager exists
+    if(!mLabelOverlayManager) {
+        mLabelOverlayManager = new LabelOverlayManager(mCurrentScene,
+                                                       mCurrentSceneIdx,
+                                                       mSceneObjectManager->getRGBDScene(),
+                                                       mDatasetManager->getLabelNames(),
+                                                       static_cast<unsigned int>(std::max(1, ui->spinBoxMinLabelPx->value())),
+                                                       static_cast<unsigned int>(std::max(1, ui->horizontalSliderLabelFontSize->value() * 5)));
+        setUpLOMConnections();
+
+        // "Emit" state change again so the label overlay manager sees it
+        mLabelOverlayManager->onCheckBoxDisplayLabelBordersStateChanged(state);
+    }
+}
+
 void MainWindow::onPushButtonStartNewBoxClicked(bool checked) {
     Q_UNUSED(checked);
 
@@ -436,6 +452,7 @@ void MainWindow::setUpConnections() {
     connect(ui->pushButtonGoToScene, SIGNAL(clicked(bool)), this, SLOT(onPushButtonGoToSceneClicked(bool)));
 
     connect(ui->checkBoxDisplayLabels, SIGNAL(stateChanged(int)), this, SLOT(onCheckBoxDisplayLabelsStateChanged(int)));
+    connect(ui->checkBoxDisplayLabelBorders, SIGNAL(stateChanged(int)), this, SLOT(onCheckBoxDisplayLabelBordersStateChanged(int)));
 
     connect(ui->pushButtonStartNewBox, SIGNAL(clicked(bool)), this, SLOT(onPushButtonStartNewBoxClicked(bool)));
     connect(ui->pushButtonFinalizeBox, SIGNAL(clicked(bool)), this, SLOT(onPushButtonFinalizeBoxClicked(bool)));
@@ -512,6 +529,8 @@ void MainWindow::setUpLOMConnections() {
     connect(ui->horizontalSliderLabelFontSize, static_cast<void(QSlider::*)(int)>(&QSlider::valueChanged), [this](int value) {
         mLabelOverlayManager->onHorizontalSliderLabelFontSizeValueChanged(value * 5);
     });
+
+    connect(ui->checkBoxDisplayLabelBorders, SIGNAL(stateChanged(int)), mLabelOverlayManager, SLOT(onCheckBoxDisplayLabelBordersStateChanged(int)));
 }
 
 QString MainWindow::buildWindowTitle() {

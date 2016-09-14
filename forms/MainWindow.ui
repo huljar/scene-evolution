@@ -262,6 +262,13 @@
                </item>
               </layout>
              </item>
+             <item>
+              <widget class="QCheckBox" name="checkBoxDisplayLabelBorders">
+               <property name="text">
+                <string>Display borders</string>
+               </property>
+              </widget>
+             </item>
             </layout>
            </widget>
           </item>

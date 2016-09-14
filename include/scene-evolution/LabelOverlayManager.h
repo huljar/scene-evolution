@@ -22,7 +22,8 @@ class LabelOverlayManager : public QObject
     Q_OBJECT
 
 public:
-    typedef QMap<unsigned int, std::tuple<Ogre::Overlay*, unsigned int, unsigned int>> SceneOverlayMap;
+    typedef QMap<unsigned int, std::tuple<Ogre::Overlay*, unsigned int, unsigned int>> SceneOverlayMap; // sceneIdx -> (overlay, minPx on creation, fontsize on creation)
+    typedef QMap<unsigned int, std::tuple<Ogre::Overlay*, Ogre::MaterialPtr, Ogre::TexturePtr>> SceneBorderMap; // sceneIdx -> (overlay, material, texture of material)
 
     typedef std::map<cv::Point, int, bool(*)(const cv::Point&, const cv::Point&)> RegionMap;
     typedef std::map<int, std::set<cv::Point, bool(*)(const cv::Point&, const cv::Point&)>> ClusterMap;
@@ -41,9 +42,13 @@ public slots:
     void onSpinBoxMinLabelPxValueChanged(int value);
     void onHorizontalSliderLabelFontSizeValueChanged(int value);
 
+    void onCheckBoxDisplayLabelBordersStateChanged(int state);
+
 private:
     void updateLabels(bool forceRecreate = false);
+    void updateLabelBorders(bool forceRecreate = false);
 
+    void createCurrentMaps();
     ClusterMap doRegionGrowing(RegionMap& points) const;
 
     unsigned int mCurrentSceneIdx;
@@ -53,11 +58,14 @@ private:
     QVector<QString> mLabels;
 
     SceneOverlayMap mSceneOverlayMap;
+    SceneBorderMap mSceneBorderMap;
     SceneMapsMap mSceneMapsMap;
 
     bool mLabelsEnabled;
     unsigned int mMinPx;
     unsigned int mFontSize;
+
+    bool mLabelBordersEnabled;
 };
 
 #endif // LABELOVERLAYMANAGER_H

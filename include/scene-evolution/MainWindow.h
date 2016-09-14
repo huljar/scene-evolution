@@ -48,6 +48,7 @@ public slots:
     void onPushButtonGoToSceneClicked(bool checked);
 
     void onCheckBoxDisplayLabelsStateChanged(int state);
+    void onCheckBoxDisplayLabelBordersStateChanged(int state);
 
     void onPushButtonStartNewBoxClicked(bool checked);
     void onPushButtonFinalizeBoxClicked(bool checked);

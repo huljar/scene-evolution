@@ -33,6 +33,9 @@ namespace Constants {
     const int SceneObjectKDTreeMinLeafSize = 10;
 
     const size_t DistanceTermApproximationNumPoints = 50;
+
+    const unsigned short OverlayLabelsZOrder = 1;
+    const unsigned short OverlayLabelBordersZOrder = 0;
 }
 
 namespace Strings {
