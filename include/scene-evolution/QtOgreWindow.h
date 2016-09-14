@@ -47,8 +47,9 @@ public:
 
     void setAnimating(bool animating);
 
-    Ogre::Root* getOgreRoot();
-    Ogre::SceneManager* getOgreSceneManager();
+    Ogre::Root* getOgreRoot() const;
+    Ogre::SceneManager* getOgreSceneManager() const;
+    Ogre::RenderWindow* getOgreRenderWindow() const;
 
 public slots:
 

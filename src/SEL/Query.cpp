@@ -61,6 +61,10 @@ void Query::exec(SceneObjectManager* sceneObjMgr, const DatasetManager::LabelMap
         std::cout << "    " << obj->getName().toStdString() << ": Translation " << obj->getCurrentTranslation() << std::endl;
 
     sceneObjMgr->updateObjects();
+
+    // Workaround/hack to force a proper update on all scene nodes (without this copied objects sometimes appeared at (0, 0, 0))
+    SceneChangedEventArgs args(sceneObjMgr->getScene(), sceneObjMgr->getCurrentSceneIdx(), sceneObjMgr->getRGBDScene());
+    sceneObjMgr->onSceneChanged(args);
 }
 
 Query* Query::clone() const {

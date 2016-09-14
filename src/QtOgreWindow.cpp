@@ -452,12 +452,16 @@ void QTOgreWindow::setAnimating(bool animating)
         renderLater();
 }
 
-Ogre::Root* QTOgreWindow::getOgreRoot() {
+Ogre::Root* QTOgreWindow::getOgreRoot() const {
     return mRoot;
 }
 
-Ogre::SceneManager* QTOgreWindow::getOgreSceneManager() {
+Ogre::SceneManager* QTOgreWindow::getOgreSceneManager() const {
     return mSceneMgr;
+}
+
+Ogre::RenderWindow* QTOgreWindow::getOgreRenderWindow() const {
+    return mWindow;
 }
 
 bool QTOgreWindow::frameRenderingQueued(const Ogre::FrameEvent& evt)
