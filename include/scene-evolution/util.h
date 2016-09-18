@@ -47,6 +47,8 @@ namespace Strings {
     const std::string BoundingBoxMeshNameActive = "obbMeshActive";
 
     const std::string LabelOverlayFontName = "scene-evolution/labels";
+
+    const QString StatsDisplayLinePrefix = "  ";
 }
 
 #endif // UTIL_H

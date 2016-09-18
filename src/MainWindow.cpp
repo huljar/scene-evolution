@@ -22,6 +22,7 @@ MainWindow::MainWindow(QWidget *parent)
     , mSceneObjectManager(nullptr)
     , mSELDriver(nullptr)
     , mLastSELDir(QDir::homePath())
+    , mStatsManager(nullptr)
 {
     ui->setupUi(this);
 
@@ -57,6 +58,7 @@ MainWindow::MainWindow(QWidget *parent)
 }
 
 MainWindow::~MainWindow() {
+    delete mStatsManager;
     delete mSELDriver;
     delete mSceneObjectManager;
     delete mLabelOverlayManager;
@@ -377,6 +379,20 @@ void MainWindow::onCheckBoxSELBoundingBoxesStateChanged(int state) {
         mSceneObjectManager->setShowBoundingBoxes(state != Qt::Unchecked);
 }
 
+void MainWindow::onPushButtonComputeStatsClicked(bool checked) {
+    Q_UNUSED(checked);
+
+    if(!mStatsManager)
+        mStatsManager = new StatsManager;
+
+    mStatsManager->parse(mDatasetManager, ui->progressBarComputeStats);
+
+    ui->textEditStatsBox->document()->setPlainText(mStatsManager->print(20, StatsManager::SORT_TOTAL_NUM_IMG, StatsManager::SORT_DESC,
+                                                                        StatsManager::PRINT_AVG_PX_PER_IMG |
+                                                                        StatsManager::PRINT_TOTAL_NUM_IMG |
+                                                                        StatsManager::PRINT_TOTAL_NUM_PX));
+}
+
 void MainWindow::onSceneChanged(SceneChangedEventArgs& e) {
     Q_UNUSED(e);
 
@@ -468,6 +484,8 @@ void MainWindow::setUpConnections() {
 
     connect(ui->pushButtonExecuteManualSEL, SIGNAL(clicked(bool)), this, SLOT(onPushButtonExecuteManualSELClicked(bool)));
     connect(ui->checkBoxSELBoundingBoxes, SIGNAL(stateChanged(int)), this, SLOT(onCheckBoxSELBoundingBoxesStateChanged(int)));
+
+    connect(ui->pushButtonComputeStats, SIGNAL(clicked(bool)), this, SLOT(onPushButtonComputeStatsClicked(bool)));
 
     connect(this, SIGNAL(datasetChanged(DatasetChangedEventArgs&)), this, SLOT(onDatasetChanged(DatasetChangedEventArgs&)));
 

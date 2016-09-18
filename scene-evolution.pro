@@ -53,7 +53,8 @@ SOURCES += src/main.cpp\
         src/SEL/RotateAction.cpp \
         src/LabelOverlayManager.cpp \
         src/SEL/CopyAction.cpp \
-        src/NameProvider.cpp
+        src/NameProvider.cpp \
+        src/StatsManager.cpp
 
 HEADERS  += include/scene-evolution/MainWindow.h \
         include/scene-evolution/QtOgreWindow.h \
@@ -97,7 +98,8 @@ HEADERS  += include/scene-evolution/MainWindow.h \
         include/SEL/RotateAction.h \
         include/scene-evolution/LabelOverlayManager.h \
         include/SEL/CopyAction.h \
-        include/scene-evolution/NameProvider.h
+        include/scene-evolution/NameProvider.h \
+        include/scene-evolution/StatsManager.h
 
 FORMS    += forms/MainWindow.ui
 

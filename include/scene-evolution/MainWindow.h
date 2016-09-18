@@ -10,6 +10,7 @@
 #include <scene-evolution/BoundingBoxManager.h>
 #include <scene-evolution/SceneObjectManager.h>
 #include <scene-evolution/LabelOverlayManager.h>
+#include <scene-evolution/StatsManager.h>
 #include <SEL/Driver.h>
 
 #include <QMainWindow>
@@ -58,6 +59,8 @@ public slots:
 
     void onCheckBoxSELBoundingBoxesStateChanged(int state);
 
+    void onPushButtonComputeStatsClicked(bool checked);
+
     void onSceneChanged(SceneChangedEventArgs& e);
     void onDatasetChanged(DatasetChangedEventArgs& e);
 
@@ -98,6 +101,8 @@ private:
 
     SEL::Driver* mSELDriver;
     QString mLastSELDir;
+
+    StatsManager* mStatsManager;
 };
 
 #endif // MAINWINDOW_H
