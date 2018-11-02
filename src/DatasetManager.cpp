@@ -106,7 +106,7 @@ QVector<QString> DatasetManager::readLabelFile(const QString& filePath) {
 CameraManager DatasetManager::readCameraFile(const QString& filePath) {
     QFile file(filePath);
     if(!file.open(QFile::ReadOnly | QFile::Text)) {
-        std::cerr << "Error: Unable to open file stream!" << std::endl;
+        std::cerr << "Error: Unable to open camera file stream!" << std::endl;
         return CameraManager();
     }
 
