@@ -145,6 +145,18 @@ vector:
 </p>
 </details>
 
+<details><summary>Special terminal symbols</summary>
+<p>
+
+* `"qualifier"`: `rightmost`, `leftmost`, `topmost`, `bottommost`, or `all`
+* `"identifier"`: an object name (based on the scene labels)
+* `"integer"`: an integral value
+* `"float"`: a decimal number
+* `"boolean"`: `true` or `false`
+
+</p>
+</details>
+
 ## License
 
 This software is licensed under the terms of the GNU General Public License
